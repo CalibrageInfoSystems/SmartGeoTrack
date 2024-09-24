@@ -12,13 +12,18 @@ class CommonStyles {
   static const statusRedBg = Color(0xFFffdedf);
   static const statusRedText = Color.fromARGB(255, 236, 62, 68);
   static const startColor = Color(0xFF59ca6b);
+ // background: #317DA6;;
 
   static const blackColor = Colors.black;
   static const blackColorShade = Color(0xFF5f5f5f);
   static const primaryColor = Color(0xFAF5F5F5);
-  static const primaryTextColor = Color(0xFFe86100);
+  static const primaryTextColor = Color(0xFFFF7660);
+  static const loginTextColor = Color(0xFFEE3618);
+  static const buttonbg = Color(0xFF317DA6);//background: #317DA6;
+
   static const formFieldErrorBorderColor = Color(0xFFff0000);
-  static const blueColor = Color(0xFF0f75bc);
+  static const blueColor = Color(0xFF4695C0);
+  static const blueheader = Color(0xFF317DA6);
   static const branchBg = Color(0xFFcfeaff);
   static const primarylightColor = Color(0xffe2f0fd);
   static const greenColor = Colors.greenAccent;

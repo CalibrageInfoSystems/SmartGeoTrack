@@ -1,35 +1,35 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'Common/Constants.dart';
+import 'Forgotpassword.dart';
+import 'common_styles.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'CommonUtils.dart';
-import 'CustomButton.dart';
-import 'CustomeFormField.dart';
 import 'HomeScreen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
 
+import 'package:flutter/material.dart';
+
+
+
+
+class LoginScreen extends StatefulWidget {
   @override
-  State<LoginScreen> createState() => userLoginState();
+  _LoginScreenState createState() => _LoginScreenState();
 }
 
-class userLoginState extends State<LoginScreen> {
-  bool isTextFieldFocused = false;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _emailError = false;
-  bool _passwordError = false;
-  String? invalidCredentials;
-  String? _emailErrorMsg;
-  String? _passwordErrorMsg;
-  bool showPassword = true;
-  bool validateUserEmail = false;
-  bool validateUserPassword = false;
-  String firebaseToken = "";
-
-  String notificationMsg = "Waiting for notifications";
+  final _formKey = GlobalKey<FormState>();
+  bool _isObscure = true; // Keeps track of password visibility
   @override
   void initState() {
     super.initState();
@@ -38,334 +38,375 @@ class userLoginState extends State<LoginScreen> {
   }
 
   @override
+  void dispose() {
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
         onWillPop: () async {
-
-          return true;
+          if (Platform.isAndroid) {
+            // Close the app on Android
+            SystemNavigator.pop();
+            return Future.value(false); // Do not navigate back
+          } else if (Platform.isIOS) {
+            // Close the app on iOS
+            exit(0);
+            return Future.value(false); // Do not navigate back
+          }
+          return Future.value(true); // Default behavior (navigate back) if not Android or iOS
         },
-        child: Scaffold(
-          backgroundColor: CommonUtils.primaryColor,
-          appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                color: CommonUtils.primaryTextColor,
-              ),
-              onPressed: () {
-                // Navigator.of(
-                //   context,
-                // ).pop();
+    child:  Scaffold(
 
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (context) => startingscreen(),
-                //     ));
-              },
-            ),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-          ),
-          body: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Container(
-                  height: MediaQuery.of(context).size.height / 2.2,
-                  decoration: const BoxDecoration(),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: MediaQuery.of(context).size.height / 4.5,
-                          child: Image.asset('assets/hfz_logo.png'),
-                        ),
-                        const SizedBox(
-                          height: 5.0,
-                        ),
-                        const Text('Login',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontFamily: "Outfit",
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 2,
-                              color: Color(0xFF11528f),
-                            )),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                      ],
-                    ),
-                  ),
+      body: Stack(
+        children: [
+          // Background with map-like design
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("assets/Splash_bg.png"), // Map background image
+                  fit: BoxFit.fill,
                 ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height - MediaQuery.of(context).size.height / 2,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Form(
-                      key: _formKey,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(30.0),
-                            topRight: Radius.circular(30.0),
-                          ),
-                        ),
-                        height: MediaQuery.of(context).size.height / 2,
-                        width: MediaQuery.of(context).size.width,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Column(
-                              children: [
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                CustomeFormField(
-                                  label: 'Email / User Name',
-                                  errorText: _emailError ? _emailErrorMsg : null,
-                                  onChanged: (_) {
-                                    setState(() {
-                                      _emailError = false;
-                                    });
-                                  },
-                                  validator: validateEmail,
-                                  controller: _emailController,
-                                  maxLength: 60,
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                CustomeFormField(
-                                  label: 'Password',
-                                  errorText: _passwordError ? _passwordErrorMsg : null,
-                                  onChanged: (_) {
-                                    setState(() {
-                                      _passwordError = false;
-                                    });
-                                  },
-                                  validator: validatePassword,
-                                  controller: _passwordController,
-                                  maxLength: 25,
-                                  obscureText: showPassword,
-                                  suffixIcon: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        showPassword = !showPassword;
-                                      });
-                                    },
-                                    child: Icon(showPassword ? Icons.visibility_off : Icons.visibility),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 5,
-                                ),
-                                // Row(
-                                //   mainAxisAlignment: MainAxisAlignment.end,
-                                //   children: [
-                                //     GestureDetector(
-                                //       onTap: () {
-                                //         Navigator.push(
-                                //           context,
-                                //           MaterialPageRoute(
-                                //               builder: (context) =>
-                                //                   const ForgotPasswordscreen()),
-                                //         );
-                                //       },
-                                //       child: const Text(
-                                //         'Forgot Password?',
-                                //         style: CommonUtils.Mediumtext_o_14,
-                                //       ),
-                                //     ),
-                                //   ],
-                                // ),
-                                const SizedBox(
-                                  height: 30,
-                                ),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: CustomButton(
-                                        buttonText: 'Login',
-                                        color: CommonUtils.primaryTextColor,
-                                        onPressed: () {
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => HomeScreen(),
-                                              ));
-                                          // if (_formKey.currentState!.validate()) {
-                                          //   if (validateUserEmail && validateUserPassword) {
-                                          //     _handleLogin();
-                                          //   }
-                                          // }
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 30,
-                                ),
+              ),
+            ),
+          ),
+          // Top-left circular shape (Red)
+          Positioned(
+            top: -150,
+            left: -200,
+            child: Container(
+              width: MediaQuery.of(context).size.width * 1.5,
+              height: 380,
+              decoration: BoxDecoration(
+                color: CommonStyles.whiteColor,
+                shape: BoxShape.circle,
+                border:  Border.all( // Add border property here
+                  color: CommonStyles.primaryTextColor, // Red border color
+                  width: 2.0, // Border width
+                ),
+              ),
 
-                                // Row(
-                                //   mainAxisAlignment: MainAxisAlignment.center,
-                                //   children: [
-                                //     const Text('New User?',
-                                //         style: CommonUtils.Mediumtext_14),
-                                //     const SizedBox(width: 8.0),
-                                //     GestureDetector(
-                                //       onTap: () {
-
-                                //         print('Click here! clicked');
-
-                                //         Navigator.of(context).push(
-                                //           MaterialPageRoute(
-                                //             builder: (context) =>
-                                //                 const CustomerRegisterScreen(),
-                                //           ),
-                                //         );
-                                //       },
-                                //       child: const Text(
-                                //         'Register Here!',
-                                //         style: TextStyle(
-                                //           fontSize: 20,
-                                //           fontFamily: "Outfit",
-                                //           fontWeight: FontWeight.w700,
-                                //           color: Color(0xFF0f75bc),
-                                //         ),
-                                //       ),
-                                //     ),
-                                //   ],
-                                // ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 50.0), // Add padding to the left
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center, // Align text to start (left)
+                  children: [
+                    SizedBox(height: 150),
+                    // App Logo
+                    SvgPicture.asset(
+                        "assets/sgt_v4.svg", // Replace with your actual logo path
+                      width: 180, // Adjust the size of the logo
+                      height: 180,
                     ),
+    //                 Transform.translate(
+    //                   offset: Offset(0, -25), // Move the text 8 pixels upwards
+    //                   child: Text(
+    // 'SGT',
+    // style: TextStyle(
+    // fontSize: 24,
+    // fontWeight: FontWeight.bold,
+    //   color:CommonStyles.blueheader, // Customize color as needed
+    // ),
+    //                   ),),
+                  ],
+
+              ),
+            ),
+          ),
+
+          ),
+
+
+
+          // Top-right circular shape (Blue)
+          Positioned(
+            top: -250,
+            right: -150,
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              height: 350,
+              decoration: BoxDecoration(
+                color: CommonStyles.blueColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          // Bottom-left circular shape (Blue)
+          Positioned(
+            bottom: -300,
+            left: -230,
+            child: Container(
+              width: MediaQuery.of(context).size.width * 2,
+              height: 400,
+              decoration: BoxDecoration(
+                color: CommonStyles.blueColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          // Bottom-right circular shape (Red)
+          Positioned(
+            bottom: -200,
+            right: -210,
+            child: Container(
+              width: MediaQuery.of(context).size.width / 1.2,
+              height: 450,
+              decoration: BoxDecoration(
+                color: CommonStyles.primaryTextColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+
+          Positioned(
+            top: MediaQuery.of(context).size.height / 2.5 - 40 ,
+            left: 20,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.location_pin,
+                  color: CommonStyles.loginTextColor,
+                  size: 30,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  "Login",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w400,
+                    color: CommonStyles.loginTextColor,
                   ),
                 ),
               ],
             ),
           ),
-        ));
-  }
-
-  String? validateEmail(String? value) {
-    if (value!.isEmpty) {
-      setState(() {
-        _emailError = true;
-        _emailErrorMsg = 'Please Enter Email / User Name';
-      });
-      return null;
+    Positioned(
+    top: MediaQuery.of(context).size.height / 2.5,
+    left: 30,
+    right: 30,
+    child: Form(
+    key: _formKey,
+    child:
+    Container(
+    padding: EdgeInsets.all(20),
+    decoration: BoxDecoration(
+    color: Colors.white.withOpacity(0.6),
+    borderRadius: BorderRadius.only(
+    topLeft: Radius.circular(1),
+    topRight: Radius.circular(20),
+    bottomLeft: Radius.circular(20),
+    bottomRight: Radius.circular(20),
+    ),
+    border: Border.all(
+    color: Colors.white,
+    width: 1,
+    ),
+    ),
+    child:
+    Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+    SizedBox(height: 15),
+    // Mobile Number / Email TextField
+    TextFormField(
+    controller: _usernameController,
+    decoration: InputDecoration(
+    labelText: "Mobile Number/Email/User Name *",
+    hintText: "Enter Mobile Number/Email/User Name",
+    border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    ),
+    ),
+    validator: (value) {
+    if (value == null || value.isEmpty) {
+    return 'Please Enter a Mobile Number/Email/User Name';
     }
-
-    if (invalidCredentials != null) {
-      setState(() {
-        invalidCredentials = null;
-      });
-      return null;
-    }
-    validateUserEmail = true;
     return null;
-  }
-
-  String? validatePassword(String? value) {
-    if (value!.isEmpty) {
-      setState(() {
-        _passwordError = true;
-        _passwordErrorMsg = 'Please Enter Password';
-      });
-      return null;
+    },
+    ),
+    SizedBox(height: 10),
+    // Password TextField
+    TextFormField(
+    controller: _passwordController,
+    obscureText: _isObscure, // Toggle between true and false
+    decoration: InputDecoration(
+    labelText: "Password *",
+    hintText: "Enter Password ",
+    border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10),
+    ),
+    suffixIcon: IconButton(
+    icon: Icon(
+    _isObscure ? Icons.visibility_off : Icons.visibility, // Icon changes based on visibility
+    ),
+    onPressed: () {
+    setState(() {
+    _isObscure = !_isObscure; // Toggle password visibility
+    });
+    },
+    ),
+    ),
+    validator: (value) {
+    if (value == null || value.isEmpty) {
+    return 'Please Enter a Password';
     }
-
-    if (invalidCredentials != null) {
-      setState(() {
-        invalidCredentials = null;
-      });
-      return null;
-    }
-
-    validateUserPassword = true;
     return null;
+    },
+    ),
+    Align(
+    alignment: Alignment.centerRight,
+    child: TextButton(
+    onPressed: () {
+    Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => Forgotpassword()),
+    );
+    },
+    child: Text(
+    "Forgot Password?",
+    style: TextStyle(color: CommonStyles.blueheader),
+    ),
+    ),
+    ),
+    // Login Button
+    SizedBox(
+    width: double.infinity,
+    height: 45,
+    child: ElevatedButton(
+    onPressed: _login,
+    style: ElevatedButton.styleFrom(
+    padding: EdgeInsets.symmetric(vertical: 10),
+    backgroundColor: CommonStyles.buttonbg,
+    shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(10),
+    ),
+    ),
+    child: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+    Icon(
+    Icons.perm_identity,
+    color: CommonStyles.whiteColor,
+    size: 20,
+    ),
+    SizedBox(width: 10),
+    Text(
+    "Login",
+    style: TextStyle(
+    fontSize: 18,
+    color: Colors.white,
+    ),
+    ),
+    ],
+    ),
+    ),
+    ),
+    ],
+    ),
+    ),
+    ),
+    )
+
+
+        ],
+      ),
+    ));
   }
 
-  String? endUserMessageFromApi(int code, String endUserMessage) {
-    if (code == 10) {
-      setState(() {
-        _emailError = true;
-        _emailErrorMsg = endUserMessage;
-        _passwordError = true;
-        _passwordErrorMsg = endUserMessage;
+  Future<void> _login() async {
+    bool isConnected = await CommonStyles.checkInternetConnectivity();
+    if (isConnected) {
+      if (_formKey.currentState!.validate()) {
+        String username = _usernameController.text.trim();
+        String password = _passwordController.text.trim();
 
-        validateUserEmail = false;
-        validateUserPassword = false;
-      });
-    }
+        // API URL
+        String url = 'http://182.18.157.215/SmartGeoTrack/API/User/ValidateUser';
+        print('url=== ${url}');
+        // Request body
+        Map<String, String> body = {
+          'username': username,
+          'password': password,
+        };
 
-    return null;
-  }
+        try {
+          // Send HTTP POST request
+          final response = await http.post(
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode(body),
+          );
+          print('object ${json.encode(body)}');
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
 
-  Future<void> _handleLogin() async {
-    String username = _emailController.text;
-    String password = _passwordController.text;
-    bool isValid = true;
-    bool hasValidationFailed = false;
-    if (username.isEmpty) {
-      CommonUtils.showCustomToastMessageLong('Please Enter Username', context, 1, 4);
-      isValid = false;
-      hasValidationFailed = true;
-      // Hide the keyboard || password.isEmpty
-      FocusScope.of(context).unfocus();
-    } else if (password.isEmpty) {
-      CommonUtils.showCustomToastMessageLong('Please Enter Password', context, 1, 4);
-      isValid = false;
-      hasValidationFailed = true;
-      // Hide the keyboard || password.isEmpty
-      FocusScope.of(context).unfocus();
-    } else {
-      bool isConnected = await CommonUtils.checkInternetConnectivity();
-      if (isConnected) {
-        print('Connected to the internet');
-        FocusScope.of(context).unfocus();
-        login(username, password);
-      } else {
-        CommonUtils.showCustomToastMessageLong('Please Check Your Internet Connection', context, 1, 4);
-        FocusScope.of(context).unfocus();
-        print('Not connected to the internet');
+            if (data['issucces']) {
+              // Successful login
+              // Navigate to the Home screen
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+
+              // Save the user data in SharedPreferences
+              prefs.setBool(Constants.isLogin, true);
+              prefs.setString('token', data['token']);
+              prefs.setInt('userID', data['user']['id']);
+              prefs.setString('username', data['user']['username']);
+              prefs.setString('firstName', data['user']['firstName']);
+              prefs.setString('email', data['user']['email']);
+              prefs.setString('mobileNumber', data['user']['mobileNumber']);
+              prefs.setInt('roleID', data['user']['roleID']);
+              prefs.setString('roleName', data['user']['roleName']);
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
+            } else {
+              // Show error message
+              _showErrorDialog("Login failed: Invalid username or password.");
+            }
+          } else {
+            _showErrorDialog("Error: ${response.statusCode}");
+          }
+        } catch (e) {
+          _showErrorDialog("An error occurred: $e");
+        }
       }
     }
+   else
+     {
+       Fluttertoast.showToast(
+           msg: "Please check your internet connection.",
+           toastLength: Toast.LENGTH_SHORT,
+           gravity: ToastGravity.CENTER,
+           timeInSecForIosWeb: 1,
+           backgroundColor: Colors.red,
+           textColor: Colors.white,
+           fontSize: 16.0
+       );
+     }
   }
 
-  Future<void> login(String usename, String password) async {
-
-
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Error"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
-
-  Future<void> addAgentSlotInformation(Map<String, dynamic> agentSlotsDetailsMap, int agentId) async {
-
-
-  }
-
-  Future<void> saveUserDataToSharedPreferences(Map<String, dynamic> userData) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    await prefs.setInt('userId', userData['id']);
-    prefs.setBool('isLoggedIn', true);
-    await prefs.setString('userFullName', userData['firstName']);
-    await prefs.setInt('userRoleId', userData['roleID']);
-    await prefs.setString('email', userData['email']);
-    await prefs.setString('contactNumber', userData['contactNumber']);
-    await prefs.setString('gender', userData['gender']);
-  }
-
-
-
-
 }
+
+
+
+
