@@ -3,6 +3,17 @@ import 'package:connectivity/connectivity.dart';
 
 class CommonStyles {
   // colors
+
+  static const primaryTextColor = Color(0xFFeb3818);
+  static const blueTextColor = Color(0xFF2e7aa6);
+  static const btnRedBgColor = Color(0xFFff7964);
+  static const btnBlueBgColor = Color(0xFF90c5f7);
+  static const listEvenColor = Color(0xFFffe9e6);
+  static const listOddColor = Color(0xFFe5f6ff);
+  static const borderColor = Color(0xFF9ac2db);
+  static const dataTextColor = Color(0xff818181);
+  static const bottomNavBgColor = Color(0xffe8f4ff);
+
   static const statusBlueBg = Color(0xffc3c8cc);
   static const statusBlueText = Color(0xFF11528f);
   static const statusGreenBg = Color(0xFFe5ffeb);
@@ -12,15 +23,13 @@ class CommonStyles {
   static const statusRedBg = Color(0xFFffdedf);
   static const statusRedText = Color.fromARGB(255, 236, 62, 68);
   static const startColor = Color(0xFF59ca6b);
- // background: #317DA6;;
+  // background: #317DA6;;
 
   static const blackColor = Colors.black;
   static const blackColorShade = Color(0xFF5f5f5f);
   static const primaryColor = Color(0xFAF5F5F5);
-  static const primaryTextColor = Color(0xFFFF7660);
   static const loginTextColor = Color(0xFFEE3618);
-  static const buttonbg = Color(0xFF317DA6);//background: #317DA6;
-
+  static const buttonbg = Color(0xFF317DA6); //background: #317DA6;
   static const formFieldErrorBorderColor = Color(0xFFff0000);
   static const blueColor = Color(0xFF4695C0);
   static const blueheader = Color(0xFF317DA6);
@@ -29,8 +38,39 @@ class CommonStyles {
   static const greenColor = Colors.greenAccent;
   static const whiteColor = Colors.white;
   static const hintTextColor = Color(0xCBBEBEBE);
-  // styles
   static const RedColor = Color(0xFFC93437);
+  // styles
+  static const txStyF20CpFF5 = TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w500,
+      color: CommonStyles.primaryTextColor);
+
+  static const txStyF20CbFF5 = TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w500,
+      color: CommonStyles.blackColor);
+
+  static const txStyF20CbluFF5 = TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w500,
+      color: CommonStyles.blueTextColor);
+
+  static const txStyF14CbFF5 = TextStyle(
+      fontSize: 14,
+      fontFamily: "hind_semibold",
+      fontWeight: FontWeight.w500,
+      color: CommonStyles.blackColor);
+  static const txStyF16CbFF5 = TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      color: CommonStyles.blackColor);
+
+  static const txStyF14CwFF5 = TextStyle(
+      fontSize: 14,
+      fontFamily: "hind_semibold",
+      fontWeight: FontWeight.w500,
+      color: CommonStyles.whiteColor);
+
   static const TextStyle txSty_12b_f5 = TextStyle(
     fontSize: 12,
     fontFamily: "hind_semibold",

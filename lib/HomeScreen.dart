@@ -1,4 +1,3 @@
-
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter_svg/svg.dart';
@@ -14,6 +13,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smartgetrack/common_styles.dart';
 
 import 'AddLeads.dart';
 import 'Database/Palm3FoilDatabase.dart';
@@ -21,8 +21,9 @@ import 'ViewLeads.dart';
 import 'location_service/logic/location_controller/location_controller_cubit.dart';
 import 'location_service/notification/notification.dart';
 import 'location_service/tools/background_service.dart';
+
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -42,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     getuserdata();
-    backgroundService = BackgroundService(userId: 1,context: context);
+    backgroundService = BackgroundService(userId: 1, context: context);
 
     startService();
   }
@@ -78,14 +79,18 @@ class _HomeScreenState extends State<HomeScreen> {
           altitude: double.tryParse(event['altitude'].toString()) ?? 0.0,
           heading: double.tryParse(event['heading'].toString()) ?? 0.0,
           speed: double.tryParse(event['speed'].toString()) ?? 0.0,
-          speedAccuracy: double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
-          altitudeAccuracy:double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
-          headingAccuracy : double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
+          speedAccuracy:
+              double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
+          altitudeAccuracy:
+              double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
+          headingAccuracy:
+              double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
         );
-        print("on_location_changed: ${position.latitude} -  ${ position.longitude}");
-        if (_isPositionAccurate(position) ) {
-          double distance = Geolocator.distanceBetween(
-              lastLatitude, lastLongitude, position.latitude, position.longitude);
+        print(
+            "on_location_changed: ${position.latitude} -  ${position.longitude}");
+        if (_isPositionAccurate(position)) {
+          double distance = Geolocator.distanceBetween(lastLatitude,
+              lastLongitude, position.latitude, position.longitude);
 
           if (distance >= MIN_DISTANCE_THRESHOLD) {
             lastLatitude = position.latitude;
@@ -98,19 +103,18 @@ class _HomeScreenState extends State<HomeScreen> {
               updatedByUserId: 1, // Replace with actual userId
               serverUpdatedStatus: false,
             );
-            appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
+            appendLog(
+                'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
             //  await sendLocationToAPI(position.latitude, position.longitude, timestamp);
 
             await context.read<LocationControllerCubit>().onLocationChanged(
-              location: position,
-            );
+                  location: position,
+                );
           }
-        }
-        else{
+        } else {
           print('Position Accuracy: ${position.accuracy}');
           print('Speed Accuracy: ${position.speedAccuracy}');
           print('Speed: ${position.speed}');
-
         }
       }
     });
@@ -125,149 +129,416 @@ class _HomeScreenState extends State<HomeScreen> {
         position.speed >= MIN_SPEED_THRESHOLD;
   }
 
+  @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return WillPopScope(
-        onWillPop: () async {
-      // Close the app when back is pressed, do not navigate back
-      exit(0);
-    //  SystemNavigator.pop();
-    },
-    child: Scaffold(
-    appBar:
-    AppBar(
-      backgroundColor: Colors.lightBlue[100],
-      automaticallyImplyLeading: false, // Ensure no back arrow is added
-      title: Row(
-        crossAxisAlignment: CrossAxisAlignment.center, // Vertically centers items
-        children: [
-          SvgPicture.asset(
-            'assets/sgt_logo.svg', // Use flutter_svg to load SVG
-            width: 40,
-          ),
-          SizedBox(width: 8), // Space between logo and text
-          Padding(
-            padding: const EdgeInsets.only(top: 10.0), // Add top padding to the text
-            child: Text(
-              "SGT",
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 24,
-                fontFamily: "hind_semibold",
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1, // Adjust font size as needed
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
-
-
-
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      onWillPop: () async {
+        exit(0);
+      },
+      child: Scaffold(
+        backgroundColor: CommonStyles.whiteColor,
+        body: Stack(
           children: [
-            // Greeting and Map Area
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                color: Colors.lightBlue[100],
-                image: DecorationImage(
-                  image: AssetImage('assets/map.png'), // Map image placeholder
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Hello,", style: TextStyle(color: Colors.white, fontSize: 18)),
-                      Text("M James", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // Statistics Section
-            Row(
-              children: [
-                Expanded(
-                  child: StatCard(
-                    label: "Km's Travel",
-                    value: "255",
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: StatCard(
-                    label: "Leads",
-                    value: "47",
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-
-            // Buttons Section
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to the next screen with id and username
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddLeads(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlue,
-                minimumSize: Size(double.infinity, 50),
-              ),
-              child: Text("+ Add Lead", style: TextStyle(color: Colors.white)),
-            ),
-            SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ViewLeads(),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlueAccent,
-                minimumSize: Size(double.infinity, 50),
-              ),
-              child: Text("View Leads", style: TextStyle(color: Colors.white)),
+            header(size),
+            Positioned.fill(
+              top: 240,
+              // top: 230,
+              child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                                child: customBox(
+                                    title: 'Total Leads', data: '123')),
+                            const SizedBox(width: 20),
+                            Expanded(
+                                child: customBox(
+                                    title: 'Total Leads', data: '321')),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        statisticsSection(),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                                child: customBox(
+                                    title: 'Km\'s Travel',
+                                    data: '255',
+                                    bgImg: 'assets/bg_image2.jpg')),
+                            const SizedBox(width: 20),
+                            Expanded(
+                                child: customBox(title: 'Leads', data: '47')),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: customBtn(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AddLeads(),
+                                    ),
+                                  );
+                                },
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add,
+                                      size: 18,
+                                      color: CommonStyles.whiteColor,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Add Lead',
+                                      style: CommonStyles.txStyF14CwFF5,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: customBtn(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ViewLeads(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.view_list_rounded,
+                                        size: 18,
+                                        color: CommonStyles.whiteColor,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'View Leads',
+                                        style: CommonStyles.txStyF14CwFF5,
+                                      ),
+                                    ],
+                                  ),
+                                  backgroundColor: CommonStyles.btnBlueBgColor),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: customBtn(
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.location_on_outlined,
+                                  size: 18,
+                                  color: CommonStyles.whiteColor,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Sync Data',
+                                  style: CommonStyles.txStyF14CwFF5,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Today Leads',
+                          style: CommonStyles.txStyF16CbFF5,
+                        ),
+                        ListView.separated(
+                          itemCount: 10,
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemBuilder: (context, index) => leadTemplate(index),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 10),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  )),
             ),
           ],
         ),
       ),
-    ));
+    );
   }
 
+  Container leadTemplate(int index) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: index.isEven
+            ? CommonStyles.listEvenColor
+            : CommonStyles.listOddColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Jessy',
+                style: CommonStyles.txStyF16CbFF5,
+              ),
+              Icon(Icons.arrow_circle_right_outlined),
+            ],
+          ),
+          const SizedBox(height: 3),
+          listCustomText('ABCD Software Solutions'),
+          listCustomText('test@test.com'),
+          listCustomText('+91 1234567890'),
+        ],
+      ),
+    );
+  }
 
+  Column listCustomText(String text) {
+    return Column(
+      children: [
+        Text(
+          text,
+          style: CommonStyles.txStyF16CbFF5
+              .copyWith(color: CommonStyles.dataTextColor),
+        ),
+        const SizedBox(height: 5),
+      ],
+    );
+  }
+
+  ElevatedButton customBtn(
+      {Color? backgroundColor = CommonStyles.btnRedBgColor,
+      required Widget child,
+      void Function()? onPressed}) {
+    return ElevatedButton(
+      onPressed: () {
+        onPressed?.call();
+      },
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        backgroundColor: backgroundColor,
+      ),
+      child: child,
+    );
+  }
+
+  Row statisticsSection() {
+    return Row(children: [
+      const Text(
+        'Statistics',
+        style: CommonStyles.txStyF16CbFF5,
+      ),
+      const Spacer(),
+      Row(
+        children: [
+          Text(
+            'Last 7d',
+            style: CommonStyles.txStyF14CbFF5
+                .copyWith(color: CommonStyles.dataTextColor),
+          ),
+          const Icon(Icons.keyboard_arrow_down_rounded,
+              color: CommonStyles.dataTextColor),
+        ],
+      ),
+      Container(
+        height: 30,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+        ),
+        child: const Row(
+          children: [
+            Text('March 2020', style: CommonStyles.txStyF14CbFF5),
+            SizedBox(width: 5),
+            Icon(
+              Icons.calendar_today_outlined,
+              size: 16,
+            ),
+          ],
+        ),
+      )
+    ]);
+  }
+
+  Row leadsSection() {
+    return Row(
+      children: [
+        Expanded(child: customBox(title: 'Total Leads', data: '123')),
+        const SizedBox(width: 20),
+        Expanded(child: customBox(title: 'Total Leads', data: '321')),
+      ],
+    );
+  }
+
+  Container customBox({
+    required String title,
+    String? data,
+    String bgImg = 'assets/bg_image1.jpg',
+  }) {
+    return Container(
+      height: 110,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        image: DecorationImage(
+          image: AssetImage(bgImg),
+          fit: BoxFit.cover,
+        ),
+        border: Border.all(
+          color: CommonStyles.blueTextColor,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(title,
+              style: CommonStyles.txStyF20CbluFF5.copyWith(
+                fontSize: 18,
+              )
+              /* style: const TextStyle(
+                color: CommonStyles.blueTextColor, fontSize: 20), */
+              ),
+          Text('$data',
+              style: CommonStyles.txStyF20CbFF5.copyWith(
+                fontSize: 40,
+              )
+              /* style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold), */
+              ),
+        ],
+      ),
+    );
+  }
+
+  Positioned header(Size size) {
+    return Positioned(
+      top: -170,
+      left: -10,
+      right: -10,
+      child: Container(
+        width: size.width * 0.9,
+        height: 400,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          image: const DecorationImage(
+            image: AssetImage('assets/header_bg_image.jpg'),
+            fit: BoxFit.cover,
+          ),
+          border: Border.all(
+            color: CommonStyles.blueTextColor,
+            width: 1.0,
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              flex: 4,
+              child: Container(
+                color: Colors.grey,
+              ),
+            ),
+            Expanded(
+              flex: 6,
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    customAppBar(),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Text('Hello,',
+                              style: CommonStyles.txStyF20CpFF5),
+                          Text(
+                            'M James',
+                            style: CommonStyles.txStyF20CpFF5.copyWith(
+                              fontSize: 25,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const Text(
+                            '23rd Sep 2024',
+                            style: CommonStyles.txStyF14CbFF5,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget customAppBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 50,
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          SvgPicture.asset(
+            'assets/sgt_logo.svg',
+            width: 35,
+            height: 35,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'SGT',
+            style: CommonStyles.txStyF20CpFF5.copyWith(
+                fontWeight: FontWeight.w900, letterSpacing: 3, fontSize: 22),
+          ),
+          const Spacer(),
+          const Icon(Icons.more_vert_rounded),
+        ],
+      ),
+    );
+  }
 
   Future<void> startService() async {
-    await Fluttertoast.showToast(msg: "Wait for a while, Initializing the service...");
+    await Fluttertoast.showToast(
+        msg: "Wait for a while, Initializing the service...");
     try {
       palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
 
-      await palm3FoilDatabase?.printTables(); // Call printTables after creating the databas
+      await palm3FoilDatabase
+          ?.printTables(); // Call printTables after creating the databas
       // dbUpgradeCall();
     } catch (e) {
       print('Error while getting master data: ${e.toString()}');
     }
-    final permission = await context.read<LocationControllerCubit>().enableGPSWithPermission();
+    final permission =
+        await context.read<LocationControllerCubit>().enableGPSWithPermission();
     if (permission) {
       try {
         Position currentPosition = await Geolocator.getCurrentPosition();
@@ -276,9 +547,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
         // Adding more debug prints
         print('Location permission granted');
-        print('Current Position: Latitude: ${currentPosition.latitude}, Longitude: ${currentPosition.longitude}');
+        print(
+            'Current Position: Latitude: ${currentPosition.latitude}, Longitude: ${currentPosition.longitude}');
 
-        await context.read<LocationControllerCubit>().locationFetchByDeviceGPS();
+        await context
+            .read<LocationControllerCubit>()
+            .locationFetchByDeviceGPS();
         await backgroundService.initializeService();
         backgroundService.setServiceAsForeground();
 
@@ -292,19 +566,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
-
   void stopService() {
     backgroundService.stopService();
     context.read<LocationControllerCubit>().stopLocationFetch();
   }
 
-
   void appendLog(String text) async {
-    final String folderName = 'SmartGeoTrack';
-    final String fileName = 'UsertrackinglogTest.file';
+    const String folderName = 'SmartGeoTrack';
+    const String fileName = 'UsertrackinglogTest.file';
 
-    Directory appFolderPath = Directory('/storage/emulated/0/Download/$folderName');
+    Directory appFolderPath =
+        Directory('/storage/emulated/0/Download/$folderName');
     if (!appFolderPath.existsSync()) {
       appFolderPath.createSync(recursive: true);
     }
@@ -325,7 +597,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> getuserdata() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? userID = prefs.getInt('userID') ;
+    int? userID = prefs.getInt('userID');
     String username = prefs.getString('username') ?? '';
     String firstName = prefs.getString('firstName') ?? '';
     String email = prefs.getString('email') ?? '';
@@ -333,12 +605,16 @@ class _HomeScreenState extends State<HomeScreen> {
     String roleName = prefs.getString('roleName') ?? '';
   }
 }
+
 class BackgroundService {
   final int userId;
   final BuildContext context; // Add context
 
-  BackgroundService({required this.userId, required this.context}); // Add context to constructor
-  final FlutterBackgroundService flutterBackgroundService = FlutterBackgroundService();
+  BackgroundService(
+      {required this.userId,
+      required this.context}); // Add context to constructor
+  final FlutterBackgroundService flutterBackgroundService =
+      FlutterBackgroundService();
 
   FlutterBackgroundService get instance => flutterBackgroundService;
 
@@ -385,24 +661,22 @@ void onStart(ServiceInstance service) async {
   // Retrieve context or adapt initialization
   //BuildContext context = ...; // Handle context acquisition appropriately
 
-  Palm3FoilDatabase? palm3FoilDatabase = await Palm3FoilDatabase.getInstance(
-
-  );
+  Palm3FoilDatabase? palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
 
   int userId = 1; // Replace with actual logic to get userId
 
   if (service is AndroidServiceInstance) {
-  service.on('setAsForeground').listen((event) async {
-  await service.setAsForegroundService();
-  });
+    service.on('setAsForeground').listen((event) async {
+      await service.setAsForegroundService();
+    });
 
-  service.on('setAsBackground').listen((event) async {
-  await service.setAsBackgroundService();
-  });
+    service.on('setAsBackground').listen((event) async {
+      await service.setAsBackgroundService();
+    });
   }
 
   service.on("stop_service").listen((event) async {
-  await service.stopSelf();
+    await service.stopSelf();
   });
 
   double lastLatitude = 0.0;
@@ -410,71 +684,72 @@ void onStart(ServiceInstance service) async {
   bool isFirstLocationLogged = false;
 
   Geolocator.getPositionStream().listen((Position position) async {
-  final permission = await Geolocator.checkPermission();
+    final permission = await Geolocator.checkPermission();
 
-  if (permission == LocationPermission.always) {
-  service.invoke('on_location_changed', position.toJson());
+    if (permission == LocationPermission.always) {
+      service.invoke('on_location_changed', position.toJson());
 
-  if (!isFirstLocationLogged) {
-  lastLatitude = position.latitude;
-  lastLongitude = position.longitude;
-  isFirstLocationLogged = true;
-  DateTime timestamp = DateTime.now();
+      if (!isFirstLocationLogged) {
+        lastLatitude = position.latitude;
+        lastLongitude = position.longitude;
+        isFirstLocationLogged = true;
+        DateTime timestamp = DateTime.now();
 
-   palm3FoilDatabase!.insertLocationValues(
-  latitude: position.latitude,
-  longitude: position.longitude,
-  createdByUserId: userId,
-  updatedByUserId: userId,
-  serverUpdatedStatus: false,
-  );
-  appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
-  }
+        palm3FoilDatabase!.insertLocationValues(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          createdByUserId: userId,
+          updatedByUserId: userId,
+          serverUpdatedStatus: false,
+        );
+        appendLog(
+            'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
+      }
 
-  if (_isPositionAccurate(position)) {
-  final distance = Geolocator.distanceBetween(
-  lastLatitude,
-  lastLongitude,
-  position.latitude,
-  position.longitude,
-  );
-print('distance====$distance');
-  if (distance >= 50.0) {
-  lastLatitude = position.latitude;
-  lastLongitude = position.longitude;
-  DateTime timestamp = DateTime.now();
+      if (_isPositionAccurate(position)) {
+        final distance = Geolocator.distanceBetween(
+          lastLatitude,
+          lastLongitude,
+          position.latitude,
+          position.longitude,
+        );
+        print('distance====$distance');
+        if (distance >= 50.0) {
+          lastLatitude = position.latitude;
+          lastLongitude = position.longitude;
+          DateTime timestamp = DateTime.now();
 
-   palm3FoilDatabase!.insertLocationValues(
-  latitude: position.latitude,
-  longitude: position.longitude,
-  createdByUserId: userId,
-  updatedByUserId: userId,
-  serverUpdatedStatus: false,
-  );
-  appendLog('Background Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
-  }
-  }
-  }
+          palm3FoilDatabase!.insertLocationValues(
+            latitude: position.latitude,
+            longitude: position.longitude,
+            createdByUserId: userId,
+            updatedByUserId: userId,
+            serverUpdatedStatus: false,
+          );
+          appendLog(
+              'Background Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
+        }
+      }
+    }
   });
 }
 
 bool _isPositionAccurate(Position position) {
-  const double MAX_ACCURACY_THRESHOLD = 10.0;
-  const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
-  const double MIN_SPEED_THRESHOLD = 0.2;
+  const double maxAccuracyThreshold = 10.0;
+  const double maxSpeedAccuracyThreshold = 5.0;
+  const double minSpeedThreshold = 0.2;
 
-  return position.accuracy <= MAX_ACCURACY_THRESHOLD &&
-      position.speedAccuracy <= MAX_SPEED_ACCURACY_THRESHOLD &&
-      position.speed >= MIN_SPEED_THRESHOLD;
+  return position.accuracy <= maxAccuracyThreshold &&
+      position.speedAccuracy <= maxSpeedAccuracyThreshold &&
+      position.speed >= minSpeedThreshold;
 }
 
-
-
 void appendLog(String text) async {
-  final String folderName = 'SmartGeoTrack';
-  final String fileName = 'UsertrackinglogTest.file';
+  const String folderName = 'SmartGeoTrack';
+  const String fileName = 'UsertrackinglogTest.file';
 
-  Directory appFolderPath = Directory('/storage/emulated/0/Download/$folderName');
+  Directory appFolderPath =
+      Directory('/storage/emulated/0/Download/$folderName');
   if (!appFolderPath.existsSync()) {
     appFolderPath.createSync(recursive: true);
   }
@@ -493,7 +768,8 @@ void appendLog(String text) async {
   }
 }
 
-Future<void> sendLocationToAPI(double latitude, double longitude, DateTime timestamp) async {
+Future<void> sendLocationToAPI(
+    double latitude, double longitude, DateTime timestamp) async {
   // void addBoundaryToDatabase() async {
   //   await insertLocationValues(
   //     latitude: 12.3456,
@@ -506,13 +782,15 @@ Future<void> sendLocationToAPI(double latitude, double longitude, DateTime times
 
   String timestamp = DateTime.now().toIso8601String();
 //  await DatabaseHelper().insertLocation(latitude, longitude, timestamp);
-  final String apiUrl = 'http://182.18.157.215/Srikar_Biotech_Dev/API/api/Location/AddLocationTracker';
+  const String apiUrl =
+      'http://182.18.157.215/Srikar_Biotech_Dev/API/api/Location/AddLocationTracker';
   Map<String, dynamic> requestBody = {
     "Id": null,
     "UserId": "e39536e2-89d3-4cc7-ae79-3dd5291ff156",
     "Latitude": latitude,
     "Longitude": longitude,
-    "Address": "test", // You might want to replace this with an actual address if available
+    "Address":
+        "test", // You might want to replace this with an actual address if available
     "LogDate": timestamp,
     "CreatedBy": "e39536e2-89d3-4cc7-ae79-3dd5291ff156",
     "CreatedDate": DateTime.now().toIso8601String()
@@ -541,16 +819,17 @@ Future<void> sendLocationToAPI(double latitude, double longitude, DateTime times
     print("Error: $error");
   }
 }
+
 class StatCard extends StatelessWidget {
   final String label;
   final String value;
 
-  const StatCard({required this.label, required this.value});
+  const StatCard({super.key, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: Colors.pink[50],
@@ -558,9 +837,10 @@ class StatCard extends StatelessWidget {
       child: Column(
         children: [
           Text(value,
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
-          Text(label, style: TextStyle(fontSize: 18)),
+              style:
+                  const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 18)),
         ],
       ),
     );
