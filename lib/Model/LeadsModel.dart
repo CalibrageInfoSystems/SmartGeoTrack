@@ -1,7 +1,13 @@
+import 'dart:convert';
 
-class LeadsModel {
-  final bool isCompany;
+Lead leadFromJson(String str) => Lead.fromJson(json.decode(str));
+
+String leadToJson(Lead data) => json.encode(data.toJson());
+
+class Lead {
+  final int? id;
   final String? code;
+  final int? isCompany;
   final String? name;
   final String? companyName;
   final String? phoneNumber;
@@ -10,68 +16,62 @@ class LeadsModel {
   final double? latitude;
   final double? longitude;
   final int? createdByUserId;
-  final DateTime? createdDate;
+  final String? createdDate;
   final int? updatedByUserId;
-  final DateTime? updatedDate;
-  bool? serverUpdatedStatus;
+  final String? updatedDate;
+  final int? serverUpdatedStatus;
 
-  LeadsModel({
-    required this.isCompany,
-    required this.code,
-    required this.name,
+  Lead({
+    this.id,
+    this.code,
+    this.isCompany,
+    this.name,
     this.companyName,
-    required this.phoneNumber,
-    required this.email,
-    required this.comments,
-    required this.latitude,
-    required this.longitude,
-    required this.createdByUserId,
-    required this.createdDate,
-    required this.updatedByUserId,
-    required this.updatedDate,
-    required this.serverUpdatedStatus,
+    this.phoneNumber,
+    this.email,
+    this.comments,
+    this.latitude,
+    this.longitude,
+    this.createdByUserId,
+    this.createdDate,
+    this.updatedByUserId,
+    this.updatedDate,
+    this.serverUpdatedStatus,
   });
 
-  // Factory method to create a Lead instance from a map
-  factory LeadsModel.fromMap(Map<String, dynamic> map) {
-    return LeadsModel(
-      isCompany: map['IsCompany'] == 1 || map['IsCompany'] == true,
-      code: map['code'],
-      name: map['Name'],
-      companyName: map['CompanyName'],
-      phoneNumber: map['PhoneNumber'],
-      email: map['Email'],
-      comments: map['Comments'],
-      latitude: map['Latitude'],
-      longitude: map['Longitude'],
-      createdByUserId: map['CreatedByUserId'],
-      createdDate: DateTime.parse(map['CreatedDate']),
-      updatedByUserId: map['UpdatedByUserId'],
-      updatedDate: DateTime.parse(map['UpdatedDate']),
-      serverUpdatedStatus: map['ServerUpdatedStatus'] is bool
-          ? map['ServerUpdatedStatus']
-          : map['ServerUpdatedStatus'] == 1,
-    );
-  }
+  factory Lead.fromJson(Map<String, dynamic> json) => Lead(
+        id: json["Id"],
+        code: json["code"],
+        isCompany: json["IsCompany"],
+        name: json["Name"],
+        companyName: json["CompanyName"],
+        phoneNumber: json["PhoneNumber"],
+        email: json["Email"],
+        comments: json["Comments"],
+        latitude: json["Latitude"]?.toDouble(),
+        longitude: json["Longitude"]?.toDouble(),
+        createdByUserId: json["CreatedByUserId"],
+        createdDate: json["CreatedDate"],
+        updatedByUserId: json["UpdatedByUserId"],
+        updatedDate: json["UpdatedDate"],
+        serverUpdatedStatus: json["ServerUpdatedStatus"],
+      );
 
-  // Method to convert a Lead instance to a map
-  Map<String, dynamic> toMap() {
-    return {
-      'IsCompany': isCompany, // Sending as a boolean (true/false)
-      'code': code,
-      'Name': name,
-      'CompanyName': companyName,
-      'PhoneNumber': phoneNumber,
-      'Email': email,
-      'Comments': comments,
-      'Latitude': latitude,
-      'Longitude': longitude,
-      'CreatedByUserId': createdByUserId,
-      'CreatedDate': createdDate?.toIso8601String(),
-      'UpdatedByUserId': updatedByUserId,
-      'UpdatedDate': updatedDate?.toIso8601String(),
-      'ServerUpdatedStatus': serverUpdatedStatus,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+        "Id": id,
+        "code": code,
+        "IsCompany": isCompany,
+        "Name": name,
+        "CompanyName": companyName,
+        "PhoneNumber": phoneNumber,
+        "Email": email,
+        "Comments": comments,
+        "Latitude": latitude,
+        "Longitude": longitude,
+        "CreatedByUserId": createdByUserId,
+        "CreatedDate": createdDate,
+        "UpdatedByUserId": updatedByUserId,
+        "UpdatedDate": updatedDate,
+        "ServerUpdatedStatus": serverUpdatedStatus,
+      };
 }
-

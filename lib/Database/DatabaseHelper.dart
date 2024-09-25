@@ -8,11 +8,9 @@ import '../Model/FileRepositoryModel.dart';
 import '../Model/GeoBoundariesModel.dart';
 import '../Model/LeadsModel.dart';
 
-
-
 class DatabaseHelper {
-  static final _databaseName = "smartgeotrack.sqlite";
-  static final _databaseVersion = 1;
+  static const _databaseName = "smartgeotrack.sqlite";
+  static const _databaseVersion = 1;
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -26,7 +24,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    final String folderName = 'SmartGeoTrack';
+    const String folderName = 'SmartGeoTrack';
     Directory documentsDirectory = Directory('/storage/emulated/0/$folderName');
 
     if (!documentsDirectory.existsSync()) {
@@ -37,7 +35,8 @@ class DatabaseHelper {
 
     if (FileSystemEntity.typeSync(path) == FileSystemEntityType.notFound) {
       ByteData data = await rootBundle.load(join("assets", _databaseName));
-      List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      List<int> bytes =
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       await File(path).writeAsBytes(bytes);
     }
 
@@ -49,11 +48,13 @@ class DatabaseHelper {
     await db.execute(sql);
   }
 
-  Future<void> insertData(String tableName, List<Map<String, dynamic>> data) async {
+  Future<void> insertData(
+      String tableName, List<Map<String, dynamic>> data) async {
     final db = await database;
     Batch batch = db.batch();
     for (var row in data) {
-      batch.insert(tableName, row, conflictAlgorithm: ConflictAlgorithm.replace);
+      batch.insert(tableName, row,
+          conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
   }
@@ -68,7 +69,8 @@ class DatabaseHelper {
 
     return result.map((row) => GeoBoundariesModel.fromMap(row)).toList();
   }
-  Future<List<LeadsModel>> getLeadsDetails() async {
+
+  Future<List<Lead>> getLeadsDetails() async {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.query(
       'Leads',
@@ -77,8 +79,9 @@ class DatabaseHelper {
     );
     print('Leads fetched: $result');
 
-    return result.map((row) => LeadsModel.fromMap(row)).toList();
+    return result.map((row) => Lead.fromJson(row)).toList();
   }
+
   Future<List<FileRepositoryModel>> getFileRepositoryDetails() async {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.query(
@@ -101,6 +104,4 @@ class DatabaseHelper {
 //
 //   return result.map((row) => LeadsModel.fromMap(row)).toList();
 // }
-
-
 }

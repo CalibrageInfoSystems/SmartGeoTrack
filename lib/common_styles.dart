@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CommonStyles {
   // colors
@@ -23,8 +24,8 @@ class CommonStyles {
   static const statusRedBg = Color(0xFFffdedf);
   static const statusRedText = Color.fromARGB(255, 236, 62, 68);
   static const startColor = Color(0xFF59ca6b);
-static const dotColor = Color(0xFFEE3618);
- // background:border: 1px solid #EE3618;;
+  static const dotColor = Color(0xFFEE3618);
+  // background:border: 1px solid #EE3618;;
 
   static const blackColor = Colors.black;
   static const blackColorShade = Color(0xFF5f5f5f);
@@ -66,6 +67,10 @@ static const dotColor = Color(0xFFEE3618);
       fontSize: 16,
       fontWeight: FontWeight.w500,
       color: CommonStyles.blackColor);
+  static const txStyF16CpFF5 = TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      color: CommonStyles.primaryTextColor);
 
   static const txStyF14CwFF5 = TextStyle(
       fontSize: 14,
@@ -389,6 +394,26 @@ static const dotColor = Color(0xFFEE3618);
           ),
         );
       },
+    );
+  }
+
+  static Widget rectangularShapeShimmerEffect() {
+    return ListView.separated(
+      itemCount: 4,
+      itemBuilder: (context, index) => Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
+        child: Container(
+          height: 100,
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+      separatorBuilder: (context, index) => const SizedBox(height: 10),
     );
   }
 

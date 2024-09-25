@@ -1,31 +1,17 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import 'package:smartgetrack/Common/custom_textfield.dart';
-import 'package:smartgetrack/Model/LeadsModel.dart';
-import 'Database/DataAccessHandler.dart';
-import 'Database/Palm3FoilDatabase.dart';
-import 'NewPassword.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
 import 'package:smartgetrack/Common/custom_lead_template.dart';
+import 'package:smartgetrack/Common/custom_textfield.dart';
 import 'package:smartgetrack/common_styles.dart';
 
-class ViewLeads extends StatefulWidget {
-  const ViewLeads({super.key});
+class Test extends StatefulWidget {
+  const Test({super.key});
 
   @override
-  State<ViewLeads> createState() => _ViewLeadsState();
+  State<Test> createState() => _TestState();
 }
 
-class _ViewLeadsState extends State<ViewLeads> {
-  final List<Map<String, dynamic>> _leads = [];
-  Palm3FoilDatabase? palm3FoilDatabase;
-
+class _TestState extends State<Test> {
   DateTime? selectedFromDate;
   DateTime? selectedToDate;
   String? displayFromDate;
@@ -34,108 +20,45 @@ class _ViewLeadsState extends State<ViewLeads> {
   TextEditingController fromDateController = TextEditingController();
   TextEditingController toDateController = TextEditingController();
 
-  late Future<List<Lead>> futureLeads;
-
-  @override
-  void initState() {
-    super.initState();
-    futureLeads = loadLeads();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    fromDateController.dispose();
-    toDateController.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: CommonStyles.listOddColor,
-          leading: IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back),
-          ),
-          scrolledUnderElevation: 0,
-          title: const Text(
-            'View Lead',
-            //  style: CommonStyles.txStyF14CbFF5,
-          ),
-          actions: [
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.more_vert_rounded),
-            ),
-          ],
+      appBar: AppBar(
+        backgroundColor: CommonStyles.listOddColor,
+        leading: const Icon(Icons.arrow_back),
+        scrolledUnderElevation: 0,
+        title: const Text(
+          'View Lead',
+          //  style: CommonStyles.txStyF14CbFF5,
         ),
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.more_vert_rounded),
+          ),
+        ],
+      ),
+      body: Scaffold(
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: filterAndSearch(),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: FutureBuilder(
-                  future: futureLeads,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CommonStyles.rectangularShapeShimmerEffect();
-                    } else if (snapshot.hasError) {
-                      // return Text('Error: ${snapshot.error}');
-                      return Text(
-                          snapshot.error
-                              .toString()
-                              .replaceFirst('Exception: ', ''),
-                          style: CommonStyles.txStyF16CpFF5);
-                    } else if (!snapshot.hasData) {
-                      return const Text('No Leads Found',
-                          style: CommonStyles.txStyF16CpFF5);
-                    }
-                    final leads = snapshot.data as List<Lead>;
-
-                    return ListView.separated(
-                      itemCount: leads.length,
-                      itemBuilder: (context, index) {
-                        final lead = leads[index];
-
-                        return CustomLeadTemplate(index: index, lead: lead);
-                      },
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 10),
-                    );
-                  },
-                ),
+            filterAndSearch(),
+            /* Expanded(
+              child: ListView.separated(
+                itemCount: 22,
+                itemBuilder: (context, index) {
+                  return CustomLeadTemplate(
+                    index: index,
+                    lead: null,
+                  );
+                },
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 10),
               ),
-            ),
+            ), */
           ],
-        ));
-  }
-
-  Future<List<Lead>> loadLeads() async {
-    try {
-      final dataAccessHandler =
-          Provider.of<DataAccessHandler>(context, listen: false);
-      List<dynamic> leads = await dataAccessHandler.getleads();
-      print('leads: ${jsonEncode(leads)}');
-      return leads.map((item) => Lead.fromJson(item)).toList();
-    } catch (e) {
-      throw Exception('catch: ${e.toString()}');
-    }
-  }
-
-  Future<List<Lead>> getTodayLeads(String today) async {
-    try {
-      final dataAccessHandler =
-          Provider.of<DataAccessHandler>(context, listen: false);
-      List<dynamic> leads = await dataAccessHandler.getTodayLeads(today);
-      return leads.map((item) => Lead.fromJson(item)).toList();
-    } catch (e) {
-      throw Exception('catch: ${e.toString()}');
-    }
+        ),
+      ),
+    );
   }
 
   Container filterAndSearch() {
@@ -248,7 +171,6 @@ class _ViewLeadsState extends State<ViewLeads> {
                       lastDate: currentDate,
                       initialDate: selectedFromDate);
                 },
-                onSubmit: (value) {},
               ),
             );
           },
@@ -315,7 +237,6 @@ class Filter extends StatefulWidget {
   final List<String> types;
   final void Function()? onToDate;
   final void Function()? onFromDate;
-  final void Function(int) onSubmit;
   final TextEditingController? fromDateController;
   final TextEditingController? toDateController;
 
@@ -331,7 +252,6 @@ class Filter extends StatefulWidget {
     this.toDateController,
     this.onSelectedDateChip,
     this.onSelectedTypeChip,
-    required this.onSubmit,
   });
 
   @override
@@ -339,9 +259,6 @@ class Filter extends StatefulWidget {
 }
 
 class _FilterState extends State<Filter> {
-  int selectedDateIndex = 0;
-  int? selectedTypeIndex;
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -399,7 +316,6 @@ class _FilterState extends State<Filter> {
                               if (widget.onSelectedDateChip != null) {
                                 widget
                                     .onSelectedDateChip!(selected ? index : -1);
-                                selectedDateIndex = index;
                               }
                             },
                           );
@@ -433,7 +349,6 @@ class _FilterState extends State<Filter> {
                               if (widget.onSelectedTypeChip != null) {
                                 widget
                                     .onSelectedTypeChip!(selected ? index : -1);
-                                selectedTypeIndex = index;
                               }
                             },
                           );
@@ -463,9 +378,7 @@ class _FilterState extends State<Filter> {
                   children: [
                     Expanded(
                       child: customBtn(
-                        onPressed: () {
-                          widget.onSubmit(selectedDateIndex);
-                        },
+                        onPressed: () {},
                         child: const Text(
                           'Submit',
                           style: CommonStyles.txStyF14CwFF5,
@@ -508,5 +421,3 @@ class _FilterState extends State<Filter> {
     );
   }
 }
-
-class FilterModel {}

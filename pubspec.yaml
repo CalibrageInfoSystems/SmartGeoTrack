@@ -51,6 +51,7 @@ dependencies:
   persistent_bottom_nav_bar_v2: ^5.3.0
   provider: ^6.1.2
   shared_preferences: ^2.2.3
+  shimmer: ^3.0.0
   sqflite: ^2.3.3+1
 
 dev_dependencies:
@@ -88,29 +89,6 @@ flutter:
     - assets/header_bg_image.jpg
     - assets/bg_image1.jpg
     - assets/bg_image2.jpg
-
     - assets/add_a_photo.svg
     - assets/fileuploadicon.svg
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/assets-and-images/#resolution-aware
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/assets-and-images/#from-packages
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/custom-fonts/#from-packages
+    - assets/right_arrow.png

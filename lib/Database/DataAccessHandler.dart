@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
@@ -17,8 +18,9 @@ class DataAccessHandler with ChangeNotifier {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = Directory('/storage/emulated/0');
-    final String folderName = 'SmartGeoTrack';
-    Directory customDirectory = Directory('${documentsDirectory.path}/$folderName');
+    const String folderName = 'SmartGeoTrack';
+    Directory customDirectory =
+        Directory('${documentsDirectory.path}/$folderName');
 
     if (!await customDirectory.exists()) {
       await customDirectory.create(recursive: true);
@@ -85,7 +87,8 @@ class DataAccessHandler with ChangeNotifier {
   Future<void> _copyDatabase(String path) async {
     try {
       ByteData data = await rootBundle.load('assets/smartgeotrack.sqlite');
-      List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      List<int> bytes =
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       await File(path).writeAsBytes(bytes, flush: true);
       print('Database copied to $path');
     } catch (e) {
@@ -104,7 +107,8 @@ class DataAccessHandler with ChangeNotifier {
     }
   }
 
-  Future<void> insertData(String tableName, List<Map<String, dynamic>> data) async {
+  Future<void> insertData(
+      String tableName, List<Map<String, dynamic>> data) async {
     try {
       final db = await database;
       for (var item in data) {
@@ -137,7 +141,8 @@ class DataAccessHandler with ChangeNotifier {
   Future<int?> getOnlyOneIntValueFromDb(String query) async {
     debugPrint("@@@ query $query");
     try {
-      List<Map<String, dynamic>> result = await (await database).rawQuery(query);
+      List<Map<String, dynamic>> result =
+          await (await database).rawQuery(query);
       if (result.isNotEmpty) {
         return result.first.values.first as int;
       }
@@ -148,7 +153,8 @@ class DataAccessHandler with ChangeNotifier {
     }
   }
 
-  Future<String?> getOnlyOneStringValueFromDb(String query, List<dynamic> params) async {
+  Future<String?> getOnlyOneStringValueFromDb(
+      String query, List<dynamic> params) async {
     List<Map<String, dynamic>> result;
     try {
       final db = await database;
@@ -177,9 +183,18 @@ class DataAccessHandler with ChangeNotifier {
     print('Executing Query: $query');
     List<Map<String, dynamic>> results = await db.query('Leads');
     print('Query Results:');
-    results.forEach((row) {
+    for (var row in results) {
       print(row);
-    });
+    }
+    return results;
+  }
+
+  Future<List<Map<String, dynamic>>> getTodayLeads(String today) async {
+    final db = await database;
+    String query = 'SELECT * FROM Leads WHERE DATE(CreatedDate) = $today';
+    List<Map<String, dynamic>> results = await db.query(query);
+    print('xxx: $query');
+    print('xxx: ${jsonEncode(results)}');
     return results;
   }
 }
