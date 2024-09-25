@@ -685,7 +685,8 @@ class _AddLeadScreenState extends State<AddLeads> with SingleTickerProviderState
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Lead Data Inserted Successfully!')),
           );
-        } catch (e) {
+        }
+        catch (e) {
           // Handle database insertion failure
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to insert lead data.')),
