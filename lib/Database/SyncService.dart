@@ -13,9 +13,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // other imports as necessary
 
-
 class SyncService {
-  static const String apiUrl = "http://182.18.157.215/SmartGeoTrack/API/SyncTransactions/SyncTransactions";
+  static const String apiUrl =
+      "http://182.18.157.215/SmartGeoTrack/API/SyncTransactions/SyncTransactions";
   static const String geoBoundariesTable = 'geoBoundaries';
   static const String leadsTable = 'leads';
   static const String fileRepositoryTable = 'FileRepositorys';
@@ -23,12 +23,18 @@ class SyncService {
   final DataAccessHandler dataAccessHandler; // Add DataAccessHandler reference
 
   Map<String, List<Map<String, dynamic>>> refreshTransactionsDataMap = {};
-  List<String> refreshTableNamesList = [geoBoundariesTable, leadsTable, fileRepositoryTable];
+  List<String> refreshTableNamesList = [
+    geoBoundariesTable,
+    leadsTable,
+    fileRepositoryTable
+  ];
   int transactionsCheck = 0;
 
-  SyncService(this.dataAccessHandler); // Constructor to inject DataAccessHandler
+  SyncService(
+      this.dataAccessHandler); // Constructor to inject DataAccessHandler
 
-  Future<List<T>> _fetchData<T>(Future<List<T>> Function() fetchFunction, String modelName) async {
+  Future<List<T>> _fetchData<T>(
+      Future<List<T>> Function() fetchFunction, String modelName) async {
     List<T> dataList = await fetchFunction();
     if (dataList.isEmpty) {
       print('$modelName list is empty.');
@@ -37,33 +43,40 @@ class SyncService {
     }
     return dataList;
   }
+
   Future<void> getRefreshSyncTransDataMap() async {
     // Fetching geoBoundaries
-    List<GeoBoundariesModel> geoBoundariesList = await _fetchData(DatabaseHelper.instance.getGeoBoundariesDetails, 'GeoBoundaries');
+    List<GeoBoundariesModel> geoBoundariesList = await _fetchData(
+        DatabaseHelper.instance.getGeoBoundariesDetails, 'GeoBoundaries');
 
     // Check if geoBoundariesList is not empty before adding to the map
     if (geoBoundariesList.isNotEmpty) {
-      refreshTransactionsDataMap[geoBoundariesTable] = geoBoundariesList.map((model) => model.toMap()).toList();
+      refreshTransactionsDataMap[geoBoundariesTable] =
+          geoBoundariesList.map((model) => model.toMap()).toList();
     } else {
       print('GeoBoundaries list is empty, skipping to next.');
     }
 
     // Fetching leads
-    List<LeadsModel> leadsList = await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
+    List<Lead> leadsList =
+        await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
 
     // Check if leadsList is not empty before adding to the map
     if (leadsList.isNotEmpty) {
-      refreshTransactionsDataMap[leadsTable] = leadsList.map((model) => model.toMap()).toList();
+      refreshTransactionsDataMap[leadsTable] =
+          leadsList.map((model) => model.toJson()).toList();
     } else {
       print('Leads list is empty, skipping to next.');
     }
 
     // Fetching fileRepoList
-    List<FileRepositoryModel> fileRepoList = await _fetchData(DatabaseHelper.instance.getFileRepositoryDetails, 'File Repository');
+    List<FileRepositoryModel> fileRepoList = await _fetchData(
+        DatabaseHelper.instance.getFileRepositoryDetails, 'File Repository');
 
     // Check if fileRepoList is not empty before adding to the map
     if (fileRepoList.isNotEmpty) {
-      refreshTransactionsDataMap[fileRepositoryTable] = fileRepoList.map((model) => model.toJson()).toList();
+      refreshTransactionsDataMap[fileRepositoryTable] =
+          fileRepoList.map((model) => model.toJson()).toList();
     } else {
       print('File Repository list is empty.');
     }
@@ -95,13 +108,15 @@ class SyncService {
   Future<void> performRefreshTransactionsSync(BuildContext context) async {
     await getRefreshSyncTransDataMap();
     if (refreshTransactionsDataMap.isNotEmpty) {
-      await _syncTransactionsDataToCloud(context, refreshTableNamesList[transactionsCheck]);
+      await _syncTransactionsDataToCloud(
+          context, refreshTableNamesList[transactionsCheck]);
     } else {
       _showSnackBar(context, "No transactions data to sync.");
     }
   }
 
-  Future<void> _syncTransactionsDataToCloud(BuildContext context, String tableName) async {
+  Future<void> _syncTransactionsDataToCloud(
+      BuildContext context, String tableName) async {
     List tableData = refreshTransactionsDataMap[tableName] ?? [];
     print('tableData for ${jsonEncode({tableName: tableData})}');
 
@@ -120,13 +135,15 @@ class SyncService {
 
           transactionsCheck++;
           if (transactionsCheck < refreshTableNamesList.length) {
-            await _syncTransactionsDataToCloud(context, refreshTableNamesList[transactionsCheck]);
+            await _syncTransactionsDataToCloud(
+                context, refreshTableNamesList[transactionsCheck]);
           } else {
             _showSnackBar(context, "Sync is successful!");
           }
         } else {
           print('Error response: ${response.body}');
-          _showSnackBar(context, "Sync failed for $tableName: ${response.body}");
+          _showSnackBar(
+              context, "Sync failed for $tableName: ${response.body}");
         }
       } catch (e) {
         _showSnackBar(context, "Error syncing data for $tableName: $e");
@@ -134,7 +151,8 @@ class SyncService {
     } else {
       transactionsCheck++;
       if (transactionsCheck < refreshTableNamesList.length) {
-        await _syncTransactionsDataToCloud(context, refreshTableNamesList[transactionsCheck]);
+        await _syncTransactionsDataToCloud(
+            context, refreshTableNamesList[transactionsCheck]);
       } else {
         _showSnackBar(context, "Sync is successful!");
       }
@@ -148,9 +166,12 @@ class SyncService {
   }
 
   Future<void> _updateServerUpdatedStatus(String tableName) async {
-    print("Attempting to update ServerUpdatedStatus for table: $tableName"); // Debug statement
-    final db = await dataAccessHandler.database; // Accessing database from DataAccessHandler
-    String query = "UPDATE $tableName SET ServerUpdatedStatus = '1' WHERE ServerUpdatedStatus = '0'";
+    print(
+        "Attempting to update ServerUpdatedStatus for table: $tableName"); // Debug statement
+    final db = await dataAccessHandler
+        .database; // Accessing database from DataAccessHandler
+    String query =
+        "UPDATE $tableName SET ServerUpdatedStatus = '1' WHERE ServerUpdatedStatus = '0'";
 
     try {
       await db.rawUpdate(query);
@@ -160,6 +181,3 @@ class SyncService {
     }
   }
 }
-
-
-
