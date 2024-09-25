@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -13,6 +14,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smartgetrack/Common/Constants.dart';
+import 'package:smartgetrack/LoginScreen.dart';
 import 'package:smartgetrack/common_styles.dart';
 
 import 'AddLeads.dart';
@@ -216,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => ViewLeads(),
+                                        builder: (context) => const ViewLeads(),
                                       ),
                                     );
                                   },
@@ -521,6 +524,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  List<String> menuItems = [
+    'Profile',
+    'Settings',
+    'Logout',
+  ];
+  String? selectedMenu;
+
+  Widget displayPopupMenu() {
+    return PopupMenuButton<String>(
+      // key: _menuKey,
+      onSelected: (String value) {
+        if (value == 'Logout') {
+          showLogoutDialog();
+        } else {
+          print('Selected: $value');
+        }
+      },
+      itemBuilder: (BuildContext context) {
+        return menuItems.map((String choice) {
+          return PopupMenuItem<String>(
+            value: choice,
+            child: Text(choice),
+          );
+        }).toList();
+      },
+      offset: const Offset(-5, 22),
+    );
+  }
+
   Widget customAppBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -543,7 +575,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontWeight: FontWeight.w900, letterSpacing: 3, fontSize: 22),
           ),
           const Spacer(),
-          const Icon(Icons.more_vert_rounded),
+          displayPopupMenu()
+          /* IconButton(
+            icon: const Icon(Icons.more_vert_rounded),
+            onPressed: () {
+              displayPopupMenu();
+            },
+          ), */
         ],
       ),
     );
@@ -627,6 +665,37 @@ class _HomeScreenState extends State<HomeScreen> {
     String email = prefs.getString('email') ?? '';
     String mobileNumber = prefs.getString('mobileNumber') ?? '';
     String roleName = prefs.getString('roleName') ?? '';
+  }
+
+  void showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you wanna logout?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                prefs.setBool(Constants.isLogin, false);
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                    (Route<dynamic> route) => false);
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
