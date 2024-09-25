@@ -6,30 +6,32 @@ import 'Forgotpassword.dart';
 import 'NewPassword.dart';
 import 'common_styles.dart';
 import 'package:http/http.dart' as http;
-class verifyotp extends StatefulWidget {
 
+class verifyotp extends StatefulWidget {
   final String username;
 
-  verifyotp({ required this.username});
+  const verifyotp({super.key, required this.username});
 
   @override
   _verifyotpScreenState createState() => _verifyotpScreenState();
 }
 
-class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderStateMixin {
+class _verifyotpScreenState extends State<verifyotp>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _otpController = TextEditingController();
-  @override
-  void initState() {
-    super.initState();
 
-
-  }
-
-  @override
-  void dispose() {
-
-    super.dispose();
+  void showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Dialog(
+          backgroundColor: Colors.transparent,
+          child: Center(child: CircularProgressIndicator()),
+        );
+      },
+    );
   }
 
   @override
@@ -40,9 +42,10 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
           // Background with map-like design
           Positioned.fill(
             child: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage("assets/Splash_bg.png"), // Map background image
+                  image: AssetImage(
+                      "assets/Splash_bg.png"), // Map background image
                   fit: BoxFit.fill,
                 ),
               ),
@@ -58,19 +61,21 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
               decoration: BoxDecoration(
                 color: CommonStyles.whiteColor,
                 shape: BoxShape.circle,
-                border:  Border.all( // Add border property here
+                border: Border.all(
+                  // Add border property here
                   color: CommonStyles.primaryTextColor, // Red border color
                   width: 2.0, // Border width
                 ),
               ),
-
               child: Padding(
-                padding: const EdgeInsets.only(left: 50.0), // Add padding to the left
+                padding: const EdgeInsets.only(
+                    left: 50.0), // Add padding to the left
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center, // Align text to start (left)
+                  crossAxisAlignment:
+                      CrossAxisAlignment.center, // Align text to start (left)
                   children: [
-                    SizedBox(height: 150),
+                    const SizedBox(height: 150),
                     // App Logo
                     Image.asset(
                       'assets/login_App_logo.png', // Replace with your actual logo path
@@ -88,14 +93,10 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
                     // ),
                     //                   ),),
                   ],
-
                 ),
               ),
             ),
-
           ),
-
-
 
           // Top-right circular shape (Blue)
           Positioned(
@@ -104,7 +105,7 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
             child: Container(
               width: MediaQuery.of(context).size.width,
               height: 350,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: CommonStyles.blueColor,
                 shape: BoxShape.circle,
               ),
@@ -117,7 +118,7 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
             child: Container(
               width: MediaQuery.of(context).size.width * 2,
               height: 400,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: CommonStyles.blueColor,
                 shape: BoxShape.circle,
               ),
@@ -130,7 +131,7 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
             child: Container(
               width: MediaQuery.of(context).size.width / 1.2,
               height: 450,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: CommonStyles.primaryTextColor,
                 shape: BoxShape.circle,
               ),
@@ -138,9 +139,9 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
           ),
 
           Positioned(
-            top: MediaQuery.of(context).size.height / 2.5 - 40 ,
+            top: MediaQuery.of(context).size.height / 2.5 - 40,
             left: 20,
-            child: Row(
+            child: const Row(
               children: [
                 Icon(
                   Icons.location_pin,
@@ -164,10 +165,10 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
             left: 30,
             right: 30,
             child: Container(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.6),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(1),
                   topRight: Radius.circular(20),
                   bottomLeft: Radius.circular(20),
@@ -181,7 +182,7 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   // OTP TextField
                   TextFormField(
                     controller: _otpController,
@@ -191,7 +192,8 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 10),
                     ),
                     keyboardType: TextInputType.number,
                     maxLength: 6,
@@ -206,16 +208,16 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
                       return null;
                     },
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   // Resend OTP Button
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
                         // Implement resend OTP functionality here
-                     resendotpmethod();
+                        resendotpmethod();
                       },
-                      child: Text(
+                      child: const Text(
                         "Resend OTP?",
                         style: TextStyle(color: CommonStyles.blueheader),
                       ),
@@ -234,13 +236,13 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
                         // }
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 10),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         backgroundColor: CommonStyles.buttonbg,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
@@ -262,9 +264,12 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
       ),
     );
   }
+
   void _validateOtp() async {
+    showLoadingDialog(context);
     String otp = _otpController.text;
-    var url = Uri.parse('http://182.18.157.215/SmartGeoTrack/API/Login/ValidOTP');
+    var url =
+        Uri.parse('http://182.18.157.215/SmartGeoTrack/API/Login/ValidOTP');
 
     // Prepare the request body
     var body = json.encode({
@@ -278,7 +283,7 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
       headers: {"Content-Type": "application/json"},
       body: body,
     );
-
+    Navigator.of(context).pop();
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
 
@@ -312,49 +317,43 @@ class _verifyotpScreenState extends State<verifyotp> with SingleTickerProviderSt
     }
   }
 
-
-
   void resendotpmethod() async {
+    var url =
+        Uri.parse('http://182.18.157.215/SmartGeoTrack/API/Login/GetUserOTP');
 
-      var url = Uri.parse('http://182.18.157.215/SmartGeoTrack/API/Login/GetUserOTP');
+    // Prepare the request body
+    var body = json.encode({
+      "userName": widget.username,
+    });
 
-      // Prepare the request body
-      var body = json.encode({"userName":  widget.username,});
+    // Make the POST request
+    var response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: body,
+    );
 
-      // Make the POST request
-      var response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: body,
-      );
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
 
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-
-        // Check if API was successful
-        if (data['isSuccess']) {
-          // No need to access listResult as it is empty in this case
-          // Just navigate to the OTP screen directly
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Otp sent to your Email')),
-          );
-        } else {
-          // Show error message if API fails
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['endUserMessage'] ?? 'Invalid username')),
-          );
-        }
-      } else {
-        // Handle error when API call fails
+      // Check if API was successful
+      if (data['isSuccess']) {
+        // No need to access listResult as it is empty in this case
+        // Just navigate to the OTP screen directly
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('API Error: ${response.statusCode}')),
+          const SnackBar(content: Text('Otp sent to your Email')),
+        );
+      } else {
+        // Show error message if API fails
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['endUserMessage'] ?? 'Invalid username')),
         );
       }
+    } else {
+      // Handle error when API call fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('API Error: ${response.statusCode}')),
+      );
     }
   }
-
-
-
-
-
-
+}

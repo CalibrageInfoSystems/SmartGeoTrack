@@ -6,33 +6,28 @@ import 'PasswordChangedScreen.dart';
 import 'common_styles.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
 class NewPassword extends StatefulWidget {
   final int id;
   final String username;
 
-  NewPassword({required this.id, required this.username});
+  const NewPassword({super.key, required this.id, required this.username});
 
   @override
   _NewPasswordScreenState createState() => _NewPasswordScreenState();
 }
 
-class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProviderStateMixin {
+class _NewPasswordScreenState extends State<NewPassword>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  TextEditingController _newPasswordController = TextEditingController();
-  TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isObscure = true;
 
   @override
   void initState() {
     super.initState();
-
-
-  }
-
-  @override
-  void dispose() {
-
-    super.dispose();
   }
 
   @override
@@ -43,9 +38,10 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
           // Background with map-like design
           Positioned.fill(
             child: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage("assets/Splash_bg.png"), // Map background image
+                  image: AssetImage(
+                      "assets/Splash_bg.png"), // Map background image
                   fit: BoxFit.fill,
                 ),
               ),
@@ -61,19 +57,21 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
               decoration: BoxDecoration(
                 color: CommonStyles.whiteColor,
                 shape: BoxShape.circle,
-                border:  Border.all( // Add border property here
+                border: Border.all(
+                  // Add border property here
                   color: CommonStyles.primaryTextColor, // Red border color
                   width: 2.0, // Border width
                 ),
               ),
-
               child: Padding(
-                padding: const EdgeInsets.only(left: 50.0), // Add padding to the left
+                padding: const EdgeInsets.only(
+                    left: 50.0), // Add padding to the left
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center, // Align text to start (left)
+                  crossAxisAlignment:
+                      CrossAxisAlignment.center, // Align text to start (left)
                   children: [
-                    SizedBox(height: 150),
+                    const SizedBox(height: 150),
                     // App Logo
                     SvgPicture.asset(
                       "assets/sgt_v4.svg", // Replace with your actual logo path
@@ -96,14 +94,10 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
                     // ),
                     //                   ),),
                   ],
-
                 ),
               ),
             ),
-
           ),
-
-
 
           // Top-right circular shape (Blue)
           Positioned(
@@ -112,7 +106,7 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
             child: Container(
               width: MediaQuery.of(context).size.width,
               height: 350,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: CommonStyles.blueColor,
                 shape: BoxShape.circle,
               ),
@@ -125,7 +119,7 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
             child: Container(
               width: MediaQuery.of(context).size.width * 2,
               height: 400,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: CommonStyles.blueColor,
                 shape: BoxShape.circle,
               ),
@@ -138,7 +132,7 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
             child: Container(
               width: MediaQuery.of(context).size.width / 1.2,
               height: 450,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: CommonStyles.primaryTextColor,
                 shape: BoxShape.circle,
               ),
@@ -146,9 +140,9 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
           ),
 
           Positioned(
-            top: MediaQuery.of(context).size.height / 2.5 - 40 ,
+            top: MediaQuery.of(context).size.height / 2.5 - 40,
             left: 20,
-            child: Row(
+            child: const Row(
               children: [
                 Icon(
                   Icons.location_pin,
@@ -172,10 +166,10 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
             left: 30,
             right: 30,
             child: Container(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.6),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(1),
                   topRight: Radius.circular(20),
                   bottomLeft: Radius.circular(20),
@@ -183,76 +177,83 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
                 ),
                 border: Border.all(color: Colors.white, width: 1),
               ),
-              child:
-              Form(
+              child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
                     // New Password TextField
-    TextFormField(
-    controller: _newPasswordController,
-    obscureText: _isObscure, // Toggle between true and false
-    decoration: InputDecoration(
-    labelText: "New Password *",
-    hintText: "Enter New Password ",
-    border: OutlineInputBorder(
-    borderRadius: BorderRadius.circular(10),
-    ),
-    contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-    suffixIcon: IconButton(
-    icon: Icon(
-    _isObscure ? Icons.visibility_off : Icons.visibility, // Toggle icon
-    ),
-    onPressed: () {
-    setState(() {
-    _isObscure = !_isObscure; // Toggle password visibility
-    });
-    },
-    ),
-    ),
-    validator: (value) {
-    if (value == null || value.isEmpty) {
-    return 'Please Enter New Password';
-    }
-    return null;
-    },
-    ),
-                    SizedBox(height: 10),
+                    TextFormField(
+                      controller: _newPasswordController,
+                      obscureText: _isObscure, // Toggle between true and false
+                      decoration: InputDecoration(
+                        labelText: "New Password *",
+                        hintText: "Enter New Password ",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 10),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isObscure
+                                ? Icons.visibility_off
+                                : Icons.visibility, // Toggle icon
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isObscure =
+                                  !_isObscure; // Toggle password visibility
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please Enter New Password';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 10),
                     // Confirm Password TextField
                     TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: _isObscure, // Toggle between true and false
-    decoration: InputDecoration(
-    labelText: "Confirm Password *",
-    hintText: "Enter Confirm Password ",
-    border: OutlineInputBorder(
-    borderRadius: BorderRadius.circular(10),
-    ),
-    contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-    suffixIcon: IconButton(
-    icon: Icon(
-    _isObscure ? Icons.visibility_off : Icons.visibility, // Toggle icon
-    ),
-    onPressed: () {
-    setState(() {
-    _isObscure = !_isObscure; // Toggle password visibility
-    });
-    },
-    ),
-    ),
-    validator: (value) {
-    if (value == null || value.isEmpty) {
-    return 'Please Enter Confirm Password';
-    }
-    if (value != _newPasswordController.text) {
-    return 'Passwords do not match';
-    }
-    return null;
-    },
-    ),
-                    SizedBox(height: 30),
+                      controller: _confirmPasswordController,
+                      obscureText: _isObscure, // Toggle between true and false
+                      decoration: InputDecoration(
+                        labelText: "Confirm Password *",
+                        hintText: "Enter Confirm Password ",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 10),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isObscure
+                                ? Icons.visibility_off
+                                : Icons.visibility, // Toggle icon
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isObscure =
+                                  !_isObscure; // Toggle password visibility
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please Enter Confirm Password';
+                        }
+                        if (value != _newPasswordController.text) {
+                          return 'Passwords do not match';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 30),
                     // Submit Button
                     SizedBox(
                       width: double.infinity,
@@ -260,20 +261,21 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
                       child: ElevatedButton(
                         onPressed: _resetPassword,
                         style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           backgroundColor: CommonStyles.buttonbg,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             SizedBox(width: 10),
                             Text(
                               "Submit",
-                              style: TextStyle(fontSize: 18, color: Colors.white),
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.white),
                             ),
                           ],
                         ),
@@ -284,8 +286,6 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
               ),
             ),
           ),
-
-
         ],
       ),
     );
@@ -294,7 +294,7 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
   // Function to handle password reset
   void _resetPassword() async {
     if (_formKey.currentState!.validate()) {
-      // Create the API object
+      showLoadingDialog(context);
       var requestBody = {
         "id": widget.id,
         "password": _newPasswordController.text,
@@ -302,7 +302,8 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
       };
 
       // API URL
-      var url = Uri.parse('http://182.18.157.215/SmartGeoTrack/API/User/ResetPassWord');
+      var url = Uri.parse(
+          'http://182.18.157.215/SmartGeoTrack/API/User/ResetPassWord');
 
       // Send POST request
       var response = await http.post(
@@ -310,7 +311,7 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
         headers: {"Content-Type": "application/json"},
         body: json.encode(requestBody),
       );
-
+      Navigator.of(context).pop();
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
 
@@ -323,7 +324,9 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
         } else {
           // Show error message if API fails
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['endUserMessage'] ?? 'Error resetting password')),
+            SnackBar(
+                content:
+                    Text(data['endUserMessage'] ?? 'Error resetting password')),
           );
         }
       } else {
@@ -335,4 +338,16 @@ class _NewPasswordScreenState extends State<NewPassword> with SingleTickerProvid
     }
   }
 
+  void showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Dialog(
+          backgroundColor: Colors.transparent,
+          child: Center(child: CircularProgressIndicator()),
+        );
+      },
+    );
+  }
 }
