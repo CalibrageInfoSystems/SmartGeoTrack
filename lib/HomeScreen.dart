@@ -16,7 +16,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartgetrack/common_styles.dart';
 
 import 'AddLeads.dart';
+import 'Database/DataAccessHandler.dart';
 import 'Database/Palm3FoilDatabase.dart';
+import 'Database/SyncService.dart';
 import 'ViewLeads.dart';
 import 'location_service/logic/location_controller/location_controller_cubit.dart';
 import 'location_service/notification/notification.dart';
@@ -241,6 +243,28 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: customBtn(
+                            onPressed: () async {
+                              final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
+                              bool isConnected = await CommonStyles.checkInternetConnectivity();
+                              if (isConnected) {
+                                // Call your login function here
+                                final syncService = SyncService(dataAccessHandler);
+                                syncService.performRefreshTransactionsSync(context);
+
+                              } else {
+                                Fluttertoast.showToast(
+                                    msg: "Please Check Your Internet Connection.",
+                                    toastLength: Toast.LENGTH_SHORT,
+                                    gravity: ToastGravity.CENTER,
+                                    timeInSecForIosWeb: 1,
+                                    backgroundColor: Colors.red,
+                                    textColor: Colors.white,
+                                    fontSize: 16.0
+                                );
+                                print("Please check your internet connection.");
+                                //showDialogMessage(context, "Please check your internet connection.");
+                              }
+                            },
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [

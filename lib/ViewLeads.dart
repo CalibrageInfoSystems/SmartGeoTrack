@@ -37,7 +37,8 @@ class _ViewLeadsState extends State<ViewLeads> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:   AppBar(
+      appBar:
+      AppBar(
         backgroundColor: Colors.lightBlue[50], // Background color
         elevation: 0, // Remove the shadow under the AppBar
         leading: IconButton(

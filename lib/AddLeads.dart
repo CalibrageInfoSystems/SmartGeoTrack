@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -645,11 +646,27 @@ class _AddLeadScreenState extends State<AddLeads> with SingleTickerProviderState
             // Insert into FileRepositorys table
             await dataAccessHandler.insertFileRepository(fileData);
           }
+          bool isConnected = await CommonStyles.checkInternetConnectivity();
+          if (isConnected) {
+            // Call your login function here
+            final syncService = SyncService(dataAccessHandler);
+            syncService.performRefreshTransactionsSync(context);
 
+          } else {
+            Fluttertoast.showToast(
+                msg: "Please Check Your Internet Connection.",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 16.0
+            );
+            print("Please check your internet connection.");
+            //showDialogMessage(context, "Please check your internet connection.");
+          }
 
           // Trigger Sync for Leads and FileRepository //TODO
-          final syncService = SyncService(dataAccessHandler);
-          syncService.performRefreshTransactionsSync(context);
 
           Navigator.push(
             context,
