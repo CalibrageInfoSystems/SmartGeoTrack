@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
@@ -14,7 +16,7 @@ import 'Database/DataAccessHandler.dart';
 import 'Database/Palm3FoilDatabase.dart';
 import 'Database/SyncService.dart';
 import 'HomeScreen.dart';
-import 'NewPassword.dart';
+import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -68,21 +70,6 @@ class _AddLeadScreenState extends State<AddLeads> with SingleTickerProviderState
     }
   }
 
-  // void _pickFile() async {
-  //
-  //
-  //   FilePickerResult? result = await FilePicker.platform.pickFiles(
-  //     allowMultiple: true,
-  //     type: FileType.custom,
-  //     allowedExtensions: ['pdf', 'xls', 'xlsx'],
-  //   );
-  //
-  //   if (result != null) {
-  //     setState(() {
-  //       _files.addAll(result.files);
-  //     });
-  //   }
-  // }
 
   void _deleteFile(int index) {
     setState(() {
@@ -423,239 +410,66 @@ class _AddLeadScreenState extends State<AddLeads> with SingleTickerProviderState
                           ],
 
                           // Vertical Layout for Uploaded Files
-                          if (_files.isNotEmpty) ...[
-                            const SizedBox(height: 20),
-                            const Text('Uploaded Files:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                            SizedBox(height: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: _files.map((file) {
-                                final int index = _files.indexOf(file);
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: Stack(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.blue),
-                                          borderRadius: BorderRadius.circular(8),
-                                          color: Colors.grey[100],
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            const Icon(Icons.file_present, size: 30, color: Colors.blue),
-                                            SizedBox(width: 10),
-                                            Expanded(
-                                              child: Text(
-                                                file.name,
-                                                style: TextStyle(fontSize: 14, overflow: TextOverflow.ellipsis),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 10,
-                                        right: 10,
-                                        child: GestureDetector(
-                                          onTap: () => _deleteFile(index),
-                                          child: Container(
-                                            width: 24,
-                                            height: 24,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(Icons.close, color: Colors.red, size: 16),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
+                if (_files.isNotEmpty) ...[
+              const SizedBox(height: 20),
+          const Text('Uploaded Files:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          SizedBox(height: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: _files.map((file) {
+              final int index = _files.indexOf(file);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Stack(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.blue),
+                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.grey[100],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.file_present, size: 30, color: Colors.blue),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              file.name,
+                              style: TextStyle(fontSize: 14, overflow: TextOverflow.ellipsis),
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: GestureDetector(
+                        onTap: () => _deleteFile(index),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.close, color: Colors.red, size: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ]
 
-                    // Padding(
-                    //   padding: const EdgeInsets.all(5.0),
-                    //   child: Column(
-                    //     crossAxisAlignment: CrossAxisAlignment.center,
-                    //     children: [
-                    //       // Row for the Image and Document Upload Buttons
-                    //       Row(
-                    //         mainAxisAlignment: MainAxisAlignment.center,
-                    //         children: [
-                    //           // Image Upload Button with Dotted Border
-                    //           Expanded(
-                    //             child: GestureDetector(
-                    //               onTap: () {
-                    //                 mobileImagePicker(context);
-                    //               },
-                    //               child: DottedBorder(
-                    //                 color: Colors.orange,
-                    //                 strokeWidth: 2,
-                    //                 dashPattern: [6, 3],
-                    //                 borderType: BorderType.RRect,
-                    //                 radius: Radius.circular(10),
-                    //                 child: Container(
-                    //                   height: 120,
-                    //                   alignment: Alignment.center, // Center the content
-                    //                   child: Column(
-                    //                     mainAxisAlignment: MainAxisAlignment.center,
-                    //                     crossAxisAlignment: CrossAxisAlignment.center,
-                    //                     children: [
-                    //                       const Icon(Icons.add_photo_alternate, size: 50, color: Colors.orange),
-                    //                       const SizedBox(height: 8),
-                    //                       Text('Upload Image', style: TextStyle(fontSize: 14, color: Colors.black)),
-                    //                     ],
-                    //                   ),
-                    //                 ),
-                    //               ),
-                    //             ),
-                    //           ),
-                    //           SizedBox(width: 10), // Space between buttons
-                    //           // Document Upload Button with Dotted Border
-                    //           Expanded(
-                    //             child: GestureDetector(
-                    //               onTap: _pickFile,
-                    //               child: DottedBorder(
-                    //                 color: Colors.orange,
-                    //                 strokeWidth: 2,
-                    //                 dashPattern: [6, 3],
-                    //                 borderType: BorderType.RRect,
-                    //                 radius: Radius.circular(10),
-                    //                 child: Container(
-                    //                   height: 120,
-                    //                   alignment: Alignment.center, // Center the content
-                    //                   child: Column(
-                    //                     mainAxisAlignment: MainAxisAlignment.center,
-                    //                     crossAxisAlignment: CrossAxisAlignment.center,
-                    //                     children: [
-                    //                       const Icon(Icons.attach_file, size: 50, color: Colors.orange),
-                    //                       const SizedBox(height: 8),
-                    //                       Text('Upload Doc', style: TextStyle(fontSize: 14, color: Colors.black)),
-                    //                     ],
-                    //                   ),
-                    //                 ),
-                    //               ),
-                    //             ),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //
-                    //       // Space between buttons and uploaded items
-                    //       const SizedBox(height: 20),
-                    //
-                    //       // Horizontal Layout for Uploaded Images
-                    //       if (_images.isNotEmpty) ...[
-                    //         const Text('Uploaded Images:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    //         SizedBox(height: 10),
-                    //         Wrap(
-                    //           spacing: 8,
-                    //           children: _images.map((image) {
-                    //             final int index = _images.indexOf(image);
-                    //             return Stack(
-                    //               alignment: Alignment.center, // Center items within the Stack
-                    //               children: [
-                    //                 Container(
-                    //                   width: 100,
-                    //                   height: 100,
-                    //                   decoration: BoxDecoration(
-                    //                     borderRadius: BorderRadius.circular(8),
-                    //                     image: DecorationImage(
-                    //                       image: MemoryImage(image),
-                    //                       fit: BoxFit.cover,
-                    //                     ),
-                    //                   ),
-                    //                 ),
-                    //                 Positioned(
-                    //                   top: 0,
-                    //                   right: 0,
-                    //                   child: GestureDetector(
-                    //                     onTap: () => _deleteImage(index),
-                    //                     child: Container(
-                    //                       width: 24,
-                    //                       height: 24,
-                    //                       decoration: BoxDecoration(
-                    //                         color: Colors.red,
-                    //                         shape: BoxShape.circle,
-                    //                       ),
-                    //                       child: const Icon(Icons.close, color: Colors.white, size: 16),
-                    //                     ),
-                    //                   ),
-                    //                 ),
-                    //               ],
-                    //             );
-                    //           }).toList(),
-                    //         ),
-                    //       ],
-                    //
-                    //       // Vertical Layout for Uploaded Files
-                    //       if (_files.isNotEmpty) ...[
-                    //         const SizedBox(height: 20),
-                    //         const Text('Uploaded Files:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    //         SizedBox(height: 10),
-                    //         Column(
-                    //           crossAxisAlignment: CrossAxisAlignment.start,
-                    //           children: _files.map((file) {
-                    //             final int index = _files.indexOf(file);
-                    //             return Padding(
-                    //               padding: const EdgeInsets.only(bottom: 8.0),
-                    //               child: Stack(
-                    //                 children: [
-                    //                   Container(
-                    //                     padding: const EdgeInsets.all(8),
-                    //                     decoration: BoxDecoration(
-                    //                       border: Border.all(color: Colors.blue),
-                    //                       borderRadius: BorderRadius.circular(8),
-                    //                       color: Colors.grey[100],
-                    //                     ),
-                    //                     child: Row(
-                    //                       children: [
-                    //                         const Icon(Icons.file_present, size: 30, color: Colors.blue),
-                    //                         SizedBox(width: 10),
-                    //                         Expanded(
-                    //                           child: Text(
-                    //                             file.name,
-                    //                             style: TextStyle(fontSize: 14, overflow: TextOverflow.ellipsis),
-                    //                           ),
-                    //                         ),
-                    //                       ],
-                    //                     ),
-                    //                   ),
-                    //                   Positioned(
-                    //                     top: 0,
-                    //                     right: 0,
-                    //                     child: GestureDetector(
-                    //                       onTap: () => _deleteFile(index),
-                    //                       child: Container(
-                    //                         width: 24,
-                    //                         height: 24,
-                    //                         decoration: BoxDecoration(
-                    //                           color: Colors.red,
-                    //                           shape: BoxShape.circle,
-                    //                         ),
-                    //                         child: const Icon(Icons.close, color: Colors.white, size: 16),
-                    //                       ),
-                    //                     ),
-                    //                   ),
-                    //                 ],
-                    //               ),
-                    //             );
-                    //           }).toList(),
-                    //         ),
-                    //       ],
-                    //     ],
-                    //   ),
-                    // ),
+        ],
+                      ),
+                    ),
 
 
-                    // Submit Button
                     SizedBox(
                       width: double.infinity,
                       height: 45,
@@ -697,12 +511,6 @@ class _AddLeadScreenState extends State<AddLeads> with SingleTickerProviderState
       String? empCode = await fetchEmpCode(Username!, context);
 
       final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
-      // Get EmpCode from UserInfos table
-      // String empCodeQuery = 'SELECT EmpCode FROM UserInfos WHERE UserName = ?';
-      //
-      //
-      // // Fetch EmpCode from the database
-      // String? empCode = await dataAccessHandler.getOnlyOneStringValueFromDb(empCodeQuery, [Username]);
 
       print('empCode===$empCode');
 
@@ -710,19 +518,40 @@ class _AddLeadScreenState extends State<AddLeads> with SingleTickerProviderState
         print('Error: EmpCode not found.');
         return;
       }
-// Get the current date in DDMMYY format
+
       String formattedDate = getCurrentDateInDDMMYY();
 
-      // Get the max serial number from the Leads table
-      String maxNumQuery = 'SELECT MAX(CAST(SUBSTR(code, LENGTH(code) - 0, 1) AS INTEGER)) AS MaxNumber FROM Leads';
+// Correct SQL query to extract the full numeric part after the hyphen
+      String maxNumQuery = '''
+  SELECT MAX(CAST(SUBSTR(code, INSTR(code, '-') + 1) AS INTEGER)) AS MaxNumber 
+  FROM Leads  WHERE code LIKE 'TL$empCode$formattedDate-%'
+''';
+
+// Get the max serial number from the Leads table
       int? maxSerialNumber = await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
 
-      // If no leads exist, start the serial number from 1
+// If no leads exist, start the serial number from 1
       int serialNumber = (maxSerialNumber != null) ? maxSerialNumber + 1 : 1;
 
-      // Generate LeadCode
-      String leadCode = 'L' + empCode + formattedDate + '-' + serialNumber.toString();
+// Format the serial number with leading zeros (e.g., 001, 011, etc.)
+      String formattedSerialNumber = serialNumber.toString().padLeft(3, '0');
+
+// Generate LeadCode
+      String leadCode = 'TL' + empCode + formattedDate + '-' + formattedSerialNumber;
       print('LeadCode==$leadCode');
+// // Get the current date in DDMMYY format
+//       String formattedDate = getCurrentDateInDDMMYY();
+//
+//       // Get the max serial number from the Leads table
+//       String maxNumQuery = 'SELECT MAX(CAST(SUBSTR(code, LENGTH(code) - 0, 1) AS INTEGER)) AS MaxNumber FROM Leads';
+//       int? maxSerialNumber = await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
+//
+//       // If no leads exist, start the serial number from 1
+//       int serialNumber = (maxSerialNumber != null) ? maxSerialNumber + 1 : 1;
+//
+//       // Generate LeadCode
+//       String leadCode = 'LEA' + empCode + formattedDate + '-' + serialNumber.toString();
+//       print('LeadCode==$leadCode');
 
       // Fetch current location
       await _getCurrentLocation();
@@ -774,6 +603,49 @@ class _AddLeadScreenState extends State<AddLeads> with SingleTickerProviderState
             // Insert into FileRepositorys table
             await dataAccessHandler.insertFileRepository(fileData);
           }
+
+// Assuming `_files`, `leadCode`, `userID`, and `dataAccessHandler` are defined in your class
+          for (var file in _files) {
+            // Extract file extension
+            String fileExtension = path.extension(file.name); // Get the file extension dynamically
+
+            // Define your file storage path (assuming you have this logic)
+            String fileLocation = ''; // Initialize or define your file storage path
+
+            // Read file bytes
+            String? filePath = file.path; // Get the path directly from the file object
+            File fileObj = File(filePath!); // Rename the variable to avoid confusion
+
+            // Read file bytes
+            List<int> fileBytes = await fileObj.readAsBytes();
+
+            // Encode bytes to base64
+            String base64String = base64Encode(fileBytes);
+            print('base64String====$base64String');
+
+            // Encode file name in base64
+            String base64FileName = base64Encode(utf8.encode(file.name)); // Uncommented and corrected variable name
+
+            // Prepare the file data for insertion
+            final fileData = {
+              'leadsCode': leadCode, // Use the retrieved lead ID here
+              'FileName': base64String, // Use the original file name encoded in base64
+              'FileLocation': fileLocation, // Define your file storage path
+              'FileExtension': fileExtension, // Use the extracted file extension
+              'IsActive': 1,
+              'CreatedByUserId': userID, // Replace with actual user ID
+              'CreatedDate': DateTime.now().toIso8601String(),
+              'UpdatedByUserId': userID, // Replace with actual user ID
+              'UpdatedDate': DateTime.now().toIso8601String(),
+              'ServerUpdatedStatus': false,
+            };
+
+            print('fileData======>$fileData');
+
+            // Insert into FileRepositorys table
+            await dataAccessHandler.insertFileRepository(fileData);
+          }
+
 
           // Trigger Sync for Leads and FileRepository //TODO
           final syncService = SyncService(dataAccessHandler);
@@ -853,35 +725,7 @@ class _AddLeadScreenState extends State<AddLeads> with SingleTickerProviderState
   }
 
 
-  // Future<void> mobileImagePicker(BuildContext context) async {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     builder: (context) {
-  //       return SafeArea(
-  //         child: Wrap(
-  //           children: [
-  //             ListTile(
-  //               leading: Icon(Icons.camera_alt),
-  //               title: Text('Camera'),
-  //               onTap: () {
-  //                 Navigator.of(context).pop();
-  //                 _pickImage(ImageSource.camera);
-  //               },
-  //             ),
-  //             ListTile(
-  //               leading: Icon(Icons.photo_library),
-  //               title: Text('Gallery'),
-  //               onTap: () {
-  //                 Navigator.of(context).pop();
-  //                 _pickImage(ImageSource.gallery);
-  //               },
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
+
 
   // Method to pick image from specified source
   Future<void> _pickImage(ImageSource source) async {

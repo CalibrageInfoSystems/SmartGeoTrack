@@ -37,23 +37,56 @@ class _ViewLeadsState extends State<ViewLeads> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: CommonStyles.listOddColor,
-        leading: const Icon(Icons.arrow_back),
-        scrolledUnderElevation: 0,
-        title: const Text(
-          'View Lead',
-          //  style: CommonStyles.txStyF14CbFF5,
+      appBar:   AppBar(
+        backgroundColor: Colors.lightBlue[50], // Background color
+        elevation: 0, // Remove the shadow under the AppBar
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            // Navigate to the previous screen
+            Navigator.pop(context);
+          },
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(Icons.more_vert_rounded),
-          ),
-        ],
+        title: Row(
+          children: [
+            const Text(
+              'View Leads', // Add Leads beside the back arrow
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+          ],
+        ),
+        centerTitle: false, // Disable automatic center title (handled manually)
+        // actions: [
+        //   IconButton(
+        //     icon: Icon(Icons.person_outline, color: Colors.black),
+        //     onPressed: () {
+        //       // Add functionality for profile icon
+        //     },
+        //   ),
+        // ],
       ),
+      // AppBar(
+      //   backgroundColor: CommonStyles.listOddColor,
+      //   leading: const Icon(Icons.arrow_back),
+      //   scrolledUnderElevation: 0,
+      //   title: const Text(
+      //     'View Lead',
+      //     //  style: CommonStyles.txStyF14CbFF5,
+      //   ),
+      //   actions: [
+      //     IconButton(
+      //       onPressed: () {
+      //         Navigator.pop(context);
+      //       },
+      //       icon: const Icon(Icons.more_vert_rounded),
+      //     ),
+      //   ],
+      // ),
       body:
       Column(
         children: [

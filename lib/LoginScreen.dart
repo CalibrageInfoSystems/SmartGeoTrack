@@ -344,7 +344,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           if (response.statusCode == 200) {
             final data = json.decode(response.body);
 
-            if (data['issucces']) {
+            if (data['isSuccess']) {
               // Successful login
               // Navigate to the Home screen
               SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -371,23 +371,24 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           } else {
             _showErrorDialog("Error: ${response.statusCode}");
           }
-        } catch (e) {
+        }
+        catch (e) {
           _showErrorDialog("An error occurred: $e");
         }
       }
     }
-   else
-     {
-       Fluttertoast.showToast(
-           msg: "Please check your internet connection.",
-           toastLength: Toast.LENGTH_SHORT,
-           gravity: ToastGravity.CENTER,
-           timeInSecForIosWeb: 1,
-           backgroundColor: Colors.red,
-           textColor: Colors.white,
-           fontSize: 16.0
-       );
-     }
+    else
+    {
+      Fluttertoast.showToast(
+          msg: "Please check your internet connection.",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+    }
   }
 
   void _showErrorDialog(String message) {

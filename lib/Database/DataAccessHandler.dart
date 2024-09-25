@@ -16,41 +16,33 @@ class DataAccessHandler with ChangeNotifier {
   }
 
   Future<Database> _initDatabase() async {
-    // Get the application documents directory
-    Directory documentsDirectory =  Directory('/storage/emulated/0');
+    Directory documentsDirectory = Directory('/storage/emulated/0');
     final String folderName = 'SmartGeoTrack';
     Directory customDirectory = Directory('${documentsDirectory.path}/$folderName');
 
-    // Check if the directory exists, and create it if it does not
     if (!await customDirectory.exists()) {
       await customDirectory.create(recursive: true);
     }
 
-    // Construct the database file path
     String path = join(customDirectory.path, 'smartgeotrack.sqlite');
     print('Database path: $path'); // Debugging statement to check the path
 
-    // Check if the database file exists
     bool dbExists = await _checkDatabase(path);
 
-    // Copy the database file if it does not exist
     if (!dbExists) {
       await _copyDatabase(path);
     }
 
-    // Open the database and handle upgrades
     return openDatabase(
       path,
-      version: 2, // Increment the version number for upgrades
+      version: 2,
       onCreate: (db, version) async {
-        print('Creating tables'); // Debugging statement to verify table creation
+        print('Creating tables');
         await _createTables(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        // Handle database upgrade logic here
         print('Upgrading database from version $oldVersion to $newVersion');
         if (oldVersion < 2) {
-          // Add the new table when upgrading to version 2
           await db.execute('''
             CREATE TABLE IF NOT EXISTS NewTable(
               Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,16 +55,13 @@ class DataAccessHandler with ChangeNotifier {
         }
       },
       onOpen: (db) async {
-        print('Opening database'); // Debugging statement to verify database opening
+        print('Opening database');
         await _createTables(db);
       },
     );
   }
 
   Future<void> _createTables(Database db) async {
-    // Create tables as defined
-
-    // Add the new table here
     await db.execute('''
       CREATE TABLE IF NOT EXISTS NewTable(
         Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,8 +70,7 @@ class DataAccessHandler with ChangeNotifier {
         Column3 FLOAT NOT NULL
       )
     ''');
-
-    print('Table NewTable created'); // Debugging statement to verify the creation of the new table
+    print('Table NewTable created');
   }
 
   Future<bool> _checkDatabase(String path) async {
@@ -127,26 +115,24 @@ class DataAccessHandler with ChangeNotifier {
       print('Error inserting data into $tableName: $e');
     }
   }
-  // Method to insert a lead
+
   Future<int> insertLead(Map<String, dynamic> leadData) async {
     final db = await database;
     return await db.insert(
       'Leads',
       leadData,
-      conflictAlgorithm: ConflictAlgorithm.replace, // Replace if the lead already exists
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  // Method to insert a file repository
   Future<int> insertFileRepository(Map<String, dynamic> fileData) async {
     final db = await database;
     return await db.insert(
       'FileRepositorys',
       fileData,
-      conflictAlgorithm: ConflictAlgorithm.replace, // Replace if the file already exists
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
-
 
   Future<int?> getOnlyOneIntValueFromDb(String query) async {
     debugPrint("@@@ query $query");
@@ -159,75 +145,41 @@ class DataAccessHandler with ChangeNotifier {
     } catch (e) {
       debugPrint("Exception: $e");
       return null;
-    } finally {
-      await closeDataBase();
     }
   }
+
   Future<String?> getOnlyOneStringValueFromDb(String query, List<dynamic> params) async {
     List<Map<String, dynamic>> result;
     try {
-      final db = await database; // Ensure the database is open
-      result = await db.rawQuery(query, params); // Pass the parameters
+      final db = await database;
+      result = await db.rawQuery(query, params);
 
       if (result.isNotEmpty && result.first.isNotEmpty) {
-        return result.first.values.first.toString(); // Return the first value as a string
+        return result.first.values.first.toString();
       }
-      return null; // Return null if no result found
+      return null;
     } catch (e) {
       debugPrint("Exception: $e");
       return null;
     }
   }
 
-
-  // Future<String?> getOnlyOneStringValueFromDb(String query) async {
-  //   debugPrint("@@@ query $query");
-  //   List<Map<String, dynamic>> result;
-  //   try {
-  //     final db = await database; // Access the database
-  //     result = await db.rawQuery(query);
-  //
-  //     if (result.isNotEmpty && result.first.isNotEmpty) {
-  //       // Return the first value as a string
-  //       return result.first.values.first.toString();
-  //     }
-  //     return null; // Return null if no result
-  //   } catch (e) {
-  //     debugPrint("Exception: $e");
-  //     return null;
-  //   } finally {
-  //     await closeDataBase(); // Close the database connection
-  //   }
-  // }
-
-
   Future<void> closeDataBase() async {
     if (_database != null) {
       await _database!.close();
-      _database = null; // Ensure we clear the reference after closing
+      _database = null;
     }
   }
 
-
-
   Future<List<Map<String, dynamic>>> getleads() async {
-    // Get the database instance using the getter
     final db = await database;
-
-    // SQL query for debugging
     String query = 'SELECT * FROM Leads';
     print('Executing Query: $query');
-
-    // Execute the query and get the results
     List<Map<String, dynamic>> results = await db.query('Leads');
-
-    // Print the results
     print('Query Results:');
     results.forEach((row) {
       print(row);
     });
-
     return results;
   }
-
 }
