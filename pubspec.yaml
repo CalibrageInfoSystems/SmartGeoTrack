@@ -88,6 +88,9 @@ flutter:
     - assets/header_bg_image.jpg
     - assets/bg_image1.jpg
     - assets/bg_image2.jpg
+
+    - assets/add_a_photo.svg
+    - assets/fileuploadicon.svg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
   # For details regarding adding assets from package dependencies, see

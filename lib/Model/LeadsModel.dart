@@ -1,40 +1,4 @@
-// class LeadsModel {
-//   int? isCompany;
-//   String? code;
-//   String? name;
-//   String? phoneNumber;
-//   String? email;
-//   double? latitude;
-//   double? longitude;
-//   int? createdByUserId;
-//   String? createdDate;
-//
-//   LeadsModel({
-//     this.isCompany,
-//     this.code,
-//     this.name,
-//     this.phoneNumber,
-//     this.email,
-//     this.latitude,
-//     this.longitude,
-//     this.createdByUserId,
-//     this.createdDate,
-//   });
-//
-//   factory LeadsModel.fromMap(Map<String, dynamic> json) {
-//     return LeadsModel(
-//       isCompany: json['IsCompany'],
-//       code: json['Code'],
-//       name: json['Name'],
-//       phoneNumber: json['PhoneNumber'],
-//       email: json['Email'],
-//       latitude: json['Latitude'],
-//       longitude: json['Longitude'],
-//       createdByUserId: json['CreatedByUserId'],
-//       createdDate: json['CreatedDate'],
-//     );
-//   }
-// }
+
 class LeadsModel {
   final bool isCompany;
   final String? code;
@@ -44,12 +8,12 @@ class LeadsModel {
   final String? email;
   final String? comments;
   final double? latitude;
-  final double?longitude;
+  final double? longitude;
   final int? createdByUserId;
   final DateTime? createdDate;
   final int? updatedByUserId;
   final DateTime? updatedDate;
-  final int serverUpdatedStatus;
+  bool? serverUpdatedStatus;
 
   LeadsModel({
     required this.isCompany,
@@ -71,8 +35,8 @@ class LeadsModel {
   // Factory method to create a Lead instance from a map
   factory LeadsModel.fromMap(Map<String, dynamic> map) {
     return LeadsModel(
-      isCompany: map['IsCompany'] == 1,
-      code: map['Code'],
+      isCompany: map['IsCompany'] == 1 || map['IsCompany'] == true,
+      code: map['code'],
       name: map['Name'],
       companyName: map['CompanyName'],
       phoneNumber: map['PhoneNumber'],
@@ -84,15 +48,17 @@ class LeadsModel {
       createdDate: DateTime.parse(map['CreatedDate']),
       updatedByUserId: map['UpdatedByUserId'],
       updatedDate: DateTime.parse(map['UpdatedDate']),
-      serverUpdatedStatus: map['ServerUpdatedStatus'],
+      serverUpdatedStatus: map['ServerUpdatedStatus'] is bool
+          ? map['ServerUpdatedStatus']
+          : map['ServerUpdatedStatus'] == 1,
     );
   }
 
   // Method to convert a Lead instance to a map
   Map<String, dynamic> toMap() {
     return {
-      'IsCompany': isCompany ? 1 : 0,
-      'Code': code,
+      'IsCompany': isCompany, // Sending as a boolean (true/false)
+      'code': code,
       'Name': name,
       'CompanyName': companyName,
       'PhoneNumber': phoneNumber,
@@ -101,10 +67,11 @@ class LeadsModel {
       'Latitude': latitude,
       'Longitude': longitude,
       'CreatedByUserId': createdByUserId,
-      'CreatedDate': createdDate!.toIso8601String(),
+      'CreatedDate': createdDate?.toIso8601String(),
       'UpdatedByUserId': updatedByUserId,
-      'UpdatedDate': updatedDate!.toIso8601String(),
+      'UpdatedDate': updatedDate?.toIso8601String(),
       'ServerUpdatedStatus': serverUpdatedStatus,
     };
   }
 }
+

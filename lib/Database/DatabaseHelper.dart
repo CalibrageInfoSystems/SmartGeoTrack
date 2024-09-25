@@ -63,7 +63,7 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> result = await db.query(
       'geoBoundaries',
       where: 'ServerUpdatedStatus = ?',
-      whereArgs: [0],
+      whereArgs: [false],
     );
 
     return result.map((row) => GeoBoundariesModel.fromMap(row)).toList();
@@ -73,28 +73,34 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> result = await db.query(
       'Leads',
       where: 'ServerUpdatedStatus = ?',
-      whereArgs: [0],
+      whereArgs: [false],
     );
     print('Leads fetched: $result');
 
     return result.map((row) => LeadsModel.fromMap(row)).toList();
   }
-
-  // Future<List<LeadsModel>> getLeadsDetails() async {
-  //   final db = await database;
-  //   final List<Map<String, dynamic>> result = await db.query(
-  //     'Leads',
-  //     where: 'ServerUpdatedStatus = ?',
-  //     whereArgs: [0],
-  //   );
-  //
-  //   return result.map((row) => LeadsModel.fromMap(row)).toList();
-  // }
-
-  Future<List<FileRepositoryModel>> getFileRepositoryDetails(String query) async {
+  Future<List<FileRepositoryModel>> getFileRepositoryDetails() async {
     final db = await database;
-    final List<Map<String, dynamic>> result = await db.rawQuery(query);
+    final List<Map<String, dynamic>> result = await db.query(
+      'FileRepositorys',
+      where: 'ServerUpdatedStatus = ?',
+      whereArgs: [false],
+    );
+    print('fileRepository fetched: $result');
 
-    return result.map((row) => FileRepositoryModel.fromMap(row)).toList();
+    return result.map((row) => FileRepositoryModel.fromJson(row)).toList();
   }
+
+// Future<List<FileRepositoryModel>> getFileRepositoryDetails() async {
+//   final db = await database;
+//   final List<Map<String, dynamic>> result = await db.query(
+//     'Leads',
+//     where: 'ServerUpdatedStatus = ?',
+//     whereArgs: [0],
+//   );
+//
+//   return result.map((row) => LeadsModel.fromMap(row)).toList();
+// }
+
+
 }

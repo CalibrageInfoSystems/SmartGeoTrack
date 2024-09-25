@@ -21,8 +21,8 @@ class Palm3FoilDatabase {
   static Future<Palm3FoilDatabase?> getInstance() async {
     if (_palm3FoilDatabase == null) {
       _palm3FoilDatabase = Palm3FoilDatabase._privateConstructor();
- //     _palm3FoilDatabase!._context = context;
-     Directory? documentsDirectory =   Directory('/storage/emulated/0'); // await getExternalStorageDirectory(); // Use getExternalStorageDirectory for Android
+      //     _palm3FoilDatabase!._context = context;
+      Directory? documentsDirectory =   Directory('/storage/emulated/0'); // await getExternalStorageDirectory(); // Use getExternalStorageDirectory for Android
       final String folderName = 'SmartGeoTrack';
       Directory dbDirectory = Directory('${documentsDirectory!.path}/$folderName');
       // final String folderName = 'SmartGeoTrack';
@@ -109,11 +109,10 @@ class Palm3FoilDatabase {
       final geoBoundaryValues = {
         'Latitude': latitude,
         'Longitude': longitude,
+        'Address' : 'testing',
         'CreatedByUserId': createdByUserId,
         'CreatedDate': DateTime.now().toIso8601String(),
-        'UpdatedByUserId': updatedByUserId,
-        'UpdatedDate': DateTime.now().toIso8601String(),
-        'ServerUpdatedStatus': serverUpdatedStatus ? 1 : 0, // SQLite stores boolean as 0 or 1
+        'ServerUpdatedStatus': false, // SQLite stores boolean as 0 or 1
       };
 
       await db!.insert('GeoBoundaries', geoBoundaryValues);

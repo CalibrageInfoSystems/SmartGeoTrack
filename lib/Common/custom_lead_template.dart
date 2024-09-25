@@ -3,7 +3,9 @@ import 'package:smartgetrack/common_styles.dart';
 
 class CustomLeadTemplate extends StatelessWidget {
   final int index;
-  const CustomLeadTemplate({super.key, required this.index});
+  final Map<String, dynamic> lead; // Lead as a map
+
+  const CustomLeadTemplate({super.key, required this.index, required this.lead});
 
   @override
   Widget build(BuildContext context) {
@@ -18,20 +20,20 @@ class CustomLeadTemplate extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Jessy',
+                lead['Name'] ?? 'No Name', // Access 'name' from the map
                 style: CommonStyles.txStyF16CbFF5,
               ),
-              Icon(Icons.arrow_circle_right_outlined),
+              const Icon(Icons.arrow_circle_right_outlined),
             ],
           ),
           const SizedBox(height: 3),
-          listCustomText('ABCD Software Solutions'),
-          listCustomText('test@test.com'),
-          listCustomText('+91 1234567890'),
+          listCustomText(lead['CompanyName'] ?? 'No Company'),  // Access 'company'
+          listCustomText(lead['Email'] ?? 'No Email'),      // Access 'email'
+          listCustomText(lead['PhoneNumber'] ?? 'No Phone'),      // Access 'phone'
         ],
       ),
     );

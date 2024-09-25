@@ -159,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(width: 20),
                             Expanded(
                                 child: customBox(
-                                    title: 'Total Leads', data: '321')),
+                                    title: 'Today Leads', data: '321')),
                           ],
                         ),
                         const SizedBox(height: 10),

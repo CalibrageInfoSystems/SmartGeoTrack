@@ -32,7 +32,7 @@ class DataSyncHelper {
 
     // Send the request with JSON body and headers
     var response = await http.post(
-      Uri.parse('http://182.18.157.215/SmartGeoTrack/API/api/SyncMasters/GetMasterData'),
+      Uri.parse('http://182.18.157.215/SmartGeoTrack/API/SyncMasters/GetMasterData'),
       headers: {"Content-Type": "application/json"},  // Set the content type to JSON
       body: jsonEncode(syncDataMap),  // Encode the data to JSON format
     );

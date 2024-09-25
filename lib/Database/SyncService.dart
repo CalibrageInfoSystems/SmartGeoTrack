@@ -1,63 +1,97 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 import '../Model/FileRepositoryModel.dart';
 import '../Model/GeoBoundariesModel.dart';
 import '../Model/LeadsModel.dart';
+import 'DataAccessHandler.dart';
 import 'DatabaseHelper.dart';
 
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+// other imports as necessary
+
+
 class SyncService {
-  final String apiUrl = "http://182.18.157.215/SmartGeoTrack/API/SyncTransactions/SyncTransactions";
+  static const String apiUrl = "http://182.18.157.215/SmartGeoTrack/API/SyncTransactions/SyncTransactions";
+  static const String geoBoundariesTable = 'geoBoundaries';
+  static const String leadsTable = 'leads';
+  static const String fileRepositoryTable = 'FileRepositorys';
+
+  final DataAccessHandler dataAccessHandler; // Add DataAccessHandler reference
+
   Map<String, List<Map<String, dynamic>>> refreshTransactionsDataMap = {};
-  List<String> refreshTableNamesList = ['geoBoundaries', 'leads', 'fileRepository'];
+  List<String> refreshTableNamesList = [geoBoundariesTable, leadsTable, fileRepositoryTable];
   int transactionsCheck = 0;
 
-  // Fetch data for specified tables
+  SyncService(this.dataAccessHandler); // Constructor to inject DataAccessHandler
+
+  Future<List<T>> _fetchData<T>(Future<List<T>> Function() fetchFunction, String modelName) async {
+    List<T> dataList = await fetchFunction();
+    if (dataList.isEmpty) {
+      print('$modelName list is empty.');
+    } else {
+      print('$modelName fetched: $dataList');
+    }
+    return dataList;
+  }
+  Future<void> getRefreshSyncTransDataMap() async {
+    // Fetching geoBoundaries
+    List<GeoBoundariesModel> geoBoundariesList = await _fetchData(DatabaseHelper.instance.getGeoBoundariesDetails, 'GeoBoundaries');
+
+    // Check if geoBoundariesList is not empty before adding to the map
+    if (geoBoundariesList.isNotEmpty) {
+      refreshTransactionsDataMap[geoBoundariesTable] = geoBoundariesList.map((model) => model.toMap()).toList();
+    } else {
+      print('GeoBoundaries list is empty, skipping to next.');
+    }
+
+    // Fetching leads
+    List<LeadsModel> leadsList = await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
+
+    // Check if leadsList is not empty before adding to the map
+    if (leadsList.isNotEmpty) {
+      refreshTransactionsDataMap[leadsTable] = leadsList.map((model) => model.toMap()).toList();
+    } else {
+      print('Leads list is empty, skipping to next.');
+    }
+
+    // Fetching fileRepoList
+    List<FileRepositoryModel> fileRepoList = await _fetchData(DatabaseHelper.instance.getFileRepositoryDetails, 'File Repository');
+
+    // Check if fileRepoList is not empty before adding to the map
+    if (fileRepoList.isNotEmpty) {
+      refreshTransactionsDataMap[fileRepositoryTable] = fileRepoList.map((model) => model.toJson()).toList();
+    } else {
+      print('File Repository list is empty.');
+    }
+
+    // If no data was fetched, print a message
+    if (refreshTransactionsDataMap.isEmpty) {
+      print('No data was fetched from any table.');
+    } else {
+      print('Fetched Data: $refreshTransactionsDataMap');
+    }
+  }
+
   // Future<void> getRefreshSyncTransDataMap() async {
-  //   // Fetching geoBoundaries and converting to List<Map<String, dynamic>>
-  //   // List<GeoBoundariesModel> geoBoundariesList = await DatabaseHelper.instance.getGeoBoundariesDetails();
-  //   // refreshTransactionsDataMap['geoBoundaries'] = geoBoundariesList.map((model) => model.toMap()).toList();
+  //   // Fetching geoBoundaries
+  //   List<GeoBoundariesModel> geoBoundariesList = await _fetchData(DatabaseHelper.instance.getGeoBoundariesDetails, 'GeoBoundaries');
+  //   refreshTransactionsDataMap[geoBoundariesTable] = geoBoundariesList.map((model) => model.toMap()).toList();
   //
-  //   // Fetching leads and converting to List<Map<String, dynamic>>
-  //   List<LeadsModel> leadsList = await DatabaseHelper.instance.getLeadsDetails();
-  //   print('LeadsList: $leadsList');
-  //   refreshTransactionsDataMap['leads'] = leadsList.map((model) => model.toMap()).toList();
+  //   // Fetching leads
+  //   List<LeadsModel> leadsList = await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
+  //   refreshTransactionsDataMap[leadsTable] = leadsList.map((model) => model.toMap()).toList();
   //
-  //   // // Fetching file repository details with a sample query
-  //   // String query = 'SELECT * FROM fileRepository WHERE ServerUpdatedStatus = 0';
-  //   // List<FileRepositoryModel> fileRepoList = await DatabaseHelper.instance.getFileRepositoryDetails(query);
-  //   // refreshTransactionsDataMap['fileRepository'] = fileRepoList.map((model) => model.toMap()).toList();
+  //   // Fetching fileRepoList
+  //   List<FileRepositoryModel> fileRepoList = await _fetchData(DatabaseHelper.instance.getFileRepositoryDetails, 'File Repository');
+  //   refreshTransactionsDataMap[fileRepositoryTable] = fileRepoList.map((model) => model.toJson()).toList();
   //
   //   print('Fetched Data: $refreshTransactionsDataMap');
   // }
 
-  Future<void> getRefreshSyncTransDataMap() async {
-    // Fetching geoBoundaries
-    List<GeoBoundariesModel> geoBoundariesList = await DatabaseHelper.instance.getGeoBoundariesDetails();
-    print('GeoBoundariesList: $geoBoundariesList'); // Debug print
-    refreshTransactionsDataMap['geoBoundaries'] = geoBoundariesList.map((model) => model.toMap()).toList();
-
-    // Fetching leads
-    List<LeadsModel> leadsList = await DatabaseHelper.instance.getLeadsDetails();
-    print('Leads fetched: ${leadsList.isNotEmpty ? leadsList : "No leads found"}'); // Debug print
-
-    if (leadsList.isNotEmpty) {
-      refreshTransactionsDataMap['leads'] = leadsList.map((model) => model.toMap()).toList();
-    } else {
-      print('LeadsList is empty.');
-    }
-
-    // Uncomment if you're fetching file repository details
-    // String query = 'SELECT * FROM fileRepository WHERE ServerUpdatedStatus = 0';
-    // List<FileRepositoryModel> fileRepoList = await DatabaseHelper.instance.getFileRepositoryDetails(query);
-    // refreshTransactionsDataMap['fileRepository'] = fileRepoList.map((model) => model.toMap()).toList();
-
-    print('Fetched Data: $refreshTransactionsDataMap');
-  }
-
-
-  // Perform Sync Operation
   Future<void> performRefreshTransactionsSync(BuildContext context) async {
     await getRefreshSyncTransDataMap();
     if (refreshTransactionsDataMap.isNotEmpty) {
@@ -67,7 +101,6 @@ class SyncService {
     }
   }
 
-  // Post table data to the server one by one
   Future<void> _syncTransactionsDataToCloud(BuildContext context, String tableName) async {
     List tableData = refreshTransactionsDataMap[tableName] ?? [];
     print('tableData for ${jsonEncode({tableName: tableData})}');
@@ -82,6 +115,9 @@ class SyncService {
         );
 
         if (response.statusCode == 200) {
+          // Execute the SQL update query after successful sync
+          await _updateServerUpdatedStatus(tableName); // Ensure this is awaited
+
           transactionsCheck++;
           if (transactionsCheck < refreshTableNamesList.length) {
             await _syncTransactionsDataToCloud(context, refreshTableNamesList[transactionsCheck]);
@@ -89,7 +125,6 @@ class SyncService {
             _showSnackBar(context, "Sync is successful!");
           }
         } else {
-          // Enhanced error handling
           print('Error response: ${response.body}');
           _showSnackBar(context, "Sync failed for $tableName: ${response.body}");
         }
@@ -106,40 +141,25 @@ class SyncService {
     }
   }
 
-  // Show Snackbar
   void _showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
+
+  Future<void> _updateServerUpdatedStatus(String tableName) async {
+    print("Attempting to update ServerUpdatedStatus for table: $tableName"); // Debug statement
+    final db = await dataAccessHandler.database; // Accessing database from DataAccessHandler
+    String query = "UPDATE $tableName SET ServerUpdatedStatus = '1' WHERE ServerUpdatedStatus = '0'";
+
+    try {
+      await db.rawUpdate(query);
+      print("Updated ServerUpdatedStatus for $tableName successfully.");
+    } catch (e) {
+      print("Error updating ServerUpdatedStatus for $tableName: $e");
+    }
+  }
 }
 
 
 
-// Database Helper Mock for getting the data from geoBoundaries, leads, fileRepository
-// class DatabaseHelper {
-//   // Mock methods to get data from different tables
-//   static Future<List<Map<String, dynamic>>> getGeoBoundaries() async {
-//     // Fetch data from the local database (geoBoundaries table)
-//     return [
-//       {"id": 1, "name": "Boundary 1", "coordinates": "sample_coordinates_1"},
-//       {"id": 2, "name": "Boundary 2", "coordinates": "sample_coordinates_2"}
-//     ];
-//   }
-//
-//   static Future<List<Map<String, dynamic>>> getLeads() async {
-//     // Fetch data from the local database (leads table)
-//     return [
-//       {"id": 1, "name": "Lead 1", "email": "lead1@example.com"},
-//       {"id": 2, "name": "Lead 2", "email": "lead2@example.com"}
-//     ];
-//   }
-//
-//   static Future<List<Map<String, dynamic>>> getFileRepository() async {
-//     // Fetch data from the local database (fileRepository table)
-//     return [
-//       {"id": 1, "fileName": "file1.jpg", "filePath": "/files/file1.jpg"},
-//       {"id": 2, "fileName": "file2.jpg", "filePath": "/files/file2.jpg"}
-//     ];
-//   }
-// }

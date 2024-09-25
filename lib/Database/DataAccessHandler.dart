@@ -6,13 +6,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
-
-import 'dart:io';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart'; // Import path_provider
-import 'package:sqflite/sqflite.dart';
-import 'package:flutter/services.dart'; // For rootBundle
-
 class DataAccessHandler with ChangeNotifier {
   Database? _database;
 
@@ -78,48 +71,6 @@ class DataAccessHandler with ChangeNotifier {
 
   Future<void> _createTables(Database db) async {
     // Create tables as defined
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS CropMaintenanceDocument(
-        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        Name VARCHAR(100),
-        CMSectionId INT NOT NULL,
-        FileName VARCHAR(100),
-        FileLocation VARCHAR(250),
-        FileExtension VARCHAR(25),
-        IsActive BIT NOT NULL,
-        CreatedByUserId INT NOT NULL,
-        CreatedDate DATETIME NOT NULL,
-        UpdatedByUserId INT NOT NULL,
-        UpdatedDate DATETIME NOT NULL,
-        ServerUpdatedStatus INT NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS Benchmark(
-        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        Year INT NOT NULL,
-        MonthName VARCHAR(10) NOT NULL,
-        MonthSequenceNumber INT NOT NULL,
-        MonthlyPercentage FLOAT NOT NULL,
-        Age INT NOT NULL,
-        YieldPerHectar FLOAT NOT NULL,
-        StateId INT
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS Cluster(
-        Id INTEGER PRIMARY KEY AUTOINCREMENT,
-        Code VARCHAR(5) NOT NULL,
-        Name VARCHAR(50) NOT NULL,
-        IsActive BIT NOT NULL DEFAULT 1,
-        CreatedByUserId INT NOT NULL,
-        CreatedDate DATETIME NOT NULL,
-        UpdatedByUserId INT NOT NULL,
-        UpdatedDate DATETIME NOT NULL
-      )
-    ''');
 
     // Add the new table here
     await db.execute('''
@@ -176,4 +127,107 @@ class DataAccessHandler with ChangeNotifier {
       print('Error inserting data into $tableName: $e');
     }
   }
+  // Method to insert a lead
+  Future<int> insertLead(Map<String, dynamic> leadData) async {
+    final db = await database;
+    return await db.insert(
+      'Leads',
+      leadData,
+      conflictAlgorithm: ConflictAlgorithm.replace, // Replace if the lead already exists
+    );
+  }
+
+  // Method to insert a file repository
+  Future<int> insertFileRepository(Map<String, dynamic> fileData) async {
+    final db = await database;
+    return await db.insert(
+      'FileRepositorys',
+      fileData,
+      conflictAlgorithm: ConflictAlgorithm.replace, // Replace if the file already exists
+    );
+  }
+
+
+  Future<int?> getOnlyOneIntValueFromDb(String query) async {
+    debugPrint("@@@ query $query");
+    try {
+      List<Map<String, dynamic>> result = await (await database).rawQuery(query);
+      if (result.isNotEmpty) {
+        return result.first.values.first as int;
+      }
+      return null;
+    } catch (e) {
+      debugPrint("Exception: $e");
+      return null;
+    } finally {
+      await closeDataBase();
+    }
+  }
+  Future<String?> getOnlyOneStringValueFromDb(String query, List<dynamic> params) async {
+    List<Map<String, dynamic>> result;
+    try {
+      final db = await database; // Ensure the database is open
+      result = await db.rawQuery(query, params); // Pass the parameters
+
+      if (result.isNotEmpty && result.first.isNotEmpty) {
+        return result.first.values.first.toString(); // Return the first value as a string
+      }
+      return null; // Return null if no result found
+    } catch (e) {
+      debugPrint("Exception: $e");
+      return null;
+    }
+  }
+
+
+  // Future<String?> getOnlyOneStringValueFromDb(String query) async {
+  //   debugPrint("@@@ query $query");
+  //   List<Map<String, dynamic>> result;
+  //   try {
+  //     final db = await database; // Access the database
+  //     result = await db.rawQuery(query);
+  //
+  //     if (result.isNotEmpty && result.first.isNotEmpty) {
+  //       // Return the first value as a string
+  //       return result.first.values.first.toString();
+  //     }
+  //     return null; // Return null if no result
+  //   } catch (e) {
+  //     debugPrint("Exception: $e");
+  //     return null;
+  //   } finally {
+  //     await closeDataBase(); // Close the database connection
+  //   }
+  // }
+
+
+  Future<void> closeDataBase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null; // Ensure we clear the reference after closing
+    }
+  }
+
+
+
+  Future<List<Map<String, dynamic>>> getleads() async {
+    // Get the database instance using the getter
+    final db = await database;
+
+    // SQL query for debugging
+    String query = 'SELECT * FROM Leads';
+    print('Executing Query: $query');
+
+    // Execute the query and get the results
+    List<Map<String, dynamic>> results = await db.query('Leads');
+
+    // Print the results
+    print('Query Results:');
+    results.forEach((row) {
+      print(row);
+    });
+
+    return results;
+  }
+
 }

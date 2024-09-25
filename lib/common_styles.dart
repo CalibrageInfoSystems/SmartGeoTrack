@@ -23,11 +23,13 @@ class CommonStyles {
   static const statusRedBg = Color(0xFFffdedf);
   static const statusRedText = Color.fromARGB(255, 236, 62, 68);
   static const startColor = Color(0xFF59ca6b);
-  // background: #317DA6;;
+static const dotColor = Color(0xFFEE3618);
+ // background:border: 1px solid #EE3618;;
 
   static const blackColor = Colors.black;
   static const blackColorShade = Color(0xFF5f5f5f);
   static const primaryColor = Color(0xFAF5F5F5);
+
   static const loginTextColor = Color(0xFFEE3618);
   static const buttonbg = Color(0xFF317DA6); //background: #317DA6;
   static const formFieldErrorBorderColor = Color(0xFFff0000);
