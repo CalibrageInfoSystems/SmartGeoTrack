@@ -58,13 +58,13 @@ class SyncService {
     }
 
     // Fetching leads
-    List<Lead> leadsList =
+    List<LeadsModel> leadsList =
         await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
 
     // Check if leadsList is not empty before adding to the map
     if (leadsList.isNotEmpty) {
       refreshTransactionsDataMap[leadsTable] =
-          leadsList.map((model) => model.toJson()).toList();
+          leadsList.map((model) => model.toMap()).toList();
     } else {
       print('Leads list is empty, skipping to next.');
     }
