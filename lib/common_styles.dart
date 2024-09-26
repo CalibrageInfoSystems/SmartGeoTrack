@@ -14,6 +14,7 @@ class CommonStyles {
   static const borderColor = Color(0xFF9ac2db);
   static const dataTextColor = Color(0xff818181);
   static const bottomNavBgColor = Color(0xffe8f4ff);
+  static const appBarBgColor = Color(0xffe3f2f7);
 
   static const statusBlueBg = Color(0xffc3c8cc);
   static const statusBlueText = Color(0xFF11528f);
@@ -59,6 +60,11 @@ class CommonStyles {
       color: CommonStyles.blueTextColor);
 
   static const txStyF14CbFF5 = TextStyle(
+      fontSize: 14,
+      fontFamily: "hind_semibold",
+      fontWeight: FontWeight.w500,
+      color: CommonStyles.primaryTextColor);
+  static const txStyF14CpFF5 = TextStyle(
       fontSize: 14,
       fontFamily: "hind_semibold",
       fontWeight: FontWeight.w500,

@@ -213,11 +213,82 @@ class DataAccessHandler with ChangeNotifier {
     final db = await database;
     String query = 'SELECT * FROM Leads WHERE DATE(CreatedDate) = $today';
     List<Map<String, dynamic>> results = await db.query(query);
-    print('xxx: $query');
-    print('xxx: ${jsonEncode(results)}');
+/*     print('xxx: $query');
+    print('xxx: ${jsonEncode(results)}'); */
     return results;
   }
-  // Function to fetch the Base64-encoded image from SQLite database using leadCode
+
+  Future<List<Map<String, dynamic>>> getLeadInfoByCode(String code) async {
+    try {
+      final db = await database;
+      String query = 'SELECT * FROM Leads Where Code = ?';
+      List<Map<String, dynamic>> results = await db.rawQuery(
+        query,
+        [code],
+      );
+
+      return results;
+    } catch (e) {
+      throw Exception('catch: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getLeadImagesByCode(
+      String leadsCode, String fileExtension) async {
+    try {
+      final db = await database;
+      String query =
+          'SELECT * FROM FileRepositorys WHERE leadsCode = ? AND FileExtension = ?';
+      List<Map<String, dynamic>> results = await db.rawQuery(
+        query,
+        [leadsCode, fileExtension],
+      );
+      print('xxx getLeadImagesByCode: ${jsonEncode(results)}');
+      return results;
+    } catch (e) {
+      throw Exception('Error fetching data: $e');
+    }
+  }
+
+// SELECT * FROM FileRepositorys WHERE FileExtension in ('.xlsx', '.pdf')
+/*   Future<List<Map<String, dynamic>>> getLeadDocsByCode(String code, String fileExtension) async {
+    try {
+      final db = await database;
+      String query =
+          'SELECT * FROM FileRepositorys WHERE leadsCode = ? AND FileExtension = ?'; // Define the query
+      List<Map<String, dynamic>> results = await db.rawQuery(
+        query,
+        [code, fileExtension],
+      );
+      print('Data fetched: ${jsonEncode(results)}');
+      return results; // Return the results
+    } catch (e) {
+      throw Exception('Error fetching data: $e');
+    }
+  } */
+
+  Future<List<Map<String, dynamic>>> getLeadDocsByCode(
+      String leadsCode, List<String> fileExtensions) async {
+    try {
+      final db = await database;
+
+      String placeholders = fileExtensions.map((_) => '?').join(', ');
+      String query =
+          'SELECT * FROM FileRepositorys WHERE leadsCode = ? AND FileExtension IN ($placeholders)';
+      print('query: $query');
+      List<dynamic> parameters = [leadsCode] + fileExtensions;
+
+      List<Map<String, dynamic>> results = await db.rawQuery(
+        query,
+        parameters,
+      );
+      print('getLeadDocsByCode: ${jsonEncode(results)}');
+      return results;
+    } catch (e) {
+      throw Exception('Error fetching data: $e');
+    }
+  }
+
   Future<String?> fetchBase64Image(String leadCode) async {
     // Replace with your actual database path and query
     final db = await database;
@@ -227,14 +298,15 @@ class DataAccessHandler with ChangeNotifier {
     );
 
     if (result.isNotEmpty) {
-      return result.first['FileName'] as String; // Assuming FileName contains Base64
+      return result.first['FileName']
+          as String; // Assuming FileName contains Base64
     }
     return null; // Return null if no image found
   }
 
   bool isValidLeadData(Map<String, dynamic> leadData) {
     // Add your validation logic here
-    return leadData.containsKey('requiredField') && leadData['requiredField'] != null;
+    return leadData.containsKey('requiredField') &&
+        leadData['requiredField'] != null;
   }
-
 }

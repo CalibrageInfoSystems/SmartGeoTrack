@@ -5,16 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smartgetrack/Model/LeadsModel.dart';
 import 'package:smartgetrack/common_styles.dart';
+import 'package:smartgetrack/view_leads_info.dart';
 
 import '../Database/DataAccessHandler.dart';
-import '../UserProfileScreen.dart';
 
 class CustomLeadTemplate extends StatelessWidget {
   final int index;
   final LeadsModel lead;
+  final void Function()? onTap;
 
   const CustomLeadTemplate(
-      {super.key, required this.index, required this.lead});
+      {super.key, required this.index, required this.lead, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -38,56 +39,27 @@ class CustomLeadTemplate extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-        Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (lead.name != null)
-            Text(
-              '${lead.name}',
-              style: TextStyle(fontSize: 16, color: Colors.black),
-            ),
-          // Icon with a click action
-          GestureDetector(
-            onTap: () async {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => UserProfileScreen(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (lead.name != null)
+                Text(
+                  '${lead.name}',
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
                 ),
-              );
-    // final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
-    //
-    //
-    // String? base64Image = await dataAccessHandler.fetchBase64Image(lead.code!);
-    //
-    // if (base64Image != null) {
-    // Uint8List bytes = base64Decode(base64Image);
-    //
-    //             //Uint8List bytes = base64Decode('');
-    //
-    //             showDialog(
-    //               context: context,
-    //               builder: (BuildContext context) {
-    //                 return AlertDialog(
-    //                   content: Image.memory(bytes), // Show the image
-    //                   actions: [
-    //                     TextButton(
-    //                       onPressed: () {
-    //                         Navigator.of(context).pop(); // Close the popup
-    //                       },
-    //                       child: Text('Close'),
-    //                     ),
-    //                   ],
-    //                 );
-    //               },
-    //             );
-    //          }
-           },
-            child: const Icon(Icons.arrow_circle_right_outlined),
+              GestureDetector(
+                onTap: onTap,
+                /* () async {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ViewLeadsInfo()));
+                  
+                }, */
+                child: const Icon(Icons.arrow_circle_right_outlined),
+              ),
+            ],
           ),
-        ],
-      ),
-
           const SizedBox(height: 3),
           if (lead.companyName != null)
             listCustomText(
@@ -112,10 +84,8 @@ class CustomLeadTemplate extends StatelessWidget {
           style: CommonStyles.txStyF16CbFF5
               .copyWith(color: CommonStyles.dataTextColor),
         ),
-        if (isSpace) const SizedBox(height: 8),
+        if (isSpace) const SizedBox(height: 5),
       ],
     );
   }
-
-
 }
