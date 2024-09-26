@@ -1,20 +1,23 @@
+import 'dart:convert';
+import 'dart:io';
+
 class FileRepositoryModel {
   final String leadsCode;
-  final String? fileName;       // Nullable
-  final String? fileLocation;   // Nullable
-  final String? fileExtension;  // Nullable
+  final String? fileName; // This will hold the Base64 string
+  final String? fileLocation; // Nullable
+  final String? fileExtension; // Nullable
   final bool isActive;
   final int createdByUserId;
-  final String createdDate;     // This should not be nullable
+  final String createdDate; // This should not be nullable
   final int updatedByUserId;
-  final String updatedDate;     // This should not be nullable
+  final String updatedDate; // This should not be nullable
   final bool serverUpdatedStatus;
 
   FileRepositoryModel({
     required this.leadsCode,
-    this.fileName,              // No need for 'required'
-    this.fileLocation,          // No need for 'required'
-    this.fileExtension,         // No need for 'required'
+    this.fileName, // Holds Base64 string
+    this.fileLocation, // Nullable
+    this.fileExtension, // Nullable
     required this.isActive,
     required this.createdByUserId,
     required this.createdDate,
@@ -53,5 +56,49 @@ class FileRepositoryModel {
       'UpdatedDate': updatedDate,
       'ServerUpdatedStatus': serverUpdatedStatus,
     };
+  }
+}
+
+Future<String> convertFileToBase64(String filePath) async {
+  final File file = File(filePath);
+  if (await file.exists()) {
+    List<int> fileBytes = await file.readAsBytes();
+    return base64Encode(fileBytes); // Convert bytes to Base64
+  } else {
+    throw Exception("File not found");
+  }
+}
+
+Future<void> prepareAndSendFile(String filePath, FileRepositoryModel model) async {
+  try {
+    // Convert the file to a Base64 string
+    String base64File = await convertFileToBase64(filePath);
+
+    // Create a new instance of FileRepositoryModel with the Base64 file name
+    FileRepositoryModel updatedModel = FileRepositoryModel(
+      leadsCode: model.leadsCode,
+      fileName: base64File, // Set the file name as Base64 string
+      fileLocation: model.fileLocation,
+      fileExtension: model.fileExtension,
+      isActive: model.isActive,
+      createdByUserId: model.createdByUserId,
+      createdDate: model.createdDate,
+      updatedByUserId: model.updatedByUserId,
+      updatedDate: model.updatedDate,
+      serverUpdatedStatus: model.serverUpdatedStatus,
+    );
+
+    // Convert the model to JSON
+    Map<String, dynamic> jsonData = updatedModel.toJson();
+
+    // Here, you would send jsonData to your server
+    // For example, using http package:
+    // final response = await http.post(Uri.parse('your_api_url'), body: jsonData);
+
+    // Print JSON for debugging
+    print(jsonEncode(jsonData)); // Debugging: print the JSON being sent
+
+  } catch (e) {
+    print("Error: $e");
   }
 }

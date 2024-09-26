@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     getuserdata();
-    backgroundService = BackgroundService(userId: 6, dataAccessHandler: dataAccessHandler);
+    backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
     checkLocationEnabled();
     startService();
   }
@@ -110,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
             await palm3FoilDatabase!.insertLocationValues(
               latitude: position.latitude,
               longitude: position.longitude,
-              createdByUserId:6,  // replace userID with the actual value
+              createdByUserId:userID,  // replace userID with the actual value
               serverUpdatedStatus: false,
             );
 
@@ -798,11 +798,14 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class BackgroundService {
-  final int userId;
+  int? userId;
   final DataAccessHandler dataAccessHandler; // Declare DataAccessHandler
   late SyncServiceB syncService; // Declare SyncService
   final FlutterBackgroundService flutterBackgroundService = FlutterBackgroundService();
-
+  static const double MAX_ACCURACY_THRESHOLD = 10.0;
+  static const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
+  static const double MIN_DISTANCE_THRESHOLD = 50.0;
+  static const double MIN_SPEED_THRESHOLD = 0.2;
   BackgroundService({required this.userId, required this.dataAccessHandler}) {
     // Initialize SyncService with DataAccessHandler
     syncService = SyncServiceB(dataAccessHandler); // Make sure to initialize DataAccessHandler properly
@@ -860,12 +863,15 @@ void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   Palm3FoilDatabase? palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
 
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  int? userID= prefs.getInt('userID');
+
   // You need to maintain a way to get the userId or DataAccessHandler here.
-  final userId = 6; // Replace with the actual way to get userId
+  //final userId = userID; // Replace with the actual way to get userId
 
   // Pass the DataAccessHandler to the BackgroundService
   final dataAccessHandler = DataAccessHandler(); // Initialize this properly
-  final backgroundService = BackgroundService(userId: userId, dataAccessHandler: dataAccessHandler);
+  final backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) async {
@@ -901,7 +907,7 @@ void onStart(ServiceInstance service) async {
         await palm3FoilDatabase!.insertLocationValues(
           latitude: position.latitude,
           longitude: position.longitude,
-          createdByUserId: userId,  // Use the actual userID
+          createdByUserId: userID,  // Use the actual userID
           serverUpdatedStatus: false,
         );
 
@@ -927,7 +933,7 @@ void onStart(ServiceInstance service) async {
           await palm3FoilDatabase!.insertLocationValues(
             latitude: position.latitude,
             longitude: position.longitude,
-            createdByUserId: userId,
+            createdByUserId: userID,
             serverUpdatedStatus: false,
           );
 
@@ -943,9 +949,22 @@ void onStart(ServiceInstance service) async {
 
 
 // Function to check if the position is accurate enough
+// bool _isPositionAccurate(Position position) {
+//   return position.accuracy < 20.0; // Use an accuracy threshold of 20 meters
+// }
+double MAX_ACCURACY_THRESHOLD = 10.0;
+ const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
+ const double MIN_DISTANCE_THRESHOLD = 50.0;
+ const double MIN_SPEED_THRESHOLD = 0.2;
 bool _isPositionAccurate(Position position) {
-  return position.accuracy < 20.0; // Use an accuracy threshold of 20 meters
+  print('Position Accuracy:957=== ${position.accuracy}');
+  print('Speed Accuracy:958=== ${position.speedAccuracy}');
+  print('Speed:959=== ${position.speed}');
+  return position.accuracy <= MAX_ACCURACY_THRESHOLD &&
+      position.speedAccuracy <= MAX_SPEED_ACCURACY_THRESHOLD &&
+      position.speed >= MIN_SPEED_THRESHOLD;
 }
+
 void appendLog(String text) async {
   const String folderName = 'SmartGeoTrack';
   const String fileName = 'UsertrackinglogTest.file';
@@ -970,57 +989,6 @@ void appendLog(String text) async {
   }
 }
 
-Future<void> sendLocationToAPI(
-    double latitude, double longitude, DateTime timestamp) async {
-  // void addBoundaryToDatabase() async {
-  //   await insertLocationValues(
-  //     latitude: 12.3456,
-  //     longitude: 98.7654,
-  //     createdByUserId: 101,
-  //     updatedByUserId: 101,
-  //     serverUpdatedStatus: false,
-  //   );
-  // }
-
-  String timestamp = DateTime.now().toIso8601String();
-//  await DatabaseHelper().insertLocation(latitude, longitude, timestamp);
-  const String apiUrl =
-      'http://182.18.157.215/Srikar_Biotech_Dev/API/api/Location/AddLocationTracker';
-  Map<String, dynamic> requestBody = {
-    "Id": null,
-    "UserId": "e39536e2-89d3-4cc7-ae79-3dd5291ff156",
-    "Latitude": latitude,
-    "Longitude": longitude,
-    "Address":
-        "test", // You might want to replace this with an actual address if available
-    "LogDate": timestamp,
-    "CreatedBy": "e39536e2-89d3-4cc7-ae79-3dd5291ff156",
-    "CreatedDate": DateTime.now().toIso8601String()
-  };
-
-  try {
-    var response = await http.post(
-      Uri.parse(apiUrl),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(requestBody),
-    );
-
-    if (response.statusCode == 200) {
-      var responseBody = jsonDecode(response.body);
-      if (responseBody['isSuccess'] == true) {
-        print("Location added successfully: ${responseBody['endUserMessage']}");
-      } else {
-        print("Failed to add location: ${responseBody['endUserMessage']}");
-      }
-    } else {
-      print("Failed to add location: ${response.statusCode}");
-    }
-  } catch (error) {
-    print("Error: $error");
-  }
-}
 
 class StatCard extends StatelessWidget {
   final String label;

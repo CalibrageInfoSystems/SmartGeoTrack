@@ -40,15 +40,29 @@ class Palm3FoilDatabase {
     }
     return _palm3FoilDatabase;
   }
+  // Future<Database> _openDatabase() async {
+  //   return await openDatabase(
+  //     'your_database_path.db',
+  //     version: 1,
+  //     onCreate: (db, version) {
+  //       // Your table creation logic
+  //     },
+  //     // Add this option to open the database in write mode
+  //     singleInstance: true,
+  //   );
+  // }
 
   Future<Database?> _openDatabase() async {
     if (_database == null) {
       _database = await openDatabase(
         _dbPath!,
         version: DATA_VERSION,
+        readOnly: false, // Ensure this is set to false
         onCreate: (Database db, int version) async {
           // Implement the onCreate function if you need to create tables
         },
+        // Add this option to open the database in write mode
+        singleInstance: true,
         onUpgrade: (Database db, int oldVersion, int newVersion) async {
           // Implement the onUpgrade function if you need to upgrade the database schema
         },
@@ -103,50 +117,13 @@ class Palm3FoilDatabase {
     }
   }
 
-  // Future<void> insertLocationValues({
-  //   required double latitude,
-  //   required double longitude,
-  //   required int createdByUserId,
-  //   required bool serverUpdatedStatus,
-  //   required BuildContext context,  // Add BuildContext as a required parameter
-  // }) async {
-  //   try {
-  //     final db = await _openDatabase();
-  //     final geoBoundaryValues = {
-  //       'Latitude': latitude,
-  //       'Longitude': longitude,
-  //       'Address': 'testing',
-  //       'CreatedByUserId': createdByUserId,
-  //       'CreatedDate': DateTime.now().toIso8601String(),
-  //       'ServerUpdatedStatus': serverUpdatedStatus,
-  //     };
-  //
-  //     await db!.insert('GeoBoundaries', geoBoundaryValues);
-  //     print('Location values inserted');
-  //
-  //     // After inserting, check if network is available for syncing
-  //     final connectivityResult = await (Connectivity().checkConnectivity());
-  //
-  //     if (connectivityResult == ConnectivityResult.mobile || connectivityResult == ConnectivityResult.wifi) {
-  //       print('Network is available, syncing data...');
-  //       final dataAccessHandler =
-  //       Provider.of<DataAccessHandler>(context, listen: false);
-  //       final syncService = SyncService(dataAccessHandler);
-  //       syncService.performRefreshTransactionsSync(context); // Pass BuildContext here
-  //     } else {
-  //       print('No network available, data will sync later.');
-  //     }
-  //
-  //   } catch (e) {
-  //     print('Failed to insert location values: $e');
-  //   }
-  // }
+
 
 
   Future<void> insertLocationValues({
     required double latitude,
     required double longitude,
-    required int createdByUserId,
+    required int? createdByUserId,
     required bool serverUpdatedStatus,
   }) async {
     try {

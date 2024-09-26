@@ -564,13 +564,12 @@ class _AddLeadScreenState extends State<AddLeads>
             print('===fileLocation $fileLocation');
             final fileData = {
               'leadsCode': leadCode, // Use the retrieved lead ID here
-              'FileName': fileName,
+              'FileName': fileLocation,
         //    'FileName': base64Encode(image), // Encode image as base64
               'FileLocation': fileLocation,
               'FileExtension': fileExtension,
               'IsActive': 1,
-              'CreatedByUserId':
-                  userID, // Replace with actual user ID// Store as 1 for true
+              'CreatedByUserId': userID, // Replace with actual user ID// Store as 1 for true
               'CreatedDate': DateTime.now().toIso8601String(),
               'UpdatedByUserId': userID, // Replace with actual user ID
               'UpdatedDate': DateTime.now().toIso8601String(),

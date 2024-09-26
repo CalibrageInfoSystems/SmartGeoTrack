@@ -75,8 +75,10 @@ class SyncService {
 
     // Check if fileRepoList is not empty before adding to the map
     if (fileRepoList.isNotEmpty) {
+      print('File Repository list $fileRepoList');
       refreshTransactionsDataMap[fileRepositoryTable] =
           fileRepoList.map((model) => model.toJson()).toList();
+
     } else {
       print('File Repository list is empty.');
     }
