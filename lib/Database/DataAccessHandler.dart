@@ -197,4 +197,20 @@ class DataAccessHandler with ChangeNotifier {
     print('xxx: ${jsonEncode(results)}');
     return results;
   }
+  // Function to fetch the Base64-encoded image from SQLite database using leadCode
+  Future<String?> fetchBase64Image(String leadCode) async {
+    // Replace with your actual database path and query
+    final db = await database;
+    List<Map<String, dynamic>> result = await db.rawQuery(
+      'SELECT FileName FROM FileRepositorys WHERE leadsCode = ?',
+      [leadCode],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first['FileName'] as String; // Assuming FileName contains Base64
+    }
+    return null; // Return null if no image found
+  }
+
+
 }

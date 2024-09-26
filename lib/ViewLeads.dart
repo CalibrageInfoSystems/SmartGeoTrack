@@ -34,7 +34,7 @@ class _ViewLeadsState extends State<ViewLeads> {
   TextEditingController fromDateController = TextEditingController();
   TextEditingController toDateController = TextEditingController();
 
-  late Future<List<Lead>> futureLeads;
+  late Future<List<LeadsModel>> futureLeads;
 
   @override
   void initState() {
@@ -95,7 +95,7 @@ class _ViewLeadsState extends State<ViewLeads> {
                       return const Text('No Leads Found',
                           style: CommonStyles.txStyF16CpFF5);
                     }
-                    final leads = snapshot.data as List<Lead>;
+                    final leads = snapshot.data as List<LeadsModel>;
 
                     return ListView.separated(
                       itemCount: leads.length,
@@ -115,24 +115,24 @@ class _ViewLeadsState extends State<ViewLeads> {
         ));
   }
 
-  Future<List<Lead>> loadLeads() async {
+  Future<List<LeadsModel>> loadLeads() async {
     try {
       final dataAccessHandler =
           Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getleads();
       print('leads: ${jsonEncode(leads)}');
-      return leads.map((item) => Lead.fromJson(item)).toList();
+      return leads.map((item) => LeadsModel.fromMap(item)).toList();
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
     }
   }
 
-  Future<List<Lead>> getTodayLeads(String today) async {
+  Future<List<LeadsModel>> getTodayLeads(String today) async {
     try {
       final dataAccessHandler =
           Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getTodayLeads(today);
-      return leads.map((item) => Lead.fromJson(item)).toList();
+      return leads.map((item) => LeadsModel.fromMap(item)).toList();
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
     }

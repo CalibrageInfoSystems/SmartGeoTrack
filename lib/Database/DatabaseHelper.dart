@@ -70,7 +70,7 @@ class DatabaseHelper {
     return result.map((row) => GeoBoundariesModel.fromMap(row)).toList();
   }
 
-  Future<List<Lead>> getLeadsDetails() async {
+  Future<List<LeadsModel>> getLeadsDetails() async {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.query(
       'Leads',
@@ -79,7 +79,7 @@ class DatabaseHelper {
     );
     print('Leads fetched: $result');
 
-    return result.map((row) => Lead.fromJson(row)).toList();
+    return result.map((row) => LeadsModel.fromMap(row)).toList();
   }
 
   Future<List<FileRepositoryModel>> getFileRepositoryDetails() async {
