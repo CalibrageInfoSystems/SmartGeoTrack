@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,10 +19,7 @@ import 'Database/DataSyncHelper.dart';
 import 'Database/Palm3FoilDatabase.dart';
 import 'HomeScreen.dart';
 
-import 'main.dart';
-import 'package:flutter/material.dart';
 
-import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -40,18 +38,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     Permission.phone,
     // Add other permissions if needed
   ];
-
+  bool isLocationEnabled = false;
   bool isLogin = false;
   bool welcome = false;
+  
   @override
   void initState() {
     super.initState();
     loadData();
 
-    SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+    SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitDown,
       DeviceOrientation.portraitUp,
     ]);
+    checkLocationEnabled();
     _requestPermissions();
     // Initialize AnimationController
     _animationController = AnimationController(
@@ -349,7 +349,47 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       //showDialogMessage(context, "Please check your internet connection.");
     }
   }
-    // Navigator.push(
+
+  Future<void> checkLocationEnabled() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    setState(() {
+      isLocationEnabled = serviceEnabled;
+    });
+    if (!serviceEnabled) {
+      // If location services are disabled, prompt the user to enable them
+      await _promptUserToEnableLocation();
+    }
+  }
+
+  Future<void> _promptUserToEnableLocation() async {
+    bool locationEnabled = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Location Services Disabled"),
+          content: Text("Please enable location services to use this app."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text("Enable"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (locationEnabled != null && locationEnabled) {
+      // Redirect the user to the device settings to enable location services
+      await Geolocator.openLocationSettings();
+    }
+  }
+
+
+// Navigator.push(
     //   context,
     //   MaterialPageRoute(builder: (context) => LoginScreen()),
     // );
@@ -422,194 +462,4 @@ class _TypewriterTextState extends State<TypewriterText> {
 
 
 
-
-    // Request regular permissions
-    // Map<Permission, PermissionStatus> statuses = await permissionsRequired.request();
-    //
-    // // Request MANAGE_EXTERNAL_STORAGE permission
-    // bool manageStorageGranted = await Permission.manageExternalStorage.isGranted;
-    // if (!manageStorageGranted) {
-    //   manageStorageGranted = await Permission.manageExternalStorage.request().isGranted;
-    // }
-    //
-    // // Log the status of each permission
-    // statuses.forEach((permission, status) {
-    //   print('$LOG_TAG: ${permission.toString()} - ${status.toString()}');
-    // });
-    // print('$LOG_TAG: manageStorageGranted $manageStorageGranted');
-    //
-    // bool allGranted = statuses.values.every((status) => status.isGranted) && manageStorageGranted;
-    // print('$LOG_TAG: allGranted $allGranted');
-    //
-    // if (allGranted) {
-    //   print('$LOG_TAG: permission granted');
-    //   try {
-    //     palm3FoilDatabase = await Palm3FoilDatabase.getInstance(context);
-    //     await palm3FoilDatabase!.createDatabase();
-    //     await palm3FoilDatabase?.printTables(); // Call printTables after creating the databas
-    //     // dbUpgradeCall();
-    //   } catch (e) {
-    //     print('Error while getting master data: ${e.toString()}');
-    //   }
-    //   startMasterSync();
-    // } else {
-    //   _showToast('Please grant all permissions to proceed.');
-    // }
- // }
-
-  // void _showToast(String message) {
-  //   final snackBar = SnackBar(content: Text(message));
-  //   ScaffoldMessenger.of(context).showSnackBar(snackBar);
-  // }
-  //
-  // @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     body: Center(
-  //       child: CircularProgressIndicator(),
-  //     ),
-  //   );
-  // }
-
-/*  Future<void> startMasterSync() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    bool isMasterSyncSuccess = sharedPreferences.getBool('IS_MASTER_SYNC_SUCCESS') ?? false;
-    //  var connectivityResult = await Connectivity().checkConnectivity();
-
-    if (!isMasterSyncSuccess) {
-      DataSyncHelper.performMasterSync(context, isMasterSyncSuccess, (success, result, msg) {
-        if (success) {
-          sharedPreferences.setBool('IS_MASTER_SYNC_SUCCESS', true);
-          // Implement digitalPdfSave method
-          _navigateToMainLoginScreen();
-        } else {
-          print('Master sync failed: $msg');
-          // UiUtils.showCustomToastMessage("Data syncing failed", context, 1);
-       _navigateToMainLoginScreen();
-        }
-      });
-    } else {
-      _navigateToMainLoginScreen();
-    }
-  }*/
-
-  // void _navigateToMainLoginScreen() {
-  //   Navigator.pushReplacement(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => HomeScreen()),
-  //   );
-  // }
- //
- // Future<String> get3FFileRootPath() async {
- //   // Request storage permission
- //    var status = await Permission.storage.request();
- //    if (status.isGranted) {
- //      // Get external storage directory
- //      Directory? externalDir = await getExternalStorageDirectory();
- //      String root = externalDir!.path;
- //
- //      // Create a new directory for "3F_Files"
- //      Directory rootDirectory = Directory('$root/3F_Files');
- //      if (!rootDirectory.existsSync()) {
- //        rootDirectory.createSync(recursive: true);
- //      }
- //      return '${rootDirectory.path}${Platform.pathSeparator}';
- //    } else {
- //      throw Exception("Storage permission denied");
- //    }
- //  }
-//}
-
-//
-//
-// class Palm3FoilDatabase {
-//   static const LOG_TAG = 'Palm3FoilDatabase';
-//   static const int DATA_VERSION = 35; // Changed on 21st March 2024
-//   static const String DATABASE_NAME = '3foilpalm.sqlite';
-//   static Palm3FoilDatabase? _instance;
-//   static Database?_database;
-//   static String ?_dbPath;
-//   BuildContext? _context;
-//
-//   Palm3FoilDatabase._privateConstructor();
-//
-//   static Future<Palm3FoilDatabase?> getInstance(BuildContext context) async {
-//     if (_instance == null) {
-//       _instance = Palm3FoilDatabase._privateConstructor();
-//       _instance!._context = context;
-//       Directory dbDirectory = await getApplicationDocumentsDirectory();
-//       _dbPath = join(dbDirectory.path, '3F_Database');
-//       print('The Database Path: $_dbPath');
-//     }
-//     return _instance;
-//   }
-//
-//   Future<Database> _openDatabase() async {
-//     if (_database == null) {
-//       _database = await openDatabase(
-//         join(_dbPath, DATABASE_NAME),
-//         version: DATA_VERSION,
-//         onCreate: (Database db, int version) async {
-//           // Implement the onCreate function if you need to create tables
-//         },
-//         onUpgrade: (Database db, int oldVersion, int newVersion) async {
-//           // Implement the onUpgrade function if you need to upgrade the database schema
-//         },
-//       );
-//     }
-//     return _database;
-//   }
-//
-//   Future<void> createDatabase() async {
-//     bool dbExist = await _checkDatabase();
-//     if (!dbExist) {
-//       try {
-//         await _copyDatabase();
-//         print('Database copied');
-//       } catch (e) {
-//         print('Error copying database: $e');
-//         throw Exception('Error copying database');
-//       }
-//       try {
-//         await _openDatabase();
-//       } catch (e) {
-//         print('Error opening database: $e');
-//         throw Exception('Error opening database');
-//       }
-//     }
-//   }
-//
-//   Future<bool> _checkDatabase() async {
-//     try {
-//       final dbPath = join(_dbPath, DATABASE_NAME);
-//       _database = await openDatabase(dbPath, readOnly: true);
-//       return _database != null;
-//     } catch (e) {
-//       print('Database does not exist: $e');
-//       return false;
-//     }
-//   }
-//
-//   Future<void> _copyDatabase() async {
-//     final dbDir = Directory(_dbPath);
-//     if (!await dbDir.exists()) {
-//       await dbDir.create(recursive: true);
-//     }
-//     final data = await rootBundle.load(join('assets', DATABASE_NAME));
-//     final bytes = data.buffer.asUint8List();
-//     final dbFile = File(join(_dbPath, DATABASE_NAME));
-//     await dbFile.writeAsBytes(bytes);
-//   }
-// }
-//
-// @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Center(
-//         child: CircularProgressIndicator(),
-//       ),
-//     );
-//   }
-// }
-//
 

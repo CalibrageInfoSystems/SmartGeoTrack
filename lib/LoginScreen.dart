@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:smartgetrack/test.dart';
 import 'Common/Constants.dart';
 import 'Forgotpassword.dart';
 import 'common_styles.dart';
@@ -357,6 +358,11 @@ class _LoginScreenState extends State<LoginScreen>
                 context,
                 MaterialPageRoute(builder: (context) => const HomeScreen()),
               );
+
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => const Test()),
+              // );
             } else {
               // Show error message
               _showErrorDialog("Login failed: Invalid username or password.");

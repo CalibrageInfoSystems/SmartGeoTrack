@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:ui';
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -12,6 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartgetrack/Common/Constants.dart';
@@ -22,6 +22,7 @@ import 'AddLeads.dart';
 import 'Database/DataAccessHandler.dart';
 import 'Database/Palm3FoilDatabase.dart';
 import 'Database/SyncService.dart';
+import 'Database/SyncServiceB.dart';
 import 'ViewLeads.dart';
 import 'location_service/logic/location_controller/location_controller_cubit.dart';
 import 'location_service/notification/notification.dart';
@@ -44,12 +45,17 @@ class _HomeScreenState extends State<HomeScreen> {
   static const double MIN_DISTANCE_THRESHOLD = 50.0;
   static const double MIN_SPEED_THRESHOLD = 0.2;
   Palm3FoilDatabase? palm3FoilDatabase;
+  final dataAccessHandler = DataAccessHandler();
+  String? username;
+   String? formattedDate ;
+  bool isLocationEnabled = false;
+  int? userID;
   @override
   void initState() {
     super.initState();
     getuserdata();
-    backgroundService = BackgroundService(userId: 1, context: context);
-
+    backgroundService = BackgroundService(userId: 6, dataAccessHandler: dataAccessHandler);
+    checkLocationEnabled();
     startService();
   }
 
@@ -85,38 +91,56 @@ class _HomeScreenState extends State<HomeScreen> {
           heading: double.tryParse(event['heading'].toString()) ?? 0.0,
           speed: double.tryParse(event['speed'].toString()) ?? 0.0,
           speedAccuracy:
-              double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
+          double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
           altitudeAccuracy:
-              double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
+          double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
           headingAccuracy:
-              double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
+          double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
         );
-        print(
-            "on_location_changed: ${position.latitude} -  ${position.longitude}");
-        if (_isPositionAccurate(position)) {
-          double distance = Geolocator.distanceBetween(lastLatitude,
-              lastLongitude, position.latitude, position.longitude);
+        print("on_location_changed: ${position.latitude} -  ${ position.longitude}");
+        if (_isPositionAccurate(position) ) {
+          double distance = Geolocator.distanceBetween(
+              lastLatitude, lastLongitude, position.latitude, position.longitude);
 
           if (distance >= MIN_DISTANCE_THRESHOLD) {
             lastLatitude = position.latitude;
             lastLongitude = position.longitude;
             DateTime timestamp = DateTime.now();
-            palm3FoilDatabase!.insertLocationValues(
+            // Insert location into the database
+            await palm3FoilDatabase!.insertLocationValues(
               latitude: position.latitude,
               longitude: position.longitude,
-              createdByUserId: 1, // Replace with actual userId
-              updatedByUserId: 1, // Replace with actual userId
+              createdByUserId:6,  // replace userID with the actual value
               serverUpdatedStatus: false,
             );
-            appendLog(
-                'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
+
+            appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
             //  await sendLocationToAPI(position.latitude, position.longitude, timestamp);
+            bool isConnected = await CommonStyles.checkInternetConnectivity();
+            if (isConnected) {
+              // Call your login function here
+              final syncService = SyncService(dataAccessHandler);
+              syncService.performRefreshTransactionsSync(context);
+            } else {
+              Fluttertoast.showToast(
+                  msg: "Please check your internet connection.",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.CENTER,
+                  timeInSecForIosWeb: 1,
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  fontSize: 16.0
+              );
+              print("Please check your internet connection.");
+              //showDialogMessage(context, "Please check your internet connection.");
+            }
 
             await context.read<LocationControllerCubit>().onLocationChanged(
-                  location: position,
-                );
+              location: position,
+            );
           }
-        } else {
+        }
+        else{
           print('Position Accuracy: ${position.accuracy}');
           print('Speed Accuracy: ${position.speedAccuracy}');
           print('Speed: ${position.speed}');
@@ -133,6 +157,8 @@ class _HomeScreenState extends State<HomeScreen> {
         position.speedAccuracy <= MAX_SPEED_ACCURACY_THRESHOLD &&
         position.speed >= MIN_SPEED_THRESHOLD;
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -460,6 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Positioned header(Size size) {
+    getuserdata();
     return Positioned(
       top: -170,
       left: -10,
@@ -501,14 +528,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Text('Hello,',
                               style: CommonStyles.txStyF20CpFF5),
                           Text(
-                            'M James',
+                            'string',
+                          //  '${username!}',
                             style: CommonStyles.txStyF20CpFF5.copyWith(
                               fontSize: 25,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                          const Text(
-                            '23rd Sep 2024',
+                           Text(
+                             '26th Sep 2024',
+                           // '${formattedDate}',
                             style: CommonStyles.txStyF14CbFF5,
                           ),
                         ],
@@ -587,50 +616,52 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> startService() async {
-    await Fluttertoast.showToast(
-        msg: "Wait for a while, Initializing the service...");
-    try {
-      palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
 
-      await palm3FoilDatabase
-          ?.printTables(); // Call printTables after creating the databas
-      // dbUpgradeCall();
-    } catch (e) {
-      print('Error while getting master data: ${e.toString()}');
-    }
-    final permission =
-        await context.read<LocationControllerCubit>().enableGPSWithPermission();
+  Future<void> startService() async {
+    await Fluttertoast.showToast(msg: "Wait for a while, Initializing the service...");
+
+    final permission = await context.read<LocationControllerCubit>().enableGPSWithPermission();
     if (permission) {
       try {
         Position currentPosition = await Geolocator.getCurrentPosition();
         lastLatitude = currentPosition.latitude;
         lastLongitude = currentPosition.longitude;
-
-        // Adding more debug prints
+        try {
+          palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
+          // Call printTables after creating the databas
+          // dbUpgradeCall();
+        } catch (e) {
+          print('Error while getting master data: ${e.toString()}');
+        }
+        // Debug prints
         print('Location permission granted');
-        print(
-            'Current Position: Latitude: ${currentPosition.latitude}, Longitude: ${currentPosition.longitude}');
+        print('Current Position: Latitude: ${currentPosition.latitude}, Longitude: ${currentPosition.longitude}');
 
-        await context
-            .read<LocationControllerCubit>()
-            .locationFetchByDeviceGPS();
+        await context.read<LocationControllerCubit>().locationFetchByDeviceGPS();
         await backgroundService.initializeService();
         backgroundService.setServiceAsForeground();
 
-        // Printing after setting lastLatitude and lastLongitude
+        // Show Toast after service starts
+        await Fluttertoast.showToast(msg: "Service started successfully!");
+
+        // Debug prints
         print('lastLatitude===>$lastLatitude, lastLongitude===>$lastLongitude');
       } catch (e) {
         print('Error fetching current position: $e');
+        await Fluttertoast.showToast(msg: "Error: Service could not start.");
       }
     } else {
       print('Location permission denied');
+      await Fluttertoast.showToast(msg: "Location permission denied. Service could not start.");
     }
   }
 
   void stopService() {
     backgroundService.stopService();
     context.read<LocationControllerCubit>().stopLocationFetch();
+
+    // Show Toast after service stops
+    Fluttertoast.showToast(msg: "Service stopped successfully!");
   }
 
   void appendLog(String text) async {
@@ -659,12 +690,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> getuserdata() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? userID = prefs.getInt('userID');
-    String username = prefs.getString('username') ?? '';
+    userID= prefs.getInt('userID');
+     username = prefs.getString('username') ?? '';
+    print(' username==$username');
     String firstName = prefs.getString('firstName') ?? '';
     String email = prefs.getString('email') ?? '';
     String mobileNumber = prefs.getString('mobileNumber') ?? '';
     String roleName = prefs.getString('roleName') ?? '';
+    DateTime now = DateTime.now();
+     formattedDate = formatDate(now);
+    print(' formattedDate==$formattedDate'); // Example output: "25th Sep 2024"
   }
 
   void showLogoutDialog() {
@@ -697,17 +732,81 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
+
+  String formatDate(DateTime date) {
+    String day = DateFormat('d').format(date);
+    String suffix = getDaySuffix(int.parse(day));
+    String formattedDate = '$day$suffix ${DateFormat('MMM').format(date)} ${DateFormat('y').format(date)}';
+    return formattedDate;
+  }
+
+  String getDaySuffix(int day) {
+    if (day >= 11 && day <= 13) {
+      return 'th';
+    }
+    switch (day % 10) {
+      case 1:
+        return 'st';
+      case 2:
+        return 'nd';
+      case 3:
+        return 'rd';
+      default:
+        return 'th';
+    }
+  }
+
+  Future<void> checkLocationEnabled() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    setState(() {
+      isLocationEnabled = serviceEnabled;
+    });
+    if (!serviceEnabled) {
+      // If location services are disabled, prompt the user to enable them
+      await _promptUserToEnableLocation();
+    }
+  }
+
+  Future<void> _promptUserToEnableLocation() async {
+    bool locationEnabled = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Location Services Disabled"),
+          content: Text("Please enable location services to use this app."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text("Enable"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (locationEnabled != null && locationEnabled) {
+      // Redirect the user to the device settings to enable location services
+      await Geolocator.openLocationSettings();
+    }
+  }
+
+
 }
 
 class BackgroundService {
   final int userId;
-  final BuildContext context; // Add context
+  final DataAccessHandler dataAccessHandler; // Declare DataAccessHandler
+  late SyncServiceB syncService; // Declare SyncService
+  final FlutterBackgroundService flutterBackgroundService = FlutterBackgroundService();
 
-  BackgroundService(
-      {required this.userId,
-      required this.context}); // Add context to constructor
-  final FlutterBackgroundService flutterBackgroundService =
-      FlutterBackgroundService();
+  BackgroundService({required this.userId, required this.dataAccessHandler}) {
+    // Initialize SyncService with DataAccessHandler
+    syncService = SyncServiceB(dataAccessHandler); // Make sure to initialize DataAccessHandler properly
+  }
 
   FlutterBackgroundService get instance => flutterBackgroundService;
 
@@ -716,7 +815,7 @@ class BackgroundService {
       const AndroidNotificationChannel(
         'location_channel',
         'Location Channel',
-        importance: Importance.high,
+        importance: Importance.high, // Ensure high importance for visibility
       ),
     );
 
@@ -745,18 +844,28 @@ class BackgroundService {
   void stopService() {
     flutterBackgroundService.invoke("stop_service");
   }
+
+  Future<void> syncLocationData() async {
+    try {
+      await syncService.performRefreshTransactionsSync(); // Call the sync method
+      print("Location data synced successfully.");
+    } catch (e) {
+      print("Error syncing location data: $e");
+    }
+  }
 }
 
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
-
-  // Retrieve context or adapt initialization
-  //BuildContext context = ...; // Handle context acquisition appropriately
-
   Palm3FoilDatabase? palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
 
-  int userId = 1; // Replace with actual logic to get userId
+  // You need to maintain a way to get the userId or DataAccessHandler here.
+  final userId = 6; // Replace with the actual way to get userId
+
+  // Pass the DataAccessHandler to the BackgroundService
+  final dataAccessHandler = DataAccessHandler(); // Initialize this properly
+  final backgroundService = BackgroundService(userId: userId, dataAccessHandler: dataAccessHandler);
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) async {
@@ -783,20 +892,23 @@ void onStart(ServiceInstance service) async {
       service.invoke('on_location_changed', position.toJson());
 
       if (!isFirstLocationLogged) {
+        // Log the first point
         lastLatitude = position.latitude;
         lastLongitude = position.longitude;
         isFirstLocationLogged = true;
         DateTime timestamp = DateTime.now();
 
-        palm3FoilDatabase!.insertLocationValues(
+        await palm3FoilDatabase!.insertLocationValues(
           latitude: position.latitude,
           longitude: position.longitude,
-          createdByUserId: userId,
-          updatedByUserId: userId,
+          createdByUserId: userId,  // Use the actual userID
           serverUpdatedStatus: false,
         );
-        appendLog(
-            'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
+
+        appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
+
+        // Sync the data to the server
+        await backgroundService.syncLocationData(); // Use the existing instance
       }
 
       if (_isPositionAccurate(position)) {
@@ -806,37 +918,34 @@ void onStart(ServiceInstance service) async {
           position.latitude,
           position.longitude,
         );
-        print('distance====$distance');
+
         if (distance >= 50.0) {
           lastLatitude = position.latitude;
           lastLongitude = position.longitude;
           DateTime timestamp = DateTime.now();
 
-          palm3FoilDatabase!.insertLocationValues(
+          await palm3FoilDatabase!.insertLocationValues(
             latitude: position.latitude,
             longitude: position.longitude,
             createdByUserId: userId,
-            updatedByUserId: userId,
             serverUpdatedStatus: false,
           );
-          appendLog(
-              'Background Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
+
+          appendLog('Background Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
+
+          // Sync the data to the server
+          await backgroundService.syncLocationData(); // Use the existing instance
         }
       }
     }
   });
 }
 
+
+// Function to check if the position is accurate enough
 bool _isPositionAccurate(Position position) {
-  const double maxAccuracyThreshold = 10.0;
-  const double maxSpeedAccuracyThreshold = 5.0;
-  const double minSpeedThreshold = 0.2;
-
-  return position.accuracy <= maxAccuracyThreshold &&
-      position.speedAccuracy <= maxSpeedAccuracyThreshold &&
-      position.speed >= minSpeedThreshold;
+  return position.accuracy < 20.0; // Use an accuracy threshold of 20 meters
 }
-
 void appendLog(String text) async {
   const String folderName = 'SmartGeoTrack';
   const String fileName = 'UsertrackinglogTest.file';

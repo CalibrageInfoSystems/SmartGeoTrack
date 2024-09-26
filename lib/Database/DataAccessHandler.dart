@@ -120,13 +120,33 @@ class DataAccessHandler with ChangeNotifier {
     }
   }
 
+  // Future<int> insertLead(Map<String, dynamic> leadData) async {
+  //   final db = await database;
+  //   return await db.insert(
+  //     'Leads',
+  //     leadData,
+  //     conflictAlgorithm: ConflictAlgorithm.replace,
+  //   );
+  // }
   Future<int> insertLead(Map<String, dynamic> leadData) async {
     final db = await database;
-    return await db.insert(
-      'Leads',
-      leadData,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+
+    // Validate lead data before insertion
+    // if (!isValidLeadData(leadData)) {
+    //   throw Exception("Invalid lead data");
+    // }
+
+    try {
+      return await db.insert(
+        'Leads',
+        leadData,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e) {
+      // Log or handle the error as needed
+      print("Insert failed: $e");
+      return -1; // Return an error code or handle it differently
+    }
   }
 
   Future<int> insertFileRepository(Map<String, dynamic> fileData) async {
@@ -212,5 +232,9 @@ class DataAccessHandler with ChangeNotifier {
     return null; // Return null if no image found
   }
 
+  bool isValidLeadData(Map<String, dynamic> leadData) {
+    // Add your validation logic here
+    return leadData.containsKey('requiredField') && leadData['requiredField'] != null;
+  }
 
 }

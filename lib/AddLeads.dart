@@ -42,6 +42,7 @@ class _AddLeadScreenState extends State<AddLeads>
   Palm3FoilDatabase? palm3FoilDatabase;
   Position? _currentPosition;
   final List<Uint8List> _images = [];
+  final List<XFile> _imagepath = [];
   bool isImageList = false;
   final ImagePicker _picker = ImagePicker();
   final List<PlatformFile> _files = [];
@@ -501,7 +502,7 @@ class _AddLeadScreenState extends State<AddLeads>
       showLoadingDialog(context);
       _validateTotalItems();
       String? empCode = await fetchEmpCode(Username!, context);
-
+      palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
       final dataAccessHandler =
           Provider.of<DataAccessHandler>(context, listen: false);
 
@@ -516,7 +517,7 @@ class _AddLeadScreenState extends State<AddLeads>
 
       String maxNumQuery = '''
   SELECT MAX(CAST(SUBSTR(code, INSTR(code, '-') + 1) AS INTEGER)) AS MaxNumber 
-  FROM Leads  WHERE code LIKE 'TL$empCode$formattedDate-%'
+  FROM Leads  WHERE code LIKE 'L$empCode$formattedDate-%'
 ''';
 
       int? maxSerialNumber =
@@ -526,7 +527,7 @@ class _AddLeadScreenState extends State<AddLeads>
 
       String formattedSerialNumber = serialNumber.toString().padLeft(3, '0');
 
-      String leadCode = 'TL$empCode$formattedDate-$formattedSerialNumber';
+      String leadCode = 'L$empCode$formattedDate-$formattedSerialNumber';
       print('LeadCode==$leadCode');
       await _getCurrentLocation();
       Navigator.of(context).pop();
@@ -552,21 +553,19 @@ class _AddLeadScreenState extends State<AddLeads>
 
         try {
           // Insert lead data into the database and get the inserted ID
-          int leadId = await dataAccessHandler
-              .insertLead(leadData); // Ensure this returns the inserted ID
+          int leadId = await palm3FoilDatabase!.insertLead(leadData); // Ensure this returns the inserted ID
           print('leadId======>$leadId');
 
-          for (var image in _images) {
+          for (var image in _imagepath) {
             // Prepare data for the FileRepositorys table
-            String fileName =
-                'image_${DateTime.now().millisecondsSinceEpoch}.jpg'; // Modify as needed
-            String fileLocation = ''; // Define your file storage path
+            String fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg'; // Modify as needed
+            String fileLocation = image.path; // Define your file storage path
             String fileExtension = '.jpg'; // Adjust based on image type
-
+            print('===fileLocation $fileLocation');
             final fileData = {
               'leadsCode': leadCode, // Use the retrieved lead ID here
-              // 'FileName': fileName,
-              'FileName': base64Encode(image), // Encode image as base64
+              'FileName': fileName,
+        //    'FileName': base64Encode(image), // Encode image as base64
               'FileLocation': fileLocation,
               'FileExtension': fileExtension,
               'IsActive': 1,
@@ -579,24 +578,21 @@ class _AddLeadScreenState extends State<AddLeads>
             };
             print('fileData======>$fileData');
             // Insert into FileRepositorys table
-            await dataAccessHandler.insertFileRepository(fileData);
+            await palm3FoilDatabase!.insertFileRepository(fileData);
           }
 
 // Assuming `_files`, `leadCode`, `userID`, and `dataAccessHandler` are defined in your class
           for (var file in _files) {
             // Extract file extension
-            String fileExtension =
-                path.extension(file.name); // Get the file extension dynamically
+            String fileExtension = path.extension(file.name); // Get the file extension dynamically
 
             // Define your file storage path (assuming you have this logic)
             String fileLocation =
                 ''; // Initialize or define your file storage path
 
             // Read file bytes
-            String? filePath =
-                file.path; // Get the path directly from the file object
-            File fileObj =
-                File(filePath!); // Rename the variable to avoid confusion
+            String? filePath = file.path; // Get the path directly from the file object
+            File fileObj = File(filePath!); // Rename the variable to avoid confusion
 
             // Read file bytes
             List<int> fileBytes = await fileObj.readAsBytes();
@@ -612,8 +608,8 @@ class _AddLeadScreenState extends State<AddLeads>
             // Prepare the file data for insertion
             final fileData = {
               'leadsCode': leadCode, // Use the retrieved lead ID here
-              'FileName':
-                  base64String, // Use the original file name encoded in base64
+              'FileName': filePath,
+             // 'FileName': base64String, // Use the original file name encoded in base64
               'FileLocation': fileLocation, // Define your file storage path
               'FileExtension':
                   fileExtension, // Use the extracted file extension
@@ -628,7 +624,7 @@ class _AddLeadScreenState extends State<AddLeads>
             print('fileData======>$fileData');
 
             // Insert into FileRepositorys table
-            await dataAccessHandler.insertFileRepository(fileData);
+            await palm3FoilDatabase!.insertFileRepository(fileData);
           }
 
           // Trigger Sync for Leads and FileRepository
@@ -714,6 +710,9 @@ class _AddLeadScreenState extends State<AddLeads>
         final Uint8List imageData = await pickedFile.readAsBytes();
         setState(() {
           _images.add(imageData);
+          _imagepath.add(pickedFile);
+        //  _imagepath.ad
+
         });
       }
     } catch (e) {

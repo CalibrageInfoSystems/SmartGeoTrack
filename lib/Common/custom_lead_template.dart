@@ -7,6 +7,7 @@ import 'package:smartgetrack/Model/LeadsModel.dart';
 import 'package:smartgetrack/common_styles.dart';
 
 import '../Database/DataAccessHandler.dart';
+import '../UserProfileScreen.dart';
 
 class CustomLeadTemplate extends StatelessWidget {
   final int index;
@@ -48,33 +49,39 @@ class CustomLeadTemplate extends StatelessWidget {
           // Icon with a click action
           GestureDetector(
             onTap: () async {
-    final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
-
-
-    String? base64Image = await dataAccessHandler.fetchBase64Image(lead.code!);
-
-    if (base64Image != null) {
-    Uint8List bytes = base64Decode(base64Image);
-
-                //Uint8List bytes = base64Decode('');
-
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      content: Image.memory(bytes), // Show the image
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // Close the popup
-                          },
-                          child: Text('Close'),
-                        ),
-                      ],
-                    );
-                  },
-                );
-             }
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserProfileScreen(),
+                ),
+              );
+    // final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
+    //
+    //
+    // String? base64Image = await dataAccessHandler.fetchBase64Image(lead.code!);
+    //
+    // if (base64Image != null) {
+    // Uint8List bytes = base64Decode(base64Image);
+    //
+    //             //Uint8List bytes = base64Decode('');
+    //
+    //             showDialog(
+    //               context: context,
+    //               builder: (BuildContext context) {
+    //                 return AlertDialog(
+    //                   content: Image.memory(bytes), // Show the image
+    //                   actions: [
+    //                     TextButton(
+    //                       onPressed: () {
+    //                         Navigator.of(context).pop(); // Close the popup
+    //                       },
+    //                       child: Text('Close'),
+    //                     ),
+    //                   ],
+    //                 );
+    //               },
+    //             );
+    //          }
            },
             child: const Icon(Icons.arrow_circle_right_outlined),
           ),

@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:provider/provider.dart';
 
 import '../Model/FileRepositoryModel.dart';
 import '../Model/GeoBoundariesModel.dart';
@@ -9,11 +7,7 @@ import '../Model/LeadsModel.dart';
 import 'DataAccessHandler.dart';
 import 'DatabaseHelper.dart';
 
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-// other imports as necessary
-
-class SyncService {
+class SyncServiceB {
   static const String apiUrl =
       "http://182.18.157.215/SmartGeoTrack/API/SyncTransactions/SyncTransactions";
   static const String geoBoundariesTable = 'geoBoundaries';
@@ -30,8 +24,7 @@ class SyncService {
   ];
   int transactionsCheck = 0;
 
-  SyncService(
-      this.dataAccessHandler); // Constructor to inject DataAccessHandler
+  SyncServiceB(this.dataAccessHandler); // Constructor to inject DataAccessHandler
 
   Future<List<T>> _fetchData<T>(
       Future<List<T>> Function() fetchFunction, String modelName) async {
@@ -59,7 +52,7 @@ class SyncService {
 
     // Fetching leads
     List<LeadsModel> leadsList =
-        await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
+    await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
 
     // Check if leadsList is not empty before adding to the map
     if (leadsList.isNotEmpty) {
@@ -89,34 +82,16 @@ class SyncService {
     }
   }
 
-  // Future<void> getRefreshSyncTransDataMap() async {
-  //   // Fetching geoBoundaries
-  //   List<GeoBoundariesModel> geoBoundariesList = await _fetchData(DatabaseHelper.instance.getGeoBoundariesDetails, 'GeoBoundaries');
-  //   refreshTransactionsDataMap[geoBoundariesTable] = geoBoundariesList.map((model) => model.toMap()).toList();
-  //
-  //   // Fetching leads
-  //   List<LeadsModel> leadsList = await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
-  //   refreshTransactionsDataMap[leadsTable] = leadsList.map((model) => model.toMap()).toList();
-  //
-  //   // Fetching fileRepoList
-  //   List<FileRepositoryModel> fileRepoList = await _fetchData(DatabaseHelper.instance.getFileRepositoryDetails, 'File Repository');
-  //   refreshTransactionsDataMap[fileRepositoryTable] = fileRepoList.map((model) => model.toJson()).toList();
-  //
-  //   print('Fetched Data: $refreshTransactionsDataMap');
-  // }
-
-  Future<void> performRefreshTransactionsSync(BuildContext context) async {
+  Future<void> performRefreshTransactionsSync() async {
     await getRefreshSyncTransDataMap();
     if (refreshTransactionsDataMap.isNotEmpty) {
-      await _syncTransactionsDataToCloud(
-          context, refreshTableNamesList[transactionsCheck]);
+      await _syncTransactionsDataToCloud(refreshTableNamesList[transactionsCheck]);
     } else {
-      _showSnackBar(context, "No transactions data to sync.");
+      print("No transactions data to sync.");
     }
   }
 
-  Future<void> _syncTransactionsDataToCloud(
-      BuildContext context, String tableName) async {
+  Future<void> _syncTransactionsDataToCloud(String tableName) async {
     List tableData = refreshTransactionsDataMap[tableName] ?? [];
     print('tableData for ${jsonEncode({tableName: tableData})}');
 
@@ -135,43 +110,31 @@ class SyncService {
 
           transactionsCheck++;
           if (transactionsCheck < refreshTableNamesList.length) {
-            await _syncTransactionsDataToCloud(
-                context, refreshTableNamesList[transactionsCheck]);
+            await _syncTransactionsDataToCloud(refreshTableNamesList[transactionsCheck]);
           } else {
-            _showSnackBar(context, "Sync is successful!");
+            print("Sync is successful!");
           }
         } else {
           print('Error response: ${response.body}');
-          _showSnackBar(
-              context, "Sync failed for $tableName: ${response.body}");
+          print("Sync failed for $tableName: ${response.body}");
         }
       } catch (e) {
-        _showSnackBar(context, "Error syncing data for $tableName: $e");
+        print("Error syncing data for $tableName: $e");
       }
     } else {
       transactionsCheck++;
       if (transactionsCheck < refreshTableNamesList.length) {
-        await _syncTransactionsDataToCloud(
-            context, refreshTableNamesList[transactionsCheck]);
+        await _syncTransactionsDataToCloud(refreshTableNamesList[transactionsCheck]);
       } else {
-        _showSnackBar(context, "Sync is successful!");
+        print("Sync is successful!");
       }
     }
   }
 
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-
   Future<void> _updateServerUpdatedStatus(String tableName) async {
-    print(
-        "Attempting to update ServerUpdatedStatus for table: $tableName"); // Debug statement
-    final db = await dataAccessHandler
-        .database; // Accessing database from DataAccessHandler
-    String query =
-        "UPDATE $tableName SET ServerUpdatedStatus = '1' WHERE ServerUpdatedStatus = '0'";
+    print("Attempting to update ServerUpdatedStatus for table: $tableName"); // Debug statement
+    final db = await dataAccessHandler.database; // Accessing database from DataAccessHandler
+    String query = "UPDATE $tableName SET ServerUpdatedStatus = '1' WHERE ServerUpdatedStatus = '0'";
 
     try {
       await db.rawUpdate(query);

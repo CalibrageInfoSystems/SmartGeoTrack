@@ -1,9 +1,14 @@
 import 'dart:io';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
+
+import 'DataAccessHandler.dart';
+import 'SyncService.dart';
 
 class Palm3FoilDatabase {
   static const LOG_TAG = 'Palm3FoilDatabase';
@@ -97,11 +102,51 @@ class Palm3FoilDatabase {
       throw Exception('Error copying database');
     }
   }
+
+  // Future<void> insertLocationValues({
+  //   required double latitude,
+  //   required double longitude,
+  //   required int createdByUserId,
+  //   required bool serverUpdatedStatus,
+  //   required BuildContext context,  // Add BuildContext as a required parameter
+  // }) async {
+  //   try {
+  //     final db = await _openDatabase();
+  //     final geoBoundaryValues = {
+  //       'Latitude': latitude,
+  //       'Longitude': longitude,
+  //       'Address': 'testing',
+  //       'CreatedByUserId': createdByUserId,
+  //       'CreatedDate': DateTime.now().toIso8601String(),
+  //       'ServerUpdatedStatus': serverUpdatedStatus,
+  //     };
+  //
+  //     await db!.insert('GeoBoundaries', geoBoundaryValues);
+  //     print('Location values inserted');
+  //
+  //     // After inserting, check if network is available for syncing
+  //     final connectivityResult = await (Connectivity().checkConnectivity());
+  //
+  //     if (connectivityResult == ConnectivityResult.mobile || connectivityResult == ConnectivityResult.wifi) {
+  //       print('Network is available, syncing data...');
+  //       final dataAccessHandler =
+  //       Provider.of<DataAccessHandler>(context, listen: false);
+  //       final syncService = SyncService(dataAccessHandler);
+  //       syncService.performRefreshTransactionsSync(context); // Pass BuildContext here
+  //     } else {
+  //       print('No network available, data will sync later.');
+  //     }
+  //
+  //   } catch (e) {
+  //     print('Failed to insert location values: $e');
+  //   }
+  // }
+
+
   Future<void> insertLocationValues({
     required double latitude,
     required double longitude,
     required int createdByUserId,
-    required int updatedByUserId,
     required bool serverUpdatedStatus,
   }) async {
     try {
