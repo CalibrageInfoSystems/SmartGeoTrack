@@ -152,7 +152,7 @@ class _ViewLeadsState extends State<ViewLeads> {
   Future<List<LeadsModel>> filterTheLeads(String query) async {
     try {
       final dataAccessHandler =
-          Provider.of<DataAccessHandler>(context, listen: false);
+      Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getFilterData(query);
 
       return leads.map((item) => LeadsModel.fromMap(item)).toList();

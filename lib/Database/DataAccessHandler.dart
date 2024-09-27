@@ -221,4 +221,10 @@ class DataAccessHandler with ChangeNotifier {
       return leadData.containsKey('requiredField') &&
           leadData['requiredField'] != null;
     }
+  Future<List<Map<String, dynamic>>> getFilterData(String query) async {
+    final db = await DatabaseHelper.instance.database;
+    List<Map<String, dynamic>> results = await db.rawQuery(query);
+    return results;
   }
+
+}
