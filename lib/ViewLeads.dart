@@ -1,20 +1,23 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
+import 'package:smartgetrack/Common/custom_lead_template.dart';
 import 'package:smartgetrack/Common/custom_textfield.dart';
 import 'package:smartgetrack/Model/LeadsModel.dart';
+import 'package:smartgetrack/common_styles.dart';
 import 'package:smartgetrack/view_leads_info.dart';
+
 import 'Database/DataAccessHandler.dart';
 import 'Database/Palm3FoilDatabase.dart';
 import 'NewPassword.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import 'package:flutter/material.dart';
-import 'package:smartgetrack/Common/custom_lead_template.dart';
-import 'package:smartgetrack/common_styles.dart';
 
 class ViewLeads extends StatefulWidget {
   const ViewLeads({super.key});
@@ -24,8 +27,7 @@ class ViewLeads extends StatefulWidget {
 }
 
 class _ViewLeadsState extends State<ViewLeads> {
-  final List<Map<String, dynamic>> _leads = [];
-//  Palm3FoilDatabase? palm3FoilDatabase;
+  Palm3FoilDatabase? palm3FoilDatabase;
 
   DateTime? selectedFromDate;
   DateTime? selectedToDate;
@@ -73,59 +75,52 @@ class _ViewLeadsState extends State<ViewLeads> {
         ),
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: filterAndSearch(),
-            ),
+            filterAndSearch(),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: FutureBuilder(
-                  future: futureLeads,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CommonStyles.rectangularShapeShimmerEffect();
-                    } else if (snapshot.hasError) {
-                      // return Text('Error: ${snapshot.error}');
-                      return Text(
-                          snapshot.error
-                              .toString()
-                              .replaceFirst('Exception: ', ''),
-                          style: CommonStyles.txStyF16CpFF5);
+              child: FutureBuilder(
+                future: futureLeads,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CommonStyles.rectangularShapeShimmerEffect();
+                  } else if (snapshot.hasError) {
+                    return Text(
+                        snapshot.error
+                            .toString()
+                            .replaceFirst('Exception: ', ''),
+                        style: CommonStyles.txStyF16CpFF5);
+                  } else {
+                    final leads = snapshot.data as List<LeadsModel>;
+
+                    if (leads.isEmpty) {
+                      return const Center(
+                        child: Text('No Leads Found',
+                            style: CommonStyles.txStyF16CpFF5),
+                      );
                     } else {
-                      final leads = snapshot.data as List<LeadsModel>;
+                      return ListView.separated(
+                        itemCount: leads.length,
+                        itemBuilder: (context, index) {
+                          final lead = leads[index];
 
-                      if (leads.isEmpty) {
-                        return const Center(
-                          child: Text('No Leads Found',
-                              style: CommonStyles.txStyF16CpFF5),
-                        );
-                      } else {
-                        return ListView.separated(
-                          itemCount: leads.length,
-                          itemBuilder: (context, index) {
-                            final lead = leads[index];
-
-                            return CustomLeadTemplate(
-                                index: index,
-                                lead: lead,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ViewLeadsInfo(code: lead.code!),
-                                    ),
-                                  );
-                                });
-                          },
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 10),
-                        );
-                      }
+                          return CustomLeadTemplate(
+                              index: index,
+                              lead: lead,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ViewLeadsInfo(code: lead.code!),
+                                  ),
+                                );
+                              });
+                        },
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 0),
+                      );
                     }
-                  },
-                ),
+                  }
+                },
               ),
             ),
           ],
@@ -137,7 +132,6 @@ class _ViewLeadsState extends State<ViewLeads> {
       final dataAccessHandler =
           Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getleads();
-      print('leads: ${jsonEncode(leads)}');
       return leads.map((item) => LeadsModel.fromMap(item)).toList();
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
@@ -149,6 +143,18 @@ class _ViewLeadsState extends State<ViewLeads> {
       final dataAccessHandler =
           Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getTodayLeads(today);
+      return leads.map((item) => LeadsModel.fromMap(item)).toList();
+    } catch (e) {
+      throw Exception('catch: ${e.toString()}');
+    }
+  }
+
+  Future<List<LeadsModel>> filterTheLeads(String query) async {
+    try {
+      final dataAccessHandler =
+          Provider.of<DataAccessHandler>(context, listen: false);
+      List<dynamic> leads = await dataAccessHandler.getFilterData(query);
+
       return leads.map((item) => LeadsModel.fromMap(item)).toList();
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
@@ -214,9 +220,10 @@ class _ViewLeadsState extends State<ViewLeads> {
 
   List<String> dates = ['Today', 'This Week', 'Month'];
   List<String> types = ['Company', 'Individual'];
-  int dateChipValue = 0;
+  int dateChipValue = -1;
   int typeChipValue = -1;
 
+//MARK: openFilter
   void openFilter(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -244,7 +251,6 @@ class _ViewLeadsState extends State<ViewLeads> {
                 },
                 onSelectedTypeChip: (int selectedIndex) {
                   setModalState(() {
-                    // Allow type chip to be deselected (set to -1)
                     typeChipValue = selectedIndex;
                   });
                 },
@@ -265,13 +271,149 @@ class _ViewLeadsState extends State<ViewLeads> {
                       lastDate: currentDate,
                       initialDate: selectedFromDate);
                 },
-                onSubmit: (value) {},
+                onSubmit: (date, category) {
+                  print('test: $selectedFromDate');
+                  if (fromDateController.text.isNotEmpty &&
+                      toDateController.text.isEmpty) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please select To Date',
+                        ),
+                      ),
+                    );
+                  } else if (fromDateController.text.isEmpty &&
+                      toDateController.text.isNotEmpty) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Please select From Date',
+                        ),
+                      ),
+                    );
+                  } else if (isFromDateGreaterThanToDate(
+                      selectedFromDate.toString(), selectedToDate.toString())) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'From Date cannot be greater than To Date',
+                        ),
+                      ),
+                    );
+                  } else {
+                    final result = FilterModel(
+                      date: getDate(date),
+                      category: getCategory(category),
+                      fromDate: validateDate(fromDateController.text),
+                      toDate: validateDate(toDateController.text),
+                    );
+                    // print(
+                    //     'Result: ${result.date} ${result.category} ${result.fromDate} ${result.toDate}');
+
+                    final query = buildLeadsQuery(result.date, result.category,
+                        result.fromDate, result.toDate);
+                    Navigator.pop(context);
+                    setState(() {
+                      futureLeads = filterTheLeads(query);
+                    });
+                  }
+                },
               ),
             );
           },
         );
       },
     );
+  }
+
+  bool isFromDateGreaterThanToDate(String fromDate, String toDate) {
+    DateTime fromDateTime = DateTime.parse(fromDate);
+    DateTime toDateTime = DateTime.parse(toDate);
+
+    return fromDateTime.isAfter(toDateTime);
+  }
+
+  String? validateDate(String? date) {
+    if (date == null || date.isEmpty) {
+      return null;
+    }
+    return convertDate(date);
+  }
+
+  String convertDate(String dateStr) {
+    DateFormat inputFormat = DateFormat('dd/MM/yyyy');
+
+    DateTime dateTime = inputFormat.parse(dateStr);
+
+    DateFormat outputFormat = DateFormat('yyyy-MM-dd');
+
+    return outputFormat.format(dateTime);
+  }
+
+  String buildLeadsQuery(
+      String? date, int? category, String? fromDate, String? toDate) {
+    String query = 'SELECT * FROM Leads';
+
+    List<String> conditions = [];
+
+    if (date != null) {
+      conditions.add('DATE(CreatedDate) = "$date"');
+    }
+
+    if (category != null) {
+      conditions.add('IsCompany = $category');
+    }
+
+    if (date == null) {
+      if (fromDate != null && toDate != null) {
+        conditions.add('DATE(CreatedDate) BETWEEN "$fromDate" AND "$toDate"');
+      }
+    }
+
+    if (conditions.isNotEmpty) {
+      query += ' WHERE ${conditions.join(' AND ')}';
+    }
+
+    return query;
+  }
+
+  String? getDate(int? date) {
+    final now = DateTime.now();
+
+    switch (date) {
+      case 0: // Today
+        return _formatDate(now);
+
+      case 1: // This Week (Get Monday of the current week)
+        final monday = now.subtract(Duration(days: now.weekday - 1));
+        return _formatDate(monday);
+
+      case 2: // Month (Get the first day of the current month)
+        final firstDayOfMonth = DateTime(now.year, now.month, 1);
+        return _formatDate(firstDayOfMonth);
+
+      default:
+        return null;
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    // Format the date as YYYY-MM-DD
+    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  int? getCategory(int? category) {
+    switch (category) {
+      case 0:
+        return 1;
+      case 1:
+        return 0;
+      default:
+        return null;
+    }
   }
 
   Future<void> launchFromDatePicker(BuildContext context,
@@ -323,6 +465,7 @@ class _ViewLeadsState extends State<ViewLeads> {
   }
 }
 
+//MARK: Filter
 class Filter extends StatefulWidget {
   final int dateChipValue;
   final int typeChipValue;
@@ -332,7 +475,8 @@ class Filter extends StatefulWidget {
   final List<String> types;
   final void Function()? onToDate;
   final void Function()? onFromDate;
-  final void Function(int) onSubmit;
+  final void Function(int?, int?) onSubmit;
+  final void Function()? onClearPressed;
   final TextEditingController? fromDateController;
   final TextEditingController? toDateController;
 
@@ -349,6 +493,7 @@ class Filter extends StatefulWidget {
     this.onSelectedDateChip,
     this.onSelectedTypeChip,
     required this.onSubmit,
+    this.onClearPressed,
   });
 
   @override
@@ -356,8 +501,15 @@ class Filter extends StatefulWidget {
 }
 
 class _FilterState extends State<Filter> {
-  int selectedDateIndex = 0;
+  int? selectedDateIndex;
   int? selectedTypeIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedDateIndex = widget.dateChipValue;
+    selectedTypeIndex = widget.typeChipValue;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -481,7 +633,7 @@ class _FilterState extends State<Filter> {
                     Expanded(
                       child: customBtn(
                         onPressed: () {
-                          widget.onSubmit(selectedDateIndex);
+                          widget.onSubmit(selectedDateIndex, selectedTypeIndex);
                         },
                         child: const Text(
                           'Submit',
@@ -492,7 +644,7 @@ class _FilterState extends State<Filter> {
                     const SizedBox(width: 20),
                     Expanded(
                       child: customBtn(
-                          onPressed: () {},
+                          onPressed: widget.onClearPressed,
                           child: const Text(
                             'Clear',
                             style: CommonStyles.txStyF14CwFF5,
@@ -526,4 +678,15 @@ class _FilterState extends State<Filter> {
   }
 }
 
-class FilterModel {}
+class FilterModel {
+  String? date;
+  int? category;
+  String? fromDate;
+  String? toDate;
+  FilterModel({
+    this.date,
+    this.category,
+    this.fromDate,
+    this.toDate,
+  });
+}
