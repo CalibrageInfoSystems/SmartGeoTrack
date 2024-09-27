@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:smartgetrack/Common/custom_textfield.dart';
 import 'package:smartgetrack/Model/LeadsModel.dart';
+import 'package:smartgetrack/view_leads_info.dart';
 import 'Database/DataAccessHandler.dart';
 import 'Database/Palm3FoilDatabase.dart';
 import 'NewPassword.dart';
@@ -102,7 +103,18 @@ class _ViewLeadsState extends State<ViewLeads> {
                       itemBuilder: (context, index) {
                         final lead = leads[index];
 
-                        return CustomLeadTemplate(index: index, lead: lead);
+                        return CustomLeadTemplate(
+                            index: index,
+                            lead: lead,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ViewLeadsInfo(code: lead.code!),
+                                ),
+                              );
+                            });
                       },
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 10),
