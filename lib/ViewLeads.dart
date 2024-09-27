@@ -73,59 +73,53 @@ class _ViewLeadsState extends State<ViewLeads> {
         ),
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: filterAndSearch(),
-            ),
+            filterAndSearch(),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: FutureBuilder(
-                  future: futureLeads,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CommonStyles.rectangularShapeShimmerEffect();
-                    } else if (snapshot.hasError) {
-                      // return Text('Error: ${snapshot.error}');
-                      return Text(
-                          snapshot.error
-                              .toString()
-                              .replaceFirst('Exception: ', ''),
-                          style: CommonStyles.txStyF16CpFF5);
+              child: FutureBuilder(
+                future: futureLeads,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CommonStyles.rectangularShapeShimmerEffect();
+                  } else if (snapshot.hasError) {
+                    // return Text('Error: ${snapshot.error}');
+                    return Text(
+                        snapshot.error
+                            .toString()
+                            .replaceFirst('Exception: ', ''),
+                        style: CommonStyles.txStyF16CpFF5);
+                  } else {
+                    final leads = snapshot.data as List<LeadsModel>;
+
+                    if (leads.isEmpty) {
+                      return const Center(
+                        child: Text('No Leads Found',
+                            style: CommonStyles.txStyF16CpFF5),
+                      );
                     } else {
-                      final leads = snapshot.data as List<LeadsModel>;
+                      return ListView.separated(
+                        itemCount: leads.length,
+                        itemBuilder: (context, index) {
+                          final lead = leads[index];
 
-                      if (leads.isEmpty) {
-                        return const Center(
-                          child: Text('No Leads Found',
-                              style: CommonStyles.txStyF16CpFF5),
-                        );
-                      } else {
-                        return ListView.separated(
-                          itemCount: leads.length,
-                          itemBuilder: (context, index) {
-                            final lead = leads[index];
-
-                            return CustomLeadTemplate(
-                                index: index,
-                                lead: lead,
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ViewLeadsInfo(code: lead.code!),
-                                    ),
-                                  );
-                                });
-                          },
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 10),
-                        );
-                      }
+                          return CustomLeadTemplate(
+                              index: index,
+                              lead: lead,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ViewLeadsInfo(code: lead.code!),
+                                  ),
+                                );
+                              });
+                        },
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 0),
+                      );
                     }
-                  },
-                ),
+                  }
+                },
               ),
             ),
           ],
