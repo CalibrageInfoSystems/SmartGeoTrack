@@ -17,7 +17,7 @@ class DataAccessHandler with ChangeNotifier {
   }
 
   Future<Database> _initDatabase() async {
-  //  Directory documentsDirectory = Directory('/storage/emulated/0'); //TODO
+    //  Directory documentsDirectory = Directory('/storage/emulated/0'); //TODO
     const String folderName = 'SmartGeoTrack';
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     Directory customDirectory =
@@ -216,6 +216,14 @@ class DataAccessHandler with ChangeNotifier {
     List<Map<String, dynamic>> results = await db.query(query);
 /*     print('xxx: $query');
     print('xxx: ${jsonEncode(results)}'); */
+    return results;
+  }
+
+  Future<List<Map<String, dynamic>>> getFilterData(String query) async {
+    final db = await database;
+    print('zzz: $query');
+    List<Map<String, dynamic>> results = await db.rawQuery(query);
+    print('zzz: ${jsonEncode(results)}');
     return results;
   }
 

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
@@ -62,7 +64,7 @@ class _AddLeadScreenState extends State<AddLeads>
         // Limit the number of files added to not exceed the total of 3 files + images
         int availableSlots = 3 - (_images.length + _files.length);
         List<PlatformFile> selectedFiles =
-        result.files.take(availableSlots).toList();
+            result.files.take(availableSlots).toList();
 
         setState(() {
           _files.addAll(selectedFiles);
@@ -281,9 +283,9 @@ class _AddLeadScreenState extends State<AddLeads>
                                       alignment: Alignment.center,
                                       child: Column(
                                         mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                            MainAxisAlignment.center,
                                         crossAxisAlignment:
-                                        CrossAxisAlignment.center,
+                                            CrossAxisAlignment.center,
                                         children: [
                                           SvgPicture.asset(
                                             "assets/add_a_photo.svg",
@@ -317,9 +319,9 @@ class _AddLeadScreenState extends State<AddLeads>
                                       alignment: Alignment.center,
                                       child: Column(
                                         mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                            MainAxisAlignment.center,
                                         crossAxisAlignment:
-                                        CrossAxisAlignment.center,
+                                            CrossAxisAlignment.center,
                                         children: [
                                           SvgPicture.asset(
                                             "assets/fileuploadicon.svg",
@@ -404,9 +406,9 @@ class _AddLeadScreenState extends State<AddLeads>
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           border:
-                                          Border.all(color: Colors.blue),
+                                              Border.all(color: Colors.blue),
                                           borderRadius:
-                                          BorderRadius.circular(8),
+                                              BorderRadius.circular(8),
                                           color: Colors.grey[100],
                                         ),
                                         child: Row(
@@ -420,7 +422,7 @@ class _AddLeadScreenState extends State<AddLeads>
                                                 style: const TextStyle(
                                                     fontSize: 14,
                                                     overflow:
-                                                    TextOverflow.ellipsis),
+                                                        TextOverflow.ellipsis),
                                               ),
                                             ),
                                           ],
@@ -504,7 +506,7 @@ class _AddLeadScreenState extends State<AddLeads>
       String? empCode = await fetchEmpCode(Username!, context);
       palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
       final dataAccessHandler =
-      Provider.of<DataAccessHandler>(context, listen: false);
+          Provider.of<DataAccessHandler>(context, listen: false);
 
       print('empCode===$empCode');
 
@@ -521,7 +523,7 @@ class _AddLeadScreenState extends State<AddLeads>
 ''';
 
       int? maxSerialNumber =
-      await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
+          await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
 
       int serialNumber = (maxSerialNumber != null) ? maxSerialNumber + 1 : 1;
 
@@ -553,12 +555,14 @@ class _AddLeadScreenState extends State<AddLeads>
 
         try {
           // Insert lead data into the database and get the inserted ID
-          int leadId = await palm3FoilDatabase!.insertLead(leadData); // Ensure this returns the inserted ID
+          int leadId = await palm3FoilDatabase!
+              .insertLead(leadData); // Ensure this returns the inserted ID
           print('leadId======>$leadId');
 
           for (var image in _imagepath) {
             // Prepare data for the FileRepositorys table
-            String fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg'; // Modify as needed
+            String fileName =
+                'image_${DateTime.now().millisecondsSinceEpoch}.jpg'; // Modify as needed
             String fileLocation = image.path; // Define your file storage path
             String fileExtension = '.jpg'; // Adjust based on image type
             print('===fileLocation $fileLocation');
@@ -569,93 +573,62 @@ class _AddLeadScreenState extends State<AddLeads>
               'FileLocation': fileLocation,
               'FileExtension': fileExtension,
               'IsActive': 1,
-              'CreatedByUserId': userID, // Replace with actual user ID// Store as 1 for true
+              'CreatedByUserId':
+                  userID, // Replace with actual user ID// Store as 1 for true
               'CreatedDate': DateTime.now().toIso8601String(),
               'UpdatedByUserId': userID, // Replace with actual user ID
               'UpdatedDate': DateTime.now().toIso8601String(),
               'ServerUpdatedStatus': false,
             };
-            print('fileData======>$fileData');
-            // Insert into FileRepositorys table
             await palm3FoilDatabase!.insertFileRepository(fileData);
           }
-
-// Assuming `_files`, `leadCode`, `userID`, and `dataAccessHandler` are defined in your class
           for (var file in _files) {
-            // Extract file extension
-            String fileExtension = path.extension(file.name); // Get the file extension dynamically
+            String fileExtension = path.extension(file.name);
+            String? fileLocation = file.path;
 
-            // Define your file storage path (assuming you have this logic)
-            String fileLocation =
-                ''; // Initialize or define your file storage path
+            String? filePath = file.name;
 
-            // Read file bytes
-            String? filePath = file.path; // Get the path directly from the file object
-            File fileObj = File(filePath!); // Rename the variable to avoid confusion
-
-            // Read file bytes
-            List<int> fileBytes = await fileObj.readAsBytes();
-
-            // Encode bytes to base64
-            String base64String = base64Encode(fileBytes);
-            print('base64String====$base64String');
-
-            // Encode file name in base64
-            String base64FileName = base64Encode(utf8
-                .encode(file.name)); // Uncommented and corrected variable name
-
-            // Prepare the file data for insertion
             final fileData = {
-              'leadsCode': leadCode, // Use the retrieved lead ID here
+              'leadsCode': leadCode,
               'FileName': filePath,
-              // 'FileName': base64String, // Use the original file name encoded in base64
-              'FileLocation': filePath, // Define your file storage path
-              'FileExtension':
-              fileExtension, // Use the extracted file extension
+              'FileLocation': fileLocation,
+              'FileExtension': fileExtension,
               'IsActive': 1,
-              'CreatedByUserId': userID, // Replace with actual user ID
+              'CreatedByUserId': userID,
               'CreatedDate': DateTime.now().toIso8601String(),
-              'UpdatedByUserId': userID, // Replace with actual user ID
+              'UpdatedByUserId': userID,
               'UpdatedDate': DateTime.now().toIso8601String(),
               'ServerUpdatedStatus': false,
             };
 
-            print('fileData======>$fileData');
-
-            // Insert into FileRepositorys table
             await palm3FoilDatabase!.insertFileRepository(fileData);
           }
 
-          // Trigger Sync for Leads and FileRepository
           final syncService = SyncService(dataAccessHandler);
           syncService.performRefreshTransactionsSync(context);
 
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => const HomeScreen()),
-          // );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
 
-          // Clear all input fields and images
           _nameController.clear();
           _companyNameController.clear();
           _phoneNumberController.clear();
           _emailController.clear();
           _commentsController.clear();
-          _images.clear(); // Clear the images list
+          _images.clear();
 
-          // Navigate to the home screen
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   const SnackBar(content: Text('Lead Data Inserted Successfully!')),
-          // );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Lead Data Inserted Successfully!')),
+          );
         } catch (e) {
-          // Handle database insertion failure
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to insert lead data.')),
           );
           print('Error inserting lead data: $e');
         }
       } else {
-        // Location fetch failed
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to get location.')),
         );
@@ -711,7 +684,6 @@ class _AddLeadScreenState extends State<AddLeads>
           _images.add(imageData);
           _imagepath.add(pickedFile);
           //  _imagepath.ad
-
         });
       }
     } catch (e) {
@@ -731,7 +703,7 @@ class _AddLeadScreenState extends State<AddLeads>
     if (_images.length + _files.length > 3) {
       setState(() {
         _errorMessage =
-        'You can upload a maximum of 3 images and files combined.';
+            'You can upload a maximum of 3 images and files combined.';
       });
     } else {
       setState(() {
@@ -760,7 +732,7 @@ class _AddLeadScreenState extends State<AddLeads>
 
   Future<String?> fetchEmpCode(String username, BuildContext context) async {
     final dataAccessHandler =
-    Provider.of<DataAccessHandler>(context, listen: false);
+        Provider.of<DataAccessHandler>(context, listen: false);
 
     // Use parameterized query to avoid SQL injection
     String empCodeQuery = 'SELECT EmpCode FROM UserInfos WHERE UserName = ?';
