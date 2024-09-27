@@ -46,33 +46,38 @@ class SyncService {
   }
 
   Future<void> getRefreshSyncTransDataMap() async {
-    // Fetching geoBoundaries
+
     // Fetching geoBoundaries
     List<GeoBoundariesModel> geoBoundariesList = await _fetchData(
         DatabaseHelper.instance.getGeoBoundariesDetails, 'GeoBoundaries');
-
-    // Check if geoBoundariesList is not empty before adding to the map
     if (geoBoundariesList.isNotEmpty) {
-      List<GeoBoundariesModel> updatedGeoBoundariesList = [];
-
-      // For each geo boundary, get the address using latitude and longitude
-      for (var boundary in geoBoundariesList) {
-        if (boundary.latitude != null && boundary.longitude != null) {
-          String address = await getAddressFromLatLong(boundary.latitude!, boundary.longitude!);
-          boundary.Address = address;
-        }
-
-        // Add the updated boundary to the new list
-        updatedGeoBoundariesList.add(boundary);
-      }
-
-      // Now store the updated list with addresses in the map
       refreshTransactionsDataMap[geoBoundariesTable] =
-          updatedGeoBoundariesList.map((model) => model.toMap()).toList();
-      print('Updated geoBoundariesTable map: ${refreshTransactionsDataMap[geoBoundariesTable]}');
+          geoBoundariesList.map((model) => model.toMap()).toList();
     } else {
       print('GeoBoundaries list is empty, skipping to next.');
     }
+    // Check if geoBoundariesList is not empty before adding to the map
+    // if (geoBoundariesList.isNotEmpty) {  //todo
+    //   List<GeoBoundariesModel> updatedGeoBoundariesList = [];
+    //
+    //   // For each geo boundary, get the address using latitude and longitude
+    //   for (var boundary in geoBoundariesList) {
+    //     if (boundary.latitude != null && boundary.longitude != null) {
+    //       String address = await getAddressFromLatLong(boundary.latitude!, boundary.longitude!);
+    //       boundary.Address = address;
+    //     }
+    //
+    //     // Add the updated boundary to the new list
+    //     updatedGeoBoundariesList.add(boundary);
+    //   }
+    //
+    //   // Now store the updated list with addresses in the map
+    //   refreshTransactionsDataMap[geoBoundariesTable] =
+    //       updatedGeoBoundariesList.map((model) => model.toMap()).toList();
+    //   print('Updated geoBoundariesTable map: ${refreshTransactionsDataMap[geoBoundariesTable]}');
+    // } else {
+    //   print('GeoBoundaries list is empty, skipping to next.');
+    // }
     // Fetching leads
     List<LeadsModel> leadsList =
     await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');

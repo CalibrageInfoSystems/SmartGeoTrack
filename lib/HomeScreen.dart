@@ -532,16 +532,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Text('Hello,',
                               style: CommonStyles.txStyF20CpFF5),
                           Text(
-                            'string',
-                          //  '${username!}',
+                           // 'string',
+                        '${username!}',
                             style: CommonStyles.txStyF20CpFF5.copyWith(
                               fontSize: 25,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
                            Text(
-                             '26th Sep 2024',
-                           // '${formattedDate}',
+                           //  '26th Sep 2024',
+                            '${formattedDate}',
                             style: CommonStyles.txStyF14CbFF5,
                           ),
                         ],
