@@ -17,9 +17,9 @@ class LeadInfoModel {
   final double? latitude;
   final double? longitude;
   final int? createdByUserId;
-  final DateTime? createdDate;
+  final String? createdDate;
   final int? updatedByUserId;
-  final DateTime? updatedDate;
+  final String? updatedDate;
   final int? serverUpdatedStatus;
 
   LeadInfoModel({
@@ -52,13 +52,9 @@ class LeadInfoModel {
         latitude: json["Latitude"]?.toDouble(),
         longitude: json["Longitude"]?.toDouble(),
         createdByUserId: json["CreatedByUserId"],
-        createdDate: json["CreatedDate"] == null
-            ? null
-            : DateTime.parse(json["CreatedDate"]),
+        createdDate: json["CreatedDate"],
         updatedByUserId: json["UpdatedByUserId"],
-        updatedDate: json["UpdatedDate"] == null
-            ? null
-            : DateTime.parse(json["UpdatedDate"]),
+        updatedDate: json["UpdatedDate"],
         serverUpdatedStatus: json["ServerUpdatedStatus"],
       );
 
@@ -74,9 +70,9 @@ class LeadInfoModel {
         "Latitude": latitude,
         "Longitude": longitude,
         "CreatedByUserId": createdByUserId,
-        "CreatedDate": createdDate?.toIso8601String(),
+        "CreatedDate": createdDate,
         "UpdatedByUserId": updatedByUserId,
-        "UpdatedDate": updatedDate?.toIso8601String(),
+        "UpdatedDate": updatedDate,
         "ServerUpdatedStatus": serverUpdatedStatus,
       };
 }

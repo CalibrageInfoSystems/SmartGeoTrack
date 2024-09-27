@@ -38,6 +38,7 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
       List<dynamic> result = await dataAccessHandler.getLeadInfoByCode(code);
       List<LeadInfoModel> leads =
           result.map((item) => LeadInfoModel.fromJson(item)).toList();
+      print('xxx Info: ${jsonEncode(leads)}');
       return leads;
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
@@ -52,6 +53,7 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
           await dataAccessHandler.getLeadImagesByCode(code, '.jpg');
       List<Map<String, dynamic>> leads =
           result.map((item) => Map<String, dynamic>.from(item)).toList();
+      print('xxx Images: ${jsonEncode(leads)}');
       return leads;
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
@@ -68,14 +70,27 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
       );
       List<Map<String, dynamic>> leads =
           result.map((item) => Map<String, dynamic>.from(item)).toList();
+      print('xxx Docs: ${jsonEncode(leads)}');
       return leads;
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
     }
   }
 
-  void openTheFile(String filePath) {
-    OpenFile.open(filePath);
+  Future<void> openLocalFileByPath(String? filePath) async {
+    print('openLocalFileByPath: $filePath');
+    if (filePath != null && filePath.isNotEmpty) {
+      final file = File(filePath);
+      if (await file.exists()) {
+        await OpenFile.open(filePath);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('File not found'),
+        ),
+      );
+    }
   }
 
   @override
@@ -91,95 +106,149 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                 future: futureLeadInfo,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return CommonStyles.customShimmer(child: leadInfoShimmer());
                   } else if (snapshot.hasError) {
-                    // return Text('Error: ${snapshot.error}');
                     return Text(
                         snapshot.error
                             .toString()
                             .replaceFirst('Exception: ', ''),
                         style: CommonStyles.txStyF16CpFF5);
-                  } else if (!snapshot.hasData) {
-                    return const Text('No data');
+                  } else {
+                    final leads = snapshot.data as List<LeadInfoModel>;
+
+                    if (leads.isEmpty) {
+                      return const SizedBox();
+                    } else {
+                      return Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          leadInfo(leads[0]),
+                        ],
+                      );
+                    }
                   }
-                  final leads = snapshot.data as List<LeadInfoModel>;
-                  if (leads.isEmpty) {
-                    return const SizedBox();
-                  }
-                  return Column(
-                    children: [
-                      const SizedBox(height: 12),
-                      leadInfo(leads[0]),
-                    ],
-                  );
                 },
               ),
               FutureBuilder(
                 future: futureLeadImages,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  } else if (!snapshot.hasData && snapshot.data!.isEmpty) {
-                    return const SizedBox();
+                    return CommonStyles.customShimmer(
+                        child: leadInfoShimmer(height: 100));
+                  } else if (snapshot.hasError) {
+                    return Text(
+                        snapshot.error
+                            .toString()
+                            .replaceFirst('Exception: ', ''),
+                        style: CommonStyles.txStyF16CpFF5);
+                  } else {
+                    final leads = snapshot.data!;
+
+                    if (leads.isEmpty) {
+                      return const SizedBox();
+                    } else {
+                      return Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          uploadmages(leads),
+                        ],
+                      );
+                    }
                   }
-                  final leads = snapshot.data!;
-                  return Column(
-                    children: [
-                      const SizedBox(height: 12),
-                      uploadmages(leads),
-                    ],
-                  );
                 },
               ),
               FutureBuilder(
-                future: futureLeadImages,
+                future: futureLeadDocs,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  } else if (!snapshot.hasData && snapshot.data!.isEmpty) {
-                    return const SizedBox();
+                    return CommonStyles.customShimmer(
+                        child: leadInfoShimmer(height: 100));
+                  } else if (snapshot.hasError) {
+                    return Text(
+                        snapshot.error
+                            .toString()
+                            .replaceFirst('Exception: ', ''),
+                        style: CommonStyles.txStyF16CpFF5);
+                  } else {
+                    final leads = snapshot.data!;
+
+                    if (leads.isEmpty) {
+                      return const SizedBox();
+                    } else {
+                      return Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          uploadDocs(leads),
+                        ],
+                      );
+                    }
                   }
-                  final leads = snapshot.data!;
-                  return Column(
-                    children: [
-                      const SizedBox(height: 12),
-                      uploadDocs(leads),
-                    ],
-                  );
                 },
               ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: CommonStyles.listEvenColor,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Updated Details:',
-                      style: CommonStyles.txStyF16CpFF5,
-                    ),
-                    const SizedBox(height: 10),
-                    updatedDetailItem(label: 'Updated At', data: '12-12-2022'),
-                    updatedDetailItem(label: 'Updated By', data: '12-12-2022'),
-                  ],
-                ),
+              FutureBuilder(
+                future: futureLeadInfo,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CommonStyles.customShimmer(child: leadInfoShimmer());
+                  } else if (snapshot.hasError) {
+                    return Text(
+                        snapshot.error
+                            .toString()
+                            .replaceFirst('Exception: ', ''),
+                        style: CommonStyles.txStyF16CpFF5);
+                  } else {
+                    final leads = snapshot.data as List<LeadInfoModel>;
+
+                    if (leads.isEmpty) {
+                      return const SizedBox();
+                    } else {
+                      return Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          updatedDetails(leads[0]),
+                        ],
+                      );
+                    }
+                  }
+                },
               ),
               const SizedBox(height: 12),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Column updatedDetails(LeadInfoModel lead) {
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: CommonStyles.listEvenColor,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Updated Details:',
+                style: CommonStyles.txStyF16CpFF5,
+              ),
+              const SizedBox(height: 10),
+              updatedDetailItem(
+                  label: 'Updated At',
+                  data: CommonStyles.formatDateString(lead.createdDate)),
+              updatedDetailItem(
+                  label: 'Updated By',
+                  data: CommonStyles.formatDateString(lead.updatedDate)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -206,7 +275,7 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              'Uploaded Images:',
+              'Uploaded Documents:',
               style: CommonStyles.txStyF16CbFF5,
             ),
             const SizedBox(height: 10),
@@ -214,8 +283,7 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
               spacing: 20,
               children: [
                 ...leads.map(
-                  (lead) =>
-                      customDoc(lead['FileLocation'], leads.indexOf(lead)),
+                  (lead) => customDoc(lead, leads.indexOf(lead)),
                 ),
               ],
             )
@@ -223,16 +291,16 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
     );
   }
 
-  Column customDoc(String filePath, int index) {
+  Column customDoc(Map<String, dynamic> lead, int index) {
     return Column(
       children: [
         GestureDetector(
-            onTap: () => openTheFile(filePath),
-            child: SvgPicture.asset('assets/add_a_photo.svg',
-                width: 70, height: 70)),
+            onTap: () => openLocalFileByPath(lead['FileLocation']),
+            child: SvgPicture.asset('assets/fileDownloadIcon.svg',
+                color: CommonStyles.btnBlueBgColor, width: 70, height: 70)),
         const SizedBox(height: 5),
         Text(
-          'Doc-$index',
+          'Doc${lead['FileExtension']}',
           style: CommonStyles.txStyF14CbFF5,
         )
       ],
@@ -336,45 +404,13 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
     );
   }
 
-  Container leadInfoShimmer() {
+  Container leadInfoShimmer({double? height = 130}) {
     return Container(
+      height: height,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: CommonStyles.listOddColor,
         borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Lead Name',
-                style: CommonStyles.txStyF16CpFF5,
-              ),
-              /* IconButton(
-                      icon: const Icon(Icons.location_on,
-                          color: CommonStyles.formFieldErrorBorderColor),
-                      onPressed: () {},
-                    ), */
-              Icon(Icons.location_on,
-                  color: CommonStyles.formFieldErrorBorderColor),
-            ],
-          ),
-          const SizedBox(height: 5),
-          listCustomText('ABCD Company'),
-          listCustomText('test@test.in'),
-          listCustomText('+91 9249234422'),
-          const Text('Comment:',
-              style: TextStyle(
-                  fontSize: 16, color: CommonStyles.primaryTextColor)),
-          const SizedBox(height: 3),
-          const Text(
-              'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.',
-              style: CommonStyles.txStyF14CbFF5),
-        ],
       ),
     );
   }

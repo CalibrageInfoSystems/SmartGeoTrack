@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CommonStyles {
@@ -59,12 +60,12 @@ class CommonStyles {
       fontWeight: FontWeight.w500,
       color: CommonStyles.blueTextColor);
 
-  static const txStyF14CbFF5 = TextStyle(
+  static const txStyF14CpFF = TextStyle(
       fontSize: 14,
       fontFamily: "hind_semibold",
       fontWeight: FontWeight.w500,
       color: CommonStyles.primaryTextColor);
-  static const txStyF14CpFF5 = TextStyle(
+  static const txStyF14CbFF5 = TextStyle(
       fontSize: 14,
       fontFamily: "hind_semibold",
       fontWeight: FontWeight.w500,
@@ -420,6 +421,22 @@ class CommonStyles {
         ),
       ),
       separatorBuilder: (context, index) => const SizedBox(height: 10),
+    );
+  }
+
+  static String? formatDateString(String? date) {
+    print('date: $date');
+    if (date != null && date.isNotEmpty) {
+      return DateFormat('dd-MM-yyyy').format(DateTime.parse(date));
+    }
+    return date;
+  }
+
+  static Widget customShimmer({required Widget child}) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade400,
+      highlightColor: Colors.white,
+      child: child,
     );
   }
 
