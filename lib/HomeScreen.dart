@@ -48,14 +48,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Palm3FoilDatabase? palm3FoilDatabase;
   final dataAccessHandler = DataAccessHandler();
   String? username;
-   String? formattedDate ;
+  String? formattedDate;
   bool isLocationEnabled = false;
   int? userID;
   @override
   void initState() {
     super.initState();
     getuserdata();
-    backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
+    backgroundService =
+        BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
     checkLocationEnabled();
     startService();
   }
@@ -92,16 +93,17 @@ class _HomeScreenState extends State<HomeScreen> {
           heading: double.tryParse(event['heading'].toString()) ?? 0.0,
           speed: double.tryParse(event['speed'].toString()) ?? 0.0,
           speedAccuracy:
-          double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
+              double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
           altitudeAccuracy:
-          double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
+              double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
           headingAccuracy:
-          double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
+              double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
         );
-        print("on_location_changed: ${position.latitude} -  ${ position.longitude}");
-        if (_isPositionAccurate(position) ) {
-          double distance = Geolocator.distanceBetween(
-              lastLatitude, lastLongitude, position.latitude, position.longitude);
+        print(
+            "on_location_changed: ${position.latitude} -  ${position.longitude}");
+        if (_isPositionAccurate(position)) {
+          double distance = Geolocator.distanceBetween(lastLatitude,
+              lastLongitude, position.latitude, position.longitude);
 
           if (distance >= MIN_DISTANCE_THRESHOLD) {
             lastLatitude = position.latitude;
@@ -109,14 +111,14 @@ class _HomeScreenState extends State<HomeScreen> {
             DateTime timestamp = DateTime.now();
             // Insert location into the database
             await palm3FoilDatabase!.insertLocationValues(
-              latitude: position.latitude,
-              longitude: position.longitude,
-              createdByUserId:userID,  // replace userID with the actual value
-              serverUpdatedStatus: false,
-              from: '116'
-            );
+                latitude: position.latitude,
+                longitude: position.longitude,
+                createdByUserId: userID, // replace userID with the actual value
+                serverUpdatedStatus: false,
+                from: '116');
 
-            appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
+            appendLog(
+                'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
             //  await sendLocationToAPI(position.latitude, position.longitude, timestamp);
             bool isConnected = await CommonStyles.checkInternetConnectivity();
             if (isConnected) {
@@ -131,18 +133,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   timeInSecForIosWeb: 1,
                   backgroundColor: Colors.red,
                   textColor: Colors.white,
-                  fontSize: 16.0
-              );
+                  fontSize: 16.0);
               print("Please check your internet connection.");
               //showDialogMessage(context, "Please check your internet connection.");
             }
 
             await context.read<LocationControllerCubit>().onLocationChanged(
-              location: position,
-            );
+                  location: position,
+                );
           }
-        }
-        else{
+        } else {
           print('Position Accuracy: ${position.accuracy}');
           print('Speed Accuracy: ${position.speedAccuracy}');
           print('Speed: ${position.speed}');
@@ -159,8 +159,6 @@ class _HomeScreenState extends State<HomeScreen> {
         position.speedAccuracy <= MAX_SPEED_ACCURACY_THRESHOLD &&
         position.speed >= MIN_SPEED_THRESHOLD;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -219,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => AddLeads(),
+                                      builder: (context) => const AddLeads(),
                                     ),
                                   );
                                 },
@@ -274,9 +272,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: customBtn(
-                          //  onPressed: _showSyncingBottomSheet, // Pass the function reference, not the result of the function call
+                            onPressed:
+                                showSyncSuccessBottomSheet, // Pass the function reference, not the result of the function call
                             // Uncomment this part if you want to add the internet connectivity check
-                            onPressed: () async {
+                            /* onPressed: () async {
                               final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
                               bool isConnected = await CommonStyles.checkInternetConnectivity();
                               if (isConnected) {
@@ -296,12 +295,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                                 print("Please check your internet connection.");
                               }
-                            },
+                            }, */
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.sync, // Changed to sync icon for relevance
+                                  Icons
+                                      .sync, // Changed to sync icon for relevance
                                   size: 18,
                                   color: CommonStyles.whiteColor,
                                 ),
@@ -314,7 +314,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 20),
                         const Text(
                           'Today Leads',
@@ -400,14 +399,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Row statisticsSection() {
+  Widget statisticsSection() {
     return Row(children: [
       const Text(
         'Statistics',
         style: CommonStyles.txStyF16CbFF5,
       ),
       const Spacer(),
-      Row(
+      datePopupMenu(),
+      /*  Row(
         children: [
           Text(
             'Last 7d',
@@ -417,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const Icon(Icons.keyboard_arrow_down_rounded,
               color: CommonStyles.dataTextColor),
         ],
-      ),
+      ), */
       Container(
         height: 30,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
@@ -425,15 +425,28 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey),
         ),
-        child: const Row(
-          children: [
-            Text('March 2020', style: CommonStyles.txStyF14CbFF5),
-            SizedBox(width: 5),
-            Icon(
-              Icons.calendar_today_outlined,
-              size: 16,
-            ),
-          ],
+        child: GestureDetector(
+          onTap: () {
+            final DateTime currentDate = DateTime.now();
+            final DateTime firstDate = DateTime(currentDate.year - 2);
+
+            launchDatePicker(
+              context,
+              firstDate: firstDate,
+              lastDate: DateTime.now(),
+              initialDate: DateTime.now(),
+            );
+          },
+          child: const Row(
+            children: [
+              Text('March 2020', style: CommonStyles.txStyF14CbFF5),
+              SizedBox(width: 5),
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 16,
+              ),
+            ],
+          ),
         ),
       )
     ]);
@@ -532,16 +545,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Text('Hello,',
                               style: CommonStyles.txStyF20CpFF5),
                           Text(
-                           // 'string',
-                        '${username!}',
+                            'string',
+                            //  '${username!}',
                             style: CommonStyles.txStyF20CpFF5.copyWith(
                               fontSize: 25,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                           Text(
-                           //  '26th Sep 2024',
-                            '${formattedDate}',
+                          const Text(
+                            '26th Sep 2024',
+                            // '${formattedDate}',
                             style: CommonStyles.txStyF14CbFF5,
                           ),
                         ],
@@ -562,6 +575,12 @@ class _HomeScreenState extends State<HomeScreen> {
     'Settings',
     'Logout',
   ];
+  List<String> dateItems = [
+    'Today',
+    'This Week',
+    'Month',
+  ];
+
   String? selectedMenu;
 
   Widget displayPopupMenu() {
@@ -584,6 +603,57 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       offset: const Offset(-5, 22),
     );
+  }
+
+  String selectedOption = 'Today';
+  Widget datePopupMenu() {
+    return PopupMenuButton<String>(
+        offset: const Offset(-5, 22),
+        onSelected: (String value) {
+          setState(() {
+            selectedOption = value;
+          });
+        },
+        itemBuilder: (BuildContext context) {
+          return dateItems.map((String choice) {
+            return PopupMenuItem<String>(
+              value: choice,
+              child: Text(choice),
+            );
+          }).toList();
+        },
+        child: Row(
+          children: [
+            Text(
+              selectedOption,
+              style: CommonStyles.txStyF14CbFF5
+                  .copyWith(color: CommonStyles.dataTextColor),
+            ),
+            const Icon(Icons.keyboard_arrow_down_rounded,
+                color: CommonStyles.dataTextColor),
+          ],
+        ));
+  }
+
+  String? selectedDate = 'Today';
+  Future<void> launchDatePicker(BuildContext context,
+      {required DateTime firstDate,
+      required DateTime lastDate,
+      DateTime? initialDate}) async {
+    // final DateTime lastDate = DateTime.now();
+    // final DateTime firstDate = DateTime(lastDate.year - 100);
+    final DateTime? pickedDay = await showDatePicker(
+      context: context,
+      initialDate: initialDate ?? DateTime.now(),
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      initialDatePickerMode: DatePickerMode.day,
+    );
+    if (pickedDay != null) {
+      selectedDate = pickedDay.toString();
+      print('pickedDay: $pickedDay');
+    }
   }
 
   Widget customAppBar() {
@@ -620,11 +690,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Future<void> startService() async {
-    await Fluttertoast.showToast(msg: "Wait for a while, Initializing the service...");
+    await Fluttertoast.showToast(
+        msg: "Wait for a while, Initializing the service...");
 
-    final permission = await context.read<LocationControllerCubit>().enableGPSWithPermission();
+    final permission =
+        await context.read<LocationControllerCubit>().enableGPSWithPermission();
     if (permission) {
       try {
         Position currentPosition = await Geolocator.getCurrentPosition();
@@ -639,9 +710,12 @@ class _HomeScreenState extends State<HomeScreen> {
         }
         // Debug prints
         print('Location permission granted');
-        print('Current Position: Latitude: ${currentPosition.latitude}, Longitude: ${currentPosition.longitude}');
+        print(
+            'Current Position: Latitude: ${currentPosition.latitude}, Longitude: ${currentPosition.longitude}');
 
-        await context.read<LocationControllerCubit>().locationFetchByDeviceGPS();
+        await context
+            .read<LocationControllerCubit>()
+            .locationFetchByDeviceGPS();
         await backgroundService.initializeService();
         backgroundService.setServiceAsForeground();
 
@@ -656,7 +730,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } else {
       print('Location permission denied');
-      await Fluttertoast.showToast(msg: "Location permission denied. Service could not start.");
+      await Fluttertoast.showToast(
+          msg: "Location permission denied. Service could not start.");
     }
   }
 
@@ -694,15 +769,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> getuserdata() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    userID= prefs.getInt('userID');
-     username = prefs.getString('username') ?? '';
+    userID = prefs.getInt('userID');
+    username = prefs.getString('username') ?? '';
     print(' username==$username');
     String firstName = prefs.getString('firstName') ?? '';
     String email = prefs.getString('email') ?? '';
     String mobileNumber = prefs.getString('mobileNumber') ?? '';
     String roleName = prefs.getString('roleName') ?? '';
     DateTime now = DateTime.now();
-     formattedDate = formatDate(now);
+    formattedDate = formatDate(now);
     print(' formattedDate==$formattedDate'); // Example output: "25th Sep 2024"
   }
 
@@ -726,7 +801,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 prefs.setBool(Constants.isLogin, false);
                 Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
                     (Route<dynamic> route) => false);
               },
               child: const Text('OK'),
@@ -740,7 +816,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String formatDate(DateTime date) {
     String day = DateFormat('d').format(date);
     String suffix = getDaySuffix(int.parse(day));
-    String formattedDate = '$day$suffix ${DateFormat('MMM').format(date)} ${DateFormat('y').format(date)}';
+    String formattedDate =
+        '$day$suffix ${DateFormat('MMM').format(date)} ${DateFormat('y').format(date)}';
     return formattedDate;
   }
 
@@ -776,61 +853,197 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Location Services Disabled"),
-          content: Text("Please enable location services to use this app."),
+          title: const Text("Location Services Disabled"),
+          content:
+              const Text("Please enable location services to use this app."),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: Text("Enable"),
+              child: const Text("Enable"),
             ),
           ],
         );
       },
     );
 
-    if (locationEnabled != null && locationEnabled) {
+    if (locationEnabled) {
       // Redirect the user to the device settings to enable location services
       await Geolocator.openLocationSettings();
     }
   }
 
-
-
   void _showSyncingBottomSheet() {
     showModalBottomSheet(
-      context: context,
-      isDismissible: false, // Prevent closing until sync is done
-      builder: (context) => Container(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.sync, size: 50, color: Colors.blue),
-            SizedBox(height: 20),
-            Text('Sync Offline Data'),
-            SizedBox(height: 10),
-            Text('Please don\'t close the app while syncing is in progress.'),
-            SizedBox(height: 10),
-            Text('Total Requests: 3456'),
-            Text('Pending: 0'),
-            SizedBox(height: 10),
-            Text('Last Sync: 1 Hour, Ago'),
-            SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _startSync, // Simulate sync process
-              child: Text('Sync'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                padding: EdgeInsets.symmetric(horizontal: 100, vertical: 15),
-              ),
-            ),
-          ],
+        context: context,
+        clipBehavior: Clip.antiAlias,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
         ),
-      ),
+        builder: (context) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  color: CommonStyles.listOddColor,
+                  padding: const EdgeInsets.all(5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                          ),
+                          iconSize: 20,
+                          onPressed: () {
+                            Navigator.pop(context);
+                          }),
+                      const Text('Sync Offline Data',
+                          style: CommonStyles.txStyF20CbFF5),
+                      const SizedBox(width: 40),
+                    ],
+                  ),
+                ),
+                //MARK: Here
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                          'Please don\'t close the app while syncing is in progress.',
+                          style: CommonStyles.txStyF14CbFF5
+                              .copyWith(color: CommonStyles.dataTextColor)),
+                      const SizedBox(height: 10),
+                      SvgPicture.asset('assets/fileDownloadIcon.svg',
+                          color: CommonStyles.btnBlueBgColor,
+                          width: 70,
+                          height: 70),
+                      const SizedBox(height: 20),
+                      customRow(label: 'Total Requests', data: '3535'),
+                      customRow(label: 'Pending', data: '0'),
+                      customRow(label: 'Last Sync', data: '1 Hour, Ago'),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        child: customBtn(
+                          onPressed: syncing,
+                          child: const Text('Sync',
+                              style: CommonStyles.txStyF14CwFF5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        });
+  }
+
+  Future<void> syncing() async {
+    final dataAccessHandler =
+        Provider.of<DataAccessHandler>(context, listen: false);
+    bool isConnected = await CommonStyles.checkInternetConnectivity();
+    if (isConnected) {
+      final syncService = SyncService(dataAccessHandler);
+      syncService.performRefreshTransactionsSync(context,
+          showSuccessBottomSheet: showSyncSuccessBottomSheet);
+    } else {
+      Fluttertoast.showToast(
+          msg: "Please Check Your Internet Connection.",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      print("Please check your internet connection.");
+    }
+  }
+
+  void showSyncSuccessBottomSheet() {
+    showModalBottomSheet(
+        context: context,
+        clipBehavior: Clip.antiAlias,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        builder: (context) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  color: CommonStyles.listOddColor,
+                  padding: const EdgeInsets.all(5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                          ),
+                          iconSize: 20,
+                          onPressed: () {
+                            Navigator.pop(context);
+                          }),
+                      const Text('Sync Offline Data',
+                          style: CommonStyles.txStyF20CbFF5),
+                      const SizedBox(width: 40),
+                    ],
+                  ),
+                ),
+                //MARK: Here
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 20),
+                      SvgPicture.asset('assets/fileDownloadIcon.svg',
+                          color: CommonStyles.btnBlueBgColor,
+                          width: 70,
+                          height: 70),
+                      const SizedBox(height: 20),
+                      const Text('Data was synced successfully',
+                          style: CommonStyles.txStyF14CbFF5),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        });
+  }
+
+  Widget customRow({required String label, String? data}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('$label:', style: CommonStyles.txStyF14CbFF5),
+        Text('$data',
+            style: CommonStyles.txStyF14CbFF5.copyWith(
+              color: CommonStyles.dataTextColor,
+            )),
+      ],
     );
   }
 
@@ -839,8 +1052,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       isDismissible: true,
       builder: (context) => Container(
-        padding: EdgeInsets.all(20),
-        child: Column(
+        padding: const EdgeInsets.all(20),
+        child: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.check_circle, size: 50, color: Colors.green),
@@ -855,7 +1068,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _startSync() async {
-    final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
+    final dataAccessHandler =
+        Provider.of<DataAccessHandler>(context, listen: false);
     bool isConnected = await CommonStyles.checkInternetConnectivity();
     if (isConnected) {
       // Call your login function here
@@ -870,30 +1084,26 @@ class _HomeScreenState extends State<HomeScreen> {
           timeInSecForIosWeb: 1,
           backgroundColor: Colors.red,
           textColor: Colors.white,
-          fontSize: 16.0
-      );
+          fontSize: 16.0);
       // Simulate a sync operation
-
-    }}
-
-
+    }
+  }
 }
-
-
-
 
 class BackgroundService {
   int? userId;
   final DataAccessHandler dataAccessHandler; // Declare DataAccessHandler
   late SyncServiceB syncService; // Declare SyncService
-  final FlutterBackgroundService flutterBackgroundService = FlutterBackgroundService();
+  final FlutterBackgroundService flutterBackgroundService =
+      FlutterBackgroundService();
   static const double MAX_ACCURACY_THRESHOLD = 10.0;
   static const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
   static const double MIN_DISTANCE_THRESHOLD = 50.0;
   static const double MIN_SPEED_THRESHOLD = 0.2;
   BackgroundService({required this.userId, required this.dataAccessHandler}) {
     // Initialize SyncService with DataAccessHandler
-    syncService = SyncServiceB(dataAccessHandler); // Make sure to initialize DataAccessHandler properly
+    syncService = SyncServiceB(
+        dataAccessHandler); // Make sure to initialize DataAccessHandler properly
   }
 
   FlutterBackgroundService get instance => flutterBackgroundService;
@@ -935,7 +1145,8 @@ class BackgroundService {
 
   Future<void> syncLocationData() async {
     try {
-      await syncService.performRefreshTransactionsSync(); // Call the sync method
+      await syncService
+          .performRefreshTransactionsSync(); // Call the sync method
       print("Location data synced successfully.");
     } catch (e) {
       print("Error syncing location data: $e");
@@ -949,14 +1160,15 @@ void onStart(ServiceInstance service) async {
   Palm3FoilDatabase? palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  int? userID= prefs.getInt('userID');
+  int? userID = prefs.getInt('userID');
 
   // You need to maintain a way to get the userId or DataAccessHandler here.
   //final userId = userID; // Replace with the actual way to get userId
 
   // Pass the DataAccessHandler to the BackgroundService
   final dataAccessHandler = DataAccessHandler(); // Initialize this properly
-  final backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
+  final backgroundService =
+      BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) async {
@@ -990,14 +1202,14 @@ void onStart(ServiceInstance service) async {
         DateTime timestamp = DateTime.now();
 
         await palm3FoilDatabase!.insertLocationValues(
-          latitude: position.latitude,
-          longitude: position.longitude,
-          createdByUserId: userID,  // Use the actual userID
-          serverUpdatedStatus: false,
-          from: '997'
-        );
+            latitude: position.latitude,
+            longitude: position.longitude,
+            createdByUserId: userID, // Use the actual userID
+            serverUpdatedStatus: false,
+            from: '997');
 
-        appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
+        appendLog(
+            'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
 
         // Sync the data to the server
         await backgroundService.syncLocationData(); // Use the existing instance
@@ -1017,32 +1229,32 @@ void onStart(ServiceInstance service) async {
           DateTime timestamp = DateTime.now();
 
           await palm3FoilDatabase!.insertLocationValues(
-            latitude: position.latitude,
-            longitude: position.longitude,
-            createdByUserId: userID,
-            serverUpdatedStatus: false,
-              from: '1023'
-          );
+              latitude: position.latitude,
+              longitude: position.longitude,
+              createdByUserId: userID,
+              serverUpdatedStatus: false,
+              from: '1023');
 
-          appendLog('Background Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
+          appendLog(
+              'Background Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
 
           // Sync the data to the server
-          await backgroundService.syncLocationData(); // Use the existing instance
+          await backgroundService
+              .syncLocationData(); // Use the existing instance
         }
       }
     }
   });
 }
 
-
 // Function to check if the position is accurate enough
 // bool _isPositionAccurate(Position position) {
 //   return position.accuracy < 20.0; // Use an accuracy threshold of 20 meters
 // }
 double MAX_ACCURACY_THRESHOLD = 10.0;
- const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
- const double MIN_DISTANCE_THRESHOLD = 50.0;
- const double MIN_SPEED_THRESHOLD = 0.2;
+const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
+const double MIN_DISTANCE_THRESHOLD = 50.0;
+const double MIN_SPEED_THRESHOLD = 0.2;
 bool _isPositionAccurate(Position position) {
   print('Position Accuracy:957=== ${position.accuracy}');
   print('Speed Accuracy:958=== ${position.speedAccuracy}');
@@ -1075,7 +1287,6 @@ void appendLog(String text) async {
     print("Error appending to log file: $e");
   }
 }
-
 
 class StatCard extends StatelessWidget {
   final String label;

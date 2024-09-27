@@ -42,6 +42,7 @@ dependencies:
   flutter_spinkit: ^5.2.1
   flutter_svg: ^2.0.10+1
   fluttertoast: ^8.2.1
+  geocoding: ^3.0.0
   geolocator: ^13.0.1
   http: ^1.2.1
   image_picker: ^1.1.2
@@ -54,7 +55,6 @@ dependencies:
   shared_preferences: ^2.2.3
   shimmer: ^3.0.0
   sqflite: ^2.3.3+1
-  geocoding: ^3.0.0
 
 dev_dependencies:
   flutter_lints: ^3.0.0
