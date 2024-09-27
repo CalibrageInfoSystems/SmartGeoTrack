@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 
-import 'DataAccessHandler.dart';
-import 'SyncService.dart';
+
 
 class Palm3FoilDatabase {
   static const LOG_TAG = 'Palm3FoilDatabase';
@@ -27,7 +27,11 @@ class Palm3FoilDatabase {
     if (_palm3FoilDatabase == null) {
       _palm3FoilDatabase = Palm3FoilDatabase._privateConstructor();
       //     _palm3FoilDatabase!._context = context;
-      Directory? documentsDirectory =   Directory('/storage/emulated/0'); // await getExternalStorageDirectory(); // Use getExternalStorageDirectory for Android
+      Directory documentsDirectory = await getApplicationDocumentsDirectory();
+      // _dbPath = join(documentsDirectory.path, DATABASE_NAME);
+
+//TODO
+   //   Directory? documentsDirectory =   Directory('/storage/emulated/0'); // await getExternalStorageDirectory(); // Use getExternalStorageDirectory for Android
       final String folderName = 'SmartGeoTrack';
       Directory dbDirectory = Directory('${documentsDirectory!.path}/$folderName');
       // final String folderName = 'SmartGeoTrack';
@@ -140,7 +144,17 @@ class Palm3FoilDatabase {
       await db!.insert('GeoBoundaries', geoBoundaryValues);
       print('Location values inserted');
     } catch (e) {
+      Fluttertoast.showToast(
+          msg: "Error inserting GeoBoundaries:",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
       print('Failed to insert location values: $e');
+
     }
   }
   Future<int> insertLead(Map<String, dynamic> leadData) async {
@@ -152,10 +166,21 @@ class Palm3FoilDatabase {
         leadData,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
+
     } catch (e) {
       print('Error inserting lead: $e');
+      Fluttertoast.showToast(
+          msg: "Error inserting lead:",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
       return -1; // Return an error code or handle it as needed
     }
+
   }
 
 
@@ -168,6 +193,15 @@ class Palm3FoilDatabase {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e) {
+      Fluttertoast.showToast(
+          msg: "Error FileRepositorys lead:",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
       print('Error inserting file repository: $e');
     }
   }

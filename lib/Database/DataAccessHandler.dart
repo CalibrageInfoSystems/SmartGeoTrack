@@ -17,8 +17,9 @@ class DataAccessHandler with ChangeNotifier {
   }
 
   Future<Database> _initDatabase() async {
-    Directory documentsDirectory = Directory('/storage/emulated/0');
+  //  Directory documentsDirectory = Directory('/storage/emulated/0'); //TODO
     const String folderName = 'SmartGeoTrack';
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
     Directory customDirectory =
         Directory('${documentsDirectory.path}/$folderName');
 

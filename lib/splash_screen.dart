@@ -14,8 +14,6 @@ import 'package:smartgetrack/common_styles.dart';
 
 import 'Common/Constants.dart';
 import 'Database/DataSyncHelper.dart';
-
-
 import 'Database/Palm3FoilDatabase.dart';
 import 'HomeScreen.dart';
 
@@ -41,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   bool isLocationEnabled = false;
   bool isLogin = false;
   bool welcome = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -195,18 +193,18 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 // Apply a slight transform to move the text up
                 // Transform.translate(
                 //   offset: Offset(0, -25), // Move the text 8 pixels upwards
-                  TypewriterText(
-                    text: "SGT",
-                    color:CommonStyles.blueheader,
-                  ),
-            //    ),
+                TypewriterText(
+                  text: "SGT",
+                  color:CommonStyles.blueheader,
+                ),
+                //    ),
               ],
             ),
           ),
           // Path illustration with only fade-in animation
           Positioned(
             bottom: 60, // Adjust as per your need
-          left: -10,
+            left: -10,
             child: AnimatedBuilder(
               animation: _fadeAnimation,
               builder: (context, child) {
@@ -241,7 +239,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     print('Manage external storage permission is granted: $manageExternalStoragePermission');
     var status = await Permission.location.request();
     // Request location permission
-  //  var status = await Permission.location.status;
+    //  var status = await Permission.location.status;
     if (status.isGranted) {
       print('Foreground location permission is granted');
       // Check for background permission
@@ -297,7 +295,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         } else {
           print('Master sync failed: $msg');
           // UiUtils.showCustomToastMessage("Data syncing failed", context, 1);
-     _navigateToMainLoginScreen();
+          _navigateToMainLoginScreen();
         }
       });
     } else {
@@ -316,14 +314,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       //  context.go(Routes.homeScreen.path);
     } else {
 
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => LoginScreen(),
-          ),
-        );
-        //     context.go(Routes.loginScreen.path);
-      }
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => LoginScreen(),
+        ),
+      );
+      //     context.go(Routes.loginScreen.path);
     }
+  }
 
   Future<void> loadData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -390,10 +388,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
 
 // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => LoginScreen()),
-    // );
-  }
+//   context,
+//   MaterialPageRoute(builder: (context) => LoginScreen()),
+// );
+}
 
 
 
@@ -447,12 +445,12 @@ class _TypewriterTextState extends State<TypewriterText> {
 
 
           style: TextStyle(
-            fontSize: 28,
-           color: CommonStyles.blueheader,
-            fontWeight: FontWeight.w700,
-           letterSpacing: 10
+              fontSize: 28,
+              color: CommonStyles.blueheader,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 10
 
-           // Use the provided text color
+            // Use the provided text color
           ),
         ),
       ),

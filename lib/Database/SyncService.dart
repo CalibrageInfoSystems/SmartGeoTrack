@@ -59,7 +59,7 @@ class SyncService {
 
     // Fetching leads
     List<LeadsModel> leadsList =
-        await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
+    await _fetchData(DatabaseHelper.instance.getLeadsDetails, 'Leads');
 
     // Check if leadsList is not empty before adding to the map
     if (leadsList.isNotEmpty) {
@@ -70,18 +70,33 @@ class SyncService {
     }
 
     // Fetching fileRepoList
-    List<FileRepositoryModel> fileRepoList = await _fetchData(
-        DatabaseHelper.instance.getFileRepositoryDetails, 'FileRepositorys');
+    List<FileRepositoryModel> fileRepoList = await _fetchData(DatabaseHelper.instance.getFileRepositoryDetails, 'FileRepositorys');
 
-    // Check if fileRepoList is not empty before adding to the map
     if (fileRepoList.isNotEmpty) {
-      print('File Repository list $fileRepoList');
-      refreshTransactionsDataMap[fileRepositoryTable] =
-          fileRepoList.map((model) => model.toJson()).toList();
+      print('File Repository list: $fileRepoList');
 
+      List<FileRepositoryModel> updatedFileRepoList = [];
+
+      // For each file repository, call prepareAndSendFile
+      for (var model in fileRepoList) {
+        if (model.fileLocation != null) {
+          // Call prepareAndSendFile and update the model
+          await prepareAndSendFile(model.fileLocation!, model);
+
+          // Add the updated model to the new list
+          updatedFileRepoList.add(model);
+        }
+      }
+
+      // Now store the updated list in the map
+      refreshTransactionsDataMap[fileRepositoryTable] =
+          updatedFileRepoList.map((model) => model.toJson()).toList();
+
+      print('Updated File Repository map: ${refreshTransactionsDataMap[fileRepositoryTable]}');
     } else {
       print('File Repository list is empty.');
     }
+
 
     // If no data was fetched, print a message
     if (refreshTransactionsDataMap.isEmpty) {

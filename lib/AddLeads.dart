@@ -62,7 +62,7 @@ class _AddLeadScreenState extends State<AddLeads>
         // Limit the number of files added to not exceed the total of 3 files + images
         int availableSlots = 3 - (_images.length + _files.length);
         List<PlatformFile> selectedFiles =
-            result.files.take(availableSlots).toList();
+        result.files.take(availableSlots).toList();
 
         setState(() {
           _files.addAll(selectedFiles);
@@ -281,9 +281,9 @@ class _AddLeadScreenState extends State<AddLeads>
                                       alignment: Alignment.center,
                                       child: Column(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                        MainAxisAlignment.center,
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                        CrossAxisAlignment.center,
                                         children: [
                                           SvgPicture.asset(
                                             "assets/add_a_photo.svg",
@@ -317,9 +317,9 @@ class _AddLeadScreenState extends State<AddLeads>
                                       alignment: Alignment.center,
                                       child: Column(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                        MainAxisAlignment.center,
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                        CrossAxisAlignment.center,
                                         children: [
                                           SvgPicture.asset(
                                             "assets/fileuploadicon.svg",
@@ -404,9 +404,9 @@ class _AddLeadScreenState extends State<AddLeads>
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           border:
-                                              Border.all(color: Colors.blue),
+                                          Border.all(color: Colors.blue),
                                           borderRadius:
-                                              BorderRadius.circular(8),
+                                          BorderRadius.circular(8),
                                           color: Colors.grey[100],
                                         ),
                                         child: Row(
@@ -420,7 +420,7 @@ class _AddLeadScreenState extends State<AddLeads>
                                                 style: const TextStyle(
                                                     fontSize: 14,
                                                     overflow:
-                                                        TextOverflow.ellipsis),
+                                                    TextOverflow.ellipsis),
                                               ),
                                             ),
                                           ],
@@ -504,7 +504,7 @@ class _AddLeadScreenState extends State<AddLeads>
       String? empCode = await fetchEmpCode(Username!, context);
       palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
       final dataAccessHandler =
-          Provider.of<DataAccessHandler>(context, listen: false);
+      Provider.of<DataAccessHandler>(context, listen: false);
 
       print('empCode===$empCode');
 
@@ -521,7 +521,7 @@ class _AddLeadScreenState extends State<AddLeads>
 ''';
 
       int? maxSerialNumber =
-          await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
+      await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
 
       int serialNumber = (maxSerialNumber != null) ? maxSerialNumber + 1 : 1;
 
@@ -565,7 +565,7 @@ class _AddLeadScreenState extends State<AddLeads>
             final fileData = {
               'leadsCode': leadCode, // Use the retrieved lead ID here
               'FileName': fileLocation,
-        //    'FileName': base64Encode(image), // Encode image as base64
+              //    'FileName': base64Encode(image), // Encode image as base64
               'FileLocation': fileLocation,
               'FileExtension': fileExtension,
               'IsActive': 1,
@@ -608,10 +608,10 @@ class _AddLeadScreenState extends State<AddLeads>
             final fileData = {
               'leadsCode': leadCode, // Use the retrieved lead ID here
               'FileName': filePath,
-             // 'FileName': base64String, // Use the original file name encoded in base64
-              'FileLocation': fileLocation, // Define your file storage path
+              // 'FileName': base64String, // Use the original file name encoded in base64
+              'FileLocation': filePath, // Define your file storage path
               'FileExtension':
-                  fileExtension, // Use the extracted file extension
+              fileExtension, // Use the extracted file extension
               'IsActive': 1,
               'CreatedByUserId': userID, // Replace with actual user ID
               'CreatedDate': DateTime.now().toIso8601String(),
@@ -630,10 +630,10 @@ class _AddLeadScreenState extends State<AddLeads>
           final syncService = SyncService(dataAccessHandler);
           syncService.performRefreshTransactionsSync(context);
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(builder: (context) => const HomeScreen()),
+          // );
 
           // Clear all input fields and images
           _nameController.clear();
@@ -644,9 +644,9 @@ class _AddLeadScreenState extends State<AddLeads>
           _images.clear(); // Clear the images list
 
           // Navigate to the home screen
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Lead Data Inserted Successfully!')),
-          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   const SnackBar(content: Text('Lead Data Inserted Successfully!')),
+          // );
         } catch (e) {
           // Handle database insertion failure
           ScaffoldMessenger.of(context).showSnackBar(
@@ -710,7 +710,7 @@ class _AddLeadScreenState extends State<AddLeads>
         setState(() {
           _images.add(imageData);
           _imagepath.add(pickedFile);
-        //  _imagepath.ad
+          //  _imagepath.ad
 
         });
       }
@@ -731,7 +731,7 @@ class _AddLeadScreenState extends State<AddLeads>
     if (_images.length + _files.length > 3) {
       setState(() {
         _errorMessage =
-            'You can upload a maximum of 3 images and files combined.';
+        'You can upload a maximum of 3 images and files combined.';
       });
     } else {
       setState(() {
@@ -760,7 +760,7 @@ class _AddLeadScreenState extends State<AddLeads>
 
   Future<String?> fetchEmpCode(String username, BuildContext context) async {
     final dataAccessHandler =
-        Provider.of<DataAccessHandler>(context, listen: false);
+    Provider.of<DataAccessHandler>(context, listen: false);
 
     // Use parameterized query to avoid SQL injection
     String empCodeQuery = 'SELECT EmpCode FROM UserInfos WHERE UserName = ?';

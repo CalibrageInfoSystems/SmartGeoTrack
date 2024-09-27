@@ -25,13 +25,15 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     const String folderName = 'SmartGeoTrack';
-    Directory documentsDirectory = Directory('/storage/emulated/0/$folderName');
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    Directory customDirectory = Directory('${documentsDirectory.path}/$folderName');
+ //   Directory documentsDirectory = Directory('/storage/emulated/0/$folderName');
 
-    if (!documentsDirectory.existsSync()) {
-      documentsDirectory.createSync(recursive: true);
+    if (!customDirectory.existsSync()) {
+      customDirectory.createSync(recursive: true);
     }
 
-    String path = join(documentsDirectory.path, _databaseName);
+    String path = join(customDirectory.path, _databaseName);
 
     if (FileSystemEntity.typeSync(path) == FileSystemEntityType.notFound) {
       ByteData data = await rootBundle.load(join("assets", _databaseName));
