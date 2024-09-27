@@ -501,36 +501,38 @@ class _AddLeadScreenState extends State<AddLeads>
     if (_formKey.currentState!.validate()) {
       showLoadingDialog(context);
       _validateTotalItems();
-      String? empCode = await fetchEmpCode(Username!, context);
-      palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
-      final dataAccessHandler =
-      Provider.of<DataAccessHandler>(context, listen: false);
+
+    //  String? empCode = await fetchEmpCode(Username!, context); //TODO
+      String? empCode ="ROJATEST";
+      final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
 
       print('empCode===$empCode');
 
       if (empCode == null) {
         print('Error: EmpCode not found.');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Employee code not found.')),
+        );
         return;
       }
 
       String formattedDate = getCurrentDateInDDMMYY();
 
       String maxNumQuery = '''
-  SELECT MAX(CAST(SUBSTR(code, INSTR(code, '-') + 1) AS INTEGER)) AS MaxNumber 
-  FROM Leads  WHERE code LIKE 'L$empCode$formattedDate-%'
-''';
+      SELECT MAX(CAST(SUBSTR(code, INSTR(code, '-') + 1) AS INTEGER)) AS MaxNumber 
+      FROM Leads WHERE code LIKE 'L$empCode$formattedDate-%'
+    ''';
 
-      int? maxSerialNumber =
-      await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
+      int? maxSerialNumber = await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
 
       int serialNumber = (maxSerialNumber != null) ? maxSerialNumber + 1 : 1;
-
       String formattedSerialNumber = serialNumber.toString().padLeft(3, '0');
-
       String leadCode = 'L$empCode$formattedDate-$formattedSerialNumber';
+
       print('LeadCode==$leadCode');
       await _getCurrentLocation();
-      Navigator.of(context).pop();
+
+      // Check if _currentPosition is null before proceeding
       if (_currentPosition != null) {
         final leadData = {
           'IsCompany': _isCompany ? 1 : 0,
@@ -542,9 +544,9 @@ class _AddLeadScreenState extends State<AddLeads>
           'Comments': _commentsController.text,
           'Latitude': _currentPosition!.latitude,
           'Longitude': _currentPosition!.longitude,
-          'CreatedByUserId': userID,
+          'CreatedByUserId': userID,  // Ensure userID is not null
           'CreatedDate': DateTime.now().toIso8601String(),
-          'UpdatedByUserId': userID,
+          'UpdatedByUserId': userID,  // Ensure userID is not null
           'UpdatedDate': DateTime.now().toIso8601String(),
           'ServerUpdatedStatus': false,
         };
@@ -552,88 +554,76 @@ class _AddLeadScreenState extends State<AddLeads>
         print('leadData======>$leadData');
 
         try {
-          // Insert lead data into the database and get the inserted ID
-          int leadId = await palm3FoilDatabase!.insertLead(leadData); // Ensure this returns the inserted ID
+          // Insert lead data into the database and check the result
+          int leadId = await dataAccessHandler.insertLead(leadData) ?? -1;  // Add null check for database
+
+          if (leadId == -1) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to insert lead data.')),
+            );
+            return;  // Exit if insertion fails
+          }
+
           print('leadId======>$leadId');
 
           for (var image in _imagepath) {
-            // Prepare data for the FileRepositorys table
-            String fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg'; // Modify as needed
-            String fileLocation = image.path; // Define your file storage path
-            String fileExtension = '.jpg'; // Adjust based on image type
-            print('===fileLocation $fileLocation');
-            final fileData = {
-              'leadsCode': leadCode, // Use the retrieved lead ID here
-              'FileName': fileLocation,
-              //    'FileName': base64Encode(image), // Encode image as base64
-              'FileLocation': fileLocation,
-              'FileExtension': fileExtension,
-              'IsActive': 1,
-              'CreatedByUserId': userID, // Replace with actual user ID// Store as 1 for true
-              'CreatedDate': DateTime.now().toIso8601String(),
-              'UpdatedByUserId': userID, // Replace with actual user ID
-              'UpdatedDate': DateTime.now().toIso8601String(),
-              'ServerUpdatedStatus': false,
-            };
-            print('fileData======>$fileData');
-            // Insert into FileRepositorys table
-            await palm3FoilDatabase!.insertFileRepository(fileData);
+            if (image != null) {  // Ensure image is not null
+              String fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+              String fileLocation = image.path;
+              String fileExtension = '.jpg';
+              print('===fileLocation $fileLocation');
+
+              final fileData = {
+                'leadsCode': leadCode,
+                'FileName': fileLocation,
+                'FileLocation': fileLocation,
+                'FileExtension': fileExtension,
+                'IsActive': 1,
+                'CreatedByUserId': userID,
+                'CreatedDate': DateTime.now().toIso8601String(),
+                'UpdatedByUserId': userID,
+                'UpdatedDate': DateTime.now().toIso8601String(),
+                'ServerUpdatedStatus': false,
+              };
+              print('fileData======>$fileData');
+              await dataAccessHandler?.insertFileRepository(fileData);
+            }
           }
 
-// Assuming `_files`, `leadCode`, `userID`, and `dataAccessHandler` are defined in your class
+          // Handle _files as well with similar checks
           for (var file in _files) {
-            // Extract file extension
-            String fileExtension = path.extension(file.name); // Get the file extension dynamically
+            String fileExtension = path.extension(file.name);
+            String? filePath = file.path;
 
-            // Define your file storage path (assuming you have this logic)
-            String fileLocation =
-                ''; // Initialize or define your file storage path
-
-            // Read file bytes
-            String? filePath = file.path; // Get the path directly from the file object
-            File fileObj = File(filePath!); // Rename the variable to avoid confusion
-
-            // Read file bytes
+            File fileObj = File(filePath!);
             List<int> fileBytes = await fileObj.readAsBytes();
-
-            // Encode bytes to base64
             String base64String = base64Encode(fileBytes);
-            print('base64String====$base64String');
 
-            // Encode file name in base64
-            String base64FileName = base64Encode(utf8
-                .encode(file.name)); // Uncommented and corrected variable name
-
-            // Prepare the file data for insertion
             final fileData = {
-              'leadsCode': leadCode, // Use the retrieved lead ID here
+              'leadsCode': leadCode,
               'FileName': filePath,
-              // 'FileName': base64String, // Use the original file name encoded in base64
-              'FileLocation': filePath, // Define your file storage path
-              'FileExtension':
-              fileExtension, // Use the extracted file extension
+              'FileLocation': filePath,
+              'FileExtension': fileExtension,
               'IsActive': 1,
-              'CreatedByUserId': userID, // Replace with actual user ID
+              'CreatedByUserId': userID,
               'CreatedDate': DateTime.now().toIso8601String(),
-              'UpdatedByUserId': userID, // Replace with actual user ID
+              'UpdatedByUserId': userID,
               'UpdatedDate': DateTime.now().toIso8601String(),
               'ServerUpdatedStatus': false,
             };
 
             print('fileData======>$fileData');
-
-            // Insert into FileRepositorys table
-            await palm3FoilDatabase!.insertFileRepository(fileData);
+            await dataAccessHandler?.insertFileRepository(fileData);
           }
 
           // Trigger Sync for Leads and FileRepository
           final syncService = SyncService(dataAccessHandler);
           syncService.performRefreshTransactionsSync(context);
 
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => const HomeScreen()),
-          // );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
 
           // Clear all input fields and images
           _nameController.clear();
@@ -641,18 +631,15 @@ class _AddLeadScreenState extends State<AddLeads>
           _phoneNumberController.clear();
           _emailController.clear();
           _commentsController.clear();
-          _images.clear(); // Clear the images list
+          _images.clear();
 
-          // Navigate to the home screen
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   const SnackBar(content: Text('Lead Data Inserted Successfully!')),
-          // );
         } catch (e) {
+          print('Error inserting lead data: $e');
           // Handle database insertion failure
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to insert lead data.')),
           );
-          print('Error inserting lead data: $e');
+
         }
       } else {
         // Location fetch failed

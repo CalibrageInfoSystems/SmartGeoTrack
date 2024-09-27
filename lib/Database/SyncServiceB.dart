@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:geocoding/geocoding.dart';
 import 'package:http/http.dart' as http;
 
 import '../Model/FileRepositoryModel.dart';
@@ -44,8 +45,23 @@ class SyncServiceB {
 
     // Check if geoBoundariesList is not empty before adding to the map
     if (geoBoundariesList.isNotEmpty) {
+      List<GeoBoundariesModel> updatedGeoBoundariesList = [];
+
+      // For each geo boundary, get the address using latitude and longitude
+      for (var boundary in geoBoundariesList) {
+        if (boundary.latitude != null && boundary.longitude != null) {
+          String address = await getAddressFromLatLong(boundary.latitude!, boundary.longitude!);
+          boundary.Address = address;
+        }
+
+        // Add the updated boundary to the new list
+        updatedGeoBoundariesList.add(boundary);
+      }
+
+      // Now store the updated list with addresses in the map
       refreshTransactionsDataMap[geoBoundariesTable] =
-          geoBoundariesList.map((model) => model.toMap()).toList();
+          updatedGeoBoundariesList.map((model) => model.toMap()).toList();
+      print('Updated geoBoundariesTable map: ${refreshTransactionsDataMap[geoBoundariesTable]}');
     } else {
       print('GeoBoundaries list is empty, skipping to next.');
     }
@@ -133,7 +149,7 @@ class SyncServiceB {
 
   Future<void> _updateServerUpdatedStatus(String tableName) async {
     print("Attempting to update ServerUpdatedStatus for table: $tableName"); // Debug statement
-    final db = await dataAccessHandler.database; // Accessing database from DataAccessHandler
+    final db =  await DatabaseHelper.instance.database;; // Accessing database from DataAccessHandler
     String query = "UPDATE $tableName SET ServerUpdatedStatus = '1' WHERE ServerUpdatedStatus = '0'";
 
     try {
@@ -142,5 +158,19 @@ class SyncServiceB {
     } catch (e) {
       print("Error updating ServerUpdatedStatus for $tableName: $e");
     }
+  }
+
+
+  Future<String> getAddressFromLatLong(double latitude, double longitude) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(latitude, longitude);
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        return "${place.street}, ${place.locality}, ${place.administrativeArea}, ${place.country}";
+      }
+    } catch (e) {
+      print(e);
+    }
+    return "Unknown Location";
   }
 }

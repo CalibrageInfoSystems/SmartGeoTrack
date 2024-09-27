@@ -25,7 +25,7 @@ class ViewLeads extends StatefulWidget {
 
 class _ViewLeadsState extends State<ViewLeads> {
   final List<Map<String, dynamic>> _leads = [];
-  Palm3FoilDatabase? palm3FoilDatabase;
+//  Palm3FoilDatabase? palm3FoilDatabase;
 
   DateTime? selectedFromDate;
   DateTime? selectedToDate;

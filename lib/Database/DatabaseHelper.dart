@@ -22,28 +22,51 @@ class DatabaseHelper {
     _database = await _initDatabase();
     return _database!;
   }
-
   Future<Database> _initDatabase() async {
     const String folderName = 'SmartGeoTrack';
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    Directory customDirectory = Directory('${documentsDirectory.path}/$folderName');
- //   Directory documentsDirectory = Directory('/storage/emulated/0/$folderName');
+    Directory customDirectory = Directory('/storage/emulated/0/$folderName');
+
+  //  Directory documentsDirectory = await getApplicationDocumentsDirectory();
+ //   Directory customDirectory = Directory('${documentsDirectory.path}/$folderName');
 
     if (!customDirectory.existsSync()) {
       customDirectory.createSync(recursive: true);
     }
 
     String path = join(customDirectory.path, _databaseName);
+    print('Database path: $path'); // Log the path for debugging
 
     if (FileSystemEntity.typeSync(path) == FileSystemEntityType.notFound) {
       ByteData data = await rootBundle.load(join("assets", _databaseName));
-      List<int> bytes =
-          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
       await File(path).writeAsBytes(bytes);
     }
 
+    // Open the database in writable mode
     return await openDatabase(path, version: _databaseVersion);
   }
+
+ //  Future<Database> _initDatabase() async {
+ //    const String folderName = 'SmartGeoTrack';
+ //    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+ //    Directory customDirectory = Directory('${documentsDirectory.path}/$folderName');
+ // //   Directory documentsDirectory = Directory('/storage/emulated/0/$folderName');
+ //
+ //    if (!customDirectory.existsSync()) {
+ //      customDirectory.createSync(recursive: true);
+ //    }
+ //
+ //    String path = join(customDirectory.path, _databaseName);
+ //
+ //    if (FileSystemEntity.typeSync(path) == FileSystemEntityType.notFound) {
+ //      ByteData data = await rootBundle.load(join("assets", _databaseName));
+ //      List<int> bytes =
+ //          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+ //      await File(path).writeAsBytes(bytes);
+ //    }
+ //
+ //    return await openDatabase(path, version: _databaseVersion);
+ //  }
 
   Future<void> executeSQL(String sql) async {
     final db = await database;

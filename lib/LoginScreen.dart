@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen>
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isObscure = true; // Keeps track of password visibility
+  bool? mobileacess;
   @override
   void initState() {
     super.initState();
@@ -353,7 +354,11 @@ class _LoginScreenState extends State<LoginScreen>
               prefs.setString('mobileNumber', data['user']['mobileNumber']);
               prefs.setInt('roleID', data['user']['roleID']);
               prefs.setString('roleName', data['user']['roleName']);
-
+              prefs.setString('empCode', data['user']['empCode']);
+          //    prefs.setString('mobileNumber', data['user']['isMobileAccess']);
+              mobileacess = data['user']['isMobileAccess'];
+              print('mobileacess  for ${ data['user']['username']} ===$mobileacess');
+              // if(mobileacess)
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const HomeScreen()),

@@ -260,14 +260,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if (storagePermission!.isGranted || manageExternalStoragePermission!.isGranted ) {
       // Storage permissions granted, do something
       try {
-        palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
-        await palm3FoilDatabase!.createDatabase();
-        await palm3FoilDatabase?.printTables(); // Call printTables after creating the databas
+        // palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
+        // await palm3FoilDatabase!.createDatabase();
+        // await palm3FoilDatabase?.printTables(); // Call printTables after creating the databas
         // dbUpgradeCall();
       } catch (e) {
         print('Error while getting master data: ${e.toString()}');
       }
-      startMasterSync();
+    //  startMasterSync();
     } else {
       // Storage permissions not granted, handle accordingly
       openAppSettings();

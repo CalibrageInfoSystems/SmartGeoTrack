@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/material.dart';
 
+import 'DatabaseHelper.dart';
+
 
 
 class Palm3FoilDatabase {
@@ -31,7 +33,7 @@ class Palm3FoilDatabase {
       // _dbPath = join(documentsDirectory.path, DATABASE_NAME);
 
 //TODO
-   //   Directory? documentsDirectory =   Directory('/storage/emulated/0'); // await getExternalStorageDirectory(); // Use getExternalStorageDirectory for Android
+      //   Directory? documentsDirectory =   Directory('/storage/emulated/0'); // await getExternalStorageDirectory(); // Use getExternalStorageDirectory for Android
       final String folderName = 'SmartGeoTrack';
       Directory dbDirectory = Directory('${documentsDirectory!.path}/$folderName');
       // final String folderName = 'SmartGeoTrack';
@@ -44,36 +46,7 @@ class Palm3FoilDatabase {
     }
     return _palm3FoilDatabase;
   }
-  // Future<Database> _openDatabase() async {
-  //   return await openDatabase(
-  //     'your_database_path.db',
-  //     version: 1,
-  //     onCreate: (db, version) {
-  //       // Your table creation logic
-  //     },
-  //     // Add this option to open the database in write mode
-  //     singleInstance: true,
-  //   );
-  // }
 
-  Future<Database?> _openDatabase() async {
-    if (_database == null) {
-      _database = await openDatabase(
-        _dbPath!,
-        version: DATA_VERSION,
-        readOnly: false, // Ensure this is set to false
-        onCreate: (Database db, int version) async {
-          // Implement the onCreate function if you need to create tables
-        },
-        // Add this option to open the database in write mode
-        singleInstance: true,
-        onUpgrade: (Database db, int oldVersion, int newVersion) async {
-          // Implement the onUpgrade function if you need to upgrade the database schema
-        },
-      );
-    }
-    return _database;
-  }
 
   Future<void> createDatabase() async {
     bool dbExist = await _checkDatabase();
@@ -86,14 +59,14 @@ class Palm3FoilDatabase {
         throw Exception('Error copying database');
       }
       try {
-        await _openDatabase();
+        await DatabaseHelper.instance.database;
         await printTables(); // Call printTables here
       } catch (e) {
         print('Error opening database: $e');
         throw Exception('Error opening database');
       }
     } else {
-      await _openDatabase();
+      await DatabaseHelper.instance.database;
       await printTables(); // Call printTables here
     }
   }
@@ -128,14 +101,14 @@ class Palm3FoilDatabase {
     required double latitude,
     required double longitude,
     required int? createdByUserId,
-    required bool serverUpdatedStatus,
+    required bool serverUpdatedStatus, required String? from,
   }) async {
     try {
-      final db = await _openDatabase();
+      final db = await DatabaseHelper.instance.database;
       final geoBoundaryValues = {
-        'Latitude': latitude,
+        'Latitude': latitude ,
         'Longitude': longitude,
-        'Address' : 'testing',
+        'Address' : from,
         'CreatedByUserId': createdByUserId,
         'CreatedDate': DateTime.now().toIso8601String(),
         'ServerUpdatedStatus': false, // SQLite stores boolean as 0 or 1
@@ -159,34 +132,65 @@ class Palm3FoilDatabase {
   }
   Future<int> insertLead(Map<String, dynamic> leadData) async {
     try {
-      final db = await _openDatabase();
-      // Insert the lead and get the inserted ID
-      return await db!.insert(
+      final db = await DatabaseHelper.instance.database;
+      print('Database is null: $db');
+      if (db == null) {
+        throw Exception('Database is null');
+      }
+      // Log the query to be executed
+      print('Inserting lead with data: $leadData');
+
+      return await db.insert(
         'Leads',
         leadData,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-
     } catch (e) {
-      print('Error inserting lead: $e');
+      print('Error inserting lead: ${e.toString()}');
       Fluttertoast.showToast(
-          msg: "Error inserting lead:",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0
+        msg: "Error inserting lead: ${e.toString()}",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
       );
-      return -1; // Return an error code or handle it as needed
+      return -1; // Indicate failure
     }
-
   }
+
+
+  // Future<int> insertLead(Map<String, dynamic> leadData) async {
+  //   try {
+  //     final db = await DatabaseHelper.instance.database;
+  //     // Insert the lead and get the inserted ID
+  //     return await db!.insert(
+  //       'Leads',
+  //       leadData,
+  //       conflictAlgorithm: ConflictAlgorithm.replace,
+  //     );
+  //
+  //   } catch (e) {
+  //     print('Error inserting lead: $e');
+  //     Fluttertoast.showToast(
+  //         msg: "Error inserting lead:",
+  //         toastLength: Toast.LENGTH_SHORT,
+  //         gravity: ToastGravity.CENTER,
+  //         timeInSecForIosWeb: 1,
+  //         backgroundColor: Colors.red,
+  //         textColor: Colors.white,
+  //         fontSize: 16.0
+  //     );
+  //     return -1; // Return an error code or handle it as needed
+  //   }
+  //
+  // }
 
 
   Future<void> insertFileRepository(Map<String, dynamic> fileData) async {
     try {
-      final db = await _openDatabase();
+      final db =await DatabaseHelper.instance.database;
       await db!.insert(
         'FileRepositorys',
         fileData,
@@ -208,7 +212,7 @@ class Palm3FoilDatabase {
 
   Future<void> insertLocationError(String tableName, String error) async {
     try {
-      final db = await _openDatabase();
+      final db = await DatabaseHelper.instance.database;
       final errorValues = {
         'TableName': tableName,
         'Error': error,
@@ -223,7 +227,7 @@ class Palm3FoilDatabase {
 
   Future<void> insertActivityRight(Map<String, dynamic> values) async {
     try {
-      final db = await _openDatabase();
+      final db =await DatabaseHelper.instance.database;
       await db!.insert('ActivityRight', values);
       print('ActivityRight Details inserted');
     } catch (e) {
@@ -233,7 +237,7 @@ class Palm3FoilDatabase {
 
   Future<void> printTables() async {
     try {
-      final db = await _openDatabase();
+      final db = await DatabaseHelper.instance.database;
       var result = await db!.rawQuery('SELECT name FROM sqlite_master WHERE type="table" ORDER BY name');
       print('Tables in the database: $result');
       print('Tables in the database size: ${result.length}');
@@ -242,13 +246,7 @@ class Palm3FoilDatabase {
     }
   }
 
-  // Future<List<Map<String, dynamic>>> getleads() async {
-  //   if (_database == null) {
-  //     throw Exception('Database is not initialized');
-  //   }
-  //   // Query to get all rows from the Leads table
-  //   return await _database!.query('Leads');
-  // }
+
   Future<List<Map<String, dynamic>>> getleads() async {
     if (_database == null) {
       throw Exception('Database is not initialized');

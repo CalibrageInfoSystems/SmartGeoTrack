@@ -56,7 +56,7 @@ class DataSyncHelper {
             await dataAccessHandler.deleteRow(tableName);
             if (masterData[tableName] is List<dynamic>) {
               List<Map<String, dynamic>> dataList = List<Map<String, dynamic>>.from(masterData[tableName]);
-              await dataAccessHandler.insertData(tableName, dataList);
+              await dataAccessHandler!.insertData(tableName, dataList);
             }
           } else {
             await dataAccessHandler.insertData(tableName, masterData[tableName]);

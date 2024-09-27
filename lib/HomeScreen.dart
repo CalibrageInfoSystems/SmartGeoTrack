@@ -24,6 +24,7 @@ import 'Database/Palm3FoilDatabase.dart';
 import 'Database/SyncService.dart';
 import 'Database/SyncServiceB.dart';
 import 'ViewLeads.dart';
+import '_showSyncingBottomSheet.dart';
 import 'location_service/logic/location_controller/location_controller_cubit.dart';
 import 'location_service/notification/notification.dart';
 import 'location_service/tools/background_service.dart';
@@ -112,6 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
               longitude: position.longitude,
               createdByUserId:userID,  // replace userID with the actual value
               serverUpdatedStatus: false,
+              from: '116'
             );
 
             appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
@@ -272,6 +274,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: customBtn(
+                          //  onPressed: _showSyncingBottomSheet, // Pass the function reference, not the result of the function call
+                            // Uncomment this part if you want to add the internet connectivity check
                             onPressed: () async {
                               final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
                               bool isConnected = await CommonStyles.checkInternetConnectivity();
@@ -291,14 +295,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     fontSize: 16.0
                                 );
                                 print("Please check your internet connection.");
-                                //showDialogMessage(context, "Please check your internet connection.");
                               }
                             },
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.location_on_outlined,
+                                  Icons.sync, // Changed to sync icon for relevance
                                   size: 18,
                                   color: CommonStyles.whiteColor,
                                 ),
@@ -311,6 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
+
                         const SizedBox(height: 20),
                         const Text(
                           'Today Leads',
@@ -795,7 +799,88 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
+
+  void _showSyncingBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false, // Prevent closing until sync is done
+      builder: (context) => Container(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.sync, size: 50, color: Colors.blue),
+            SizedBox(height: 20),
+            Text('Sync Offline Data'),
+            SizedBox(height: 10),
+            Text('Please don\'t close the app while syncing is in progress.'),
+            SizedBox(height: 10),
+            Text('Total Requests: 3456'),
+            Text('Pending: 0'),
+            SizedBox(height: 10),
+            Text('Last Sync: 1 Hour, Ago'),
+            SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: _startSync, // Simulate sync process
+              child: Text('Sync'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                padding: EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSyncSuccessBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isDismissible: true,
+      builder: (context) => Container(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle, size: 50, color: Colors.green),
+            SizedBox(height: 20),
+            Text('Sync Offline Data'),
+            SizedBox(height: 10),
+            Text('Data was synced successfully!'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _startSync() async {
+    final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
+    bool isConnected = await CommonStyles.checkInternetConnectivity();
+    if (isConnected) {
+      // Call your login function here
+      final syncService = SyncService(dataAccessHandler);
+      syncService.performRefreshTransactionsSync(context);
+      _showSyncSuccessBottomSheet();
+    } else {
+      Fluttertoast.showToast(
+          msg: "Please Check Your Internet Connection.",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0
+      );
+      // Simulate a sync operation
+
+    }}
+
+
 }
+
+
+
 
 class BackgroundService {
   int? userId;
@@ -909,6 +994,7 @@ void onStart(ServiceInstance service) async {
           longitude: position.longitude,
           createdByUserId: userID,  // Use the actual userID
           serverUpdatedStatus: false,
+          from: '997'
         );
 
         appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
@@ -935,6 +1021,7 @@ void onStart(ServiceInstance service) async {
             longitude: position.longitude,
             createdByUserId: userID,
             serverUpdatedStatus: false,
+              from: '1023'
           );
 
           appendLog('Background Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');

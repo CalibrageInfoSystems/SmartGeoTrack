@@ -33,8 +33,7 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
 
   Future<List<LeadInfoModel>> getLeadInfoByCode(String code) async {
     try {
-      final dataAccessHandler =
-          Provider.of<DataAccessHandler>(context, listen: false);
+      final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> result = await dataAccessHandler.getLeadInfoByCode(code);
       List<LeadInfoModel> leads =
           result.map((item) => LeadInfoModel.fromJson(item)).toList();
