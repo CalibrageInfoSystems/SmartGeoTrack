@@ -259,7 +259,8 @@ class _LoginScreenState extends State<LoginScreen>
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => Forgotpassword()),
+                                    builder: (context) =>
+                                        const Forgotpassword()),
                               );
                             },
                             child: const Text(
@@ -355,11 +356,14 @@ class _LoginScreenState extends State<LoginScreen>
               prefs.setInt('roleID', data['user']['roleID']);
               prefs.setString('roleName', data['user']['roleName']);
               prefs.setString('empCode', data['user']['empCode']);
-          //    prefs.setString('mobileNumber', data['user']['isMobileAccess']);
+              prefs.setString('currentPassword', data['user']['password']);
+              //    prefs.setString('mobileNumber', data['user']['isMobileAccess']);
               mobileacess = data['user']['isMobileAccess'];
 
-              print('mobileacess  for ${ data['user']['username']} ===$mobileacess');
-              if (mobileacess!) { //TODO
+              print(
+                  'mobileacess  for ${data['user']['username']} ===$mobileacess');
+              if (mobileacess!) {
+                //TODO
                 // If true, navigate to HomeScreen
                 Navigator.push(
                   context,
@@ -369,7 +373,8 @@ class _LoginScreenState extends State<LoginScreen>
                 // If false, show an error message
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Mobile access is not allowed for ${data['user']['username']}'),
+                    content: Text(
+                        'Mobile access is not allowed for ${data['user']['username']}'),
                   ),
                 );
               }

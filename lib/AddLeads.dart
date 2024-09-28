@@ -63,7 +63,7 @@ class _AddLeadScreenState extends State<AddLeads>
         // Limit the number of files added to not exceed the total of 3 files + images
         int availableSlots = 3 - (_images.length + _files.length);
         List<PlatformFile> selectedFiles =
-        result.files.take(availableSlots).toList();
+            result.files.take(availableSlots).toList();
 
         setState(() {
           _files.addAll(selectedFiles);
@@ -200,6 +200,7 @@ class _AddLeadScreenState extends State<AddLeads>
                                   (value == null || value.isEmpty)) {
                                 return 'Please Enter Company Name';
                               }
+
                               return null;
                             },
                           ),
@@ -219,6 +220,12 @@ class _AddLeadScreenState extends State<AddLeads>
                       ),
                       keyboardType: TextInputType.phone,
                       maxLength: 10,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'[6-9][0-9]*')),
+                      ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please Enter Phone Number';
@@ -241,7 +248,12 @@ class _AddLeadScreenState extends State<AddLeads>
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please Enter Email';
+                        } else if (!RegExp(
+                                r"^[a-z][a-z0-9.!#$%&'*+/=?^_`{|}~-]*@[a-z0-9]+\.[a-z]+$")
+                            .hasMatch(value)) {
+                          return 'Please enter a valid email address';
                         }
+
                         return null;
                       },
                     ),
@@ -251,11 +263,13 @@ class _AddLeadScreenState extends State<AddLeads>
                       decoration: InputDecoration(
                         labelText: "Comments",
                         hintText: "Enter Comments",
+                        counterText: "",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       maxLines: 4,
+                      maxLength: 250,
                     ),
                     const SizedBox(height: 10),
                     Padding(
@@ -282,9 +296,9 @@ class _AddLeadScreenState extends State<AddLeads>
                                       alignment: Alignment.center,
                                       child: Column(
                                         mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                            MainAxisAlignment.center,
                                         crossAxisAlignment:
-                                        CrossAxisAlignment.center,
+                                            CrossAxisAlignment.center,
                                         children: [
                                           SvgPicture.asset(
                                             "assets/add_a_photo.svg",
@@ -318,9 +332,9 @@ class _AddLeadScreenState extends State<AddLeads>
                                       alignment: Alignment.center,
                                       child: Column(
                                         mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                            MainAxisAlignment.center,
                                         crossAxisAlignment:
-                                        CrossAxisAlignment.center,
+                                            CrossAxisAlignment.center,
                                         children: [
                                           SvgPicture.asset(
                                             "assets/fileuploadicon.svg",
@@ -405,9 +419,9 @@ class _AddLeadScreenState extends State<AddLeads>
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           border:
-                                          Border.all(color: Colors.blue),
+                                              Border.all(color: Colors.blue),
                                           borderRadius:
-                                          BorderRadius.circular(8),
+                                              BorderRadius.circular(8),
                                           color: Colors.grey[100],
                                         ),
                                         child: Row(
@@ -421,7 +435,7 @@ class _AddLeadScreenState extends State<AddLeads>
                                                 style: const TextStyle(
                                                     fontSize: 14,
                                                     overflow:
-                                                    TextOverflow.ellipsis),
+                                                        TextOverflow.ellipsis),
                                               ),
                                             ),
                                           ],
@@ -503,9 +517,10 @@ class _AddLeadScreenState extends State<AddLeads>
       showLoadingDialog(context);
       _validateTotalItems();
 
-    //  String? empCode = await fetchEmpCode(Username!, context); //TODO
-   //   String? empCode ="ROJATEST";
-      final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
+      //  String? empCode = await fetchEmpCode(Username!, context); //TODO
+      //   String? empCode ="ROJATEST";
+      final dataAccessHandler =
+          Provider.of<DataAccessHandler>(context, listen: false);
 
       print('empCode===$empCode');
 
@@ -524,7 +539,8 @@ class _AddLeadScreenState extends State<AddLeads>
       FROM Leads WHERE code LIKE 'L$empCode$formattedDate-%'
     ''';
 
-      int? maxSerialNumber = await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
+      int? maxSerialNumber =
+          await dataAccessHandler.getOnlyOneIntValueFromDb(maxNumQuery);
 
       int serialNumber = (maxSerialNumber != null) ? maxSerialNumber + 1 : 1;
       String formattedSerialNumber = serialNumber.toString().padLeft(3, '0');
@@ -545,9 +561,9 @@ class _AddLeadScreenState extends State<AddLeads>
           'Comments': _commentsController.text,
           'Latitude': _currentPosition!.latitude,
           'Longitude': _currentPosition!.longitude,
-          'CreatedByUserId': userID,  // Ensure userID is not null
+          'CreatedByUserId': userID, // Ensure userID is not null
           'CreatedDate': DateTime.now().toIso8601String(),
-          'UpdatedByUserId': userID,  // Ensure userID is not null
+          'UpdatedByUserId': userID, // Ensure userID is not null
           'UpdatedDate': DateTime.now().toIso8601String(),
           'ServerUpdatedStatus': false,
         };
@@ -556,39 +572,40 @@ class _AddLeadScreenState extends State<AddLeads>
 
         try {
           // Insert lead data into the database and check the result
-          int leadId = await dataAccessHandler.insertLead(leadData) ?? -1;  // Add null check for database
+          int leadId = await dataAccessHandler.insertLead(leadData) ??
+              -1; // Add null check for database
 
           if (leadId == -1) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Failed to insert lead data.')),
             );
-            return;  // Exit if insertion fails
+            return; // Exit if insertion fails
           }
 
           print('leadId======>$leadId');
 
           for (var image in _imagepath) {
-            if (image != null) {  // Ensure image is not null
-              String fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
-              String fileLocation = image.path;
-              String fileExtension = '.jpg';
-              print('===fileLocation $fileLocation');
+            // Ensure image is not null
+            String fileName =
+                'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+            String fileLocation = image.path;
+            String fileExtension = '.jpg';
+            print('===fileLocation $fileLocation');
 
-              final fileData = {
-                'leadsCode': leadCode,
-                'FileName': fileLocation,
-                'FileLocation': fileLocation,
-                'FileExtension': fileExtension,
-                'IsActive': 1,
-                'CreatedByUserId': userID,
-                'CreatedDate': DateTime.now().toIso8601String(),
-                'UpdatedByUserId': userID,
-                'UpdatedDate': DateTime.now().toIso8601String(),
-                'ServerUpdatedStatus': false,
-              };
-              print('fileData======>$fileData');
-              await dataAccessHandler?.insertFileRepository(fileData);
-            }
+            final fileData = {
+              'leadsCode': leadCode,
+              'FileName': fileLocation,
+              'FileLocation': fileLocation,
+              'FileExtension': fileExtension,
+              'IsActive': 1,
+              'CreatedByUserId': userID,
+              'CreatedDate': DateTime.now().toIso8601String(),
+              'UpdatedByUserId': userID,
+              'UpdatedDate': DateTime.now().toIso8601String(),
+              'ServerUpdatedStatus': false,
+            };
+            print('fileData======>$fileData');
+            await dataAccessHandler.insertFileRepository(fileData);
           }
 
           // Handle _files as well with similar checks
@@ -614,7 +631,7 @@ class _AddLeadScreenState extends State<AddLeads>
             };
 
             print('fileData======>$fileData');
-            await dataAccessHandler?.insertFileRepository(fileData);
+            await dataAccessHandler.insertFileRepository(fileData);
           }
 
           // Trigger Sync for Leads and FileRepository
@@ -633,14 +650,12 @@ class _AddLeadScreenState extends State<AddLeads>
           _emailController.clear();
           _commentsController.clear();
           _images.clear();
-
         } catch (e) {
           print('Error inserting lead data: $e');
           // Handle database insertion failure
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Failed to insert lead data.')),
           );
-
         }
       } else {
         // Location fetch failed
@@ -699,7 +714,6 @@ class _AddLeadScreenState extends State<AddLeads>
           _images.add(imageData);
           _imagepath.add(pickedFile);
           //  _imagepath.ad
-
         });
       }
     } catch (e) {
@@ -719,7 +733,7 @@ class _AddLeadScreenState extends State<AddLeads>
     if (_images.length + _files.length > 3) {
       setState(() {
         _errorMessage =
-        'You can upload a maximum of 3 images and files combined.';
+            'You can upload a maximum of 3 images and files combined.';
       });
     } else {
       setState(() {
@@ -733,7 +747,7 @@ class _AddLeadScreenState extends State<AddLeads>
     userID = prefs.getInt('userID');
     Username = prefs.getString('username') ?? '';
     empCode = prefs.getString('empCode') ?? '';
-   // String firstName = prefs.getString('empCode') ?? '';
+    // String firstName = prefs.getString('empCode') ?? '';
     String email = prefs.getString('email') ?? '';
     String mobileNumber = prefs.getString('mobileNumber') ?? '';
     String roleName = prefs.getString('roleName') ?? '';
@@ -749,7 +763,7 @@ class _AddLeadScreenState extends State<AddLeads>
 
   Future<String?> fetchEmpCode(String username, BuildContext context) async {
     final dataAccessHandler =
-    Provider.of<DataAccessHandler>(context, listen: false);
+        Provider.of<DataAccessHandler>(context, listen: false);
 
     // Use parameterized query to avoid SQL injection
     String empCodeQuery = 'SELECT EmpCode FROM UserInfos WHERE UserName = ?';
