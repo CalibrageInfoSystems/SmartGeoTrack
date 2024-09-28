@@ -28,7 +28,6 @@ class Palm3FoilDatabase {
   static Future<Palm3FoilDatabase?> getInstance() async {
     if (_palm3FoilDatabase == null) {
       _palm3FoilDatabase = Palm3FoilDatabase._privateConstructor();
-      //     _palm3FoilDatabase!._context = context;
       Directory documentsDirectory = await getApplicationDocumentsDirectory();
       // _dbPath = join(documentsDirectory.path, DATABASE_NAME);
 

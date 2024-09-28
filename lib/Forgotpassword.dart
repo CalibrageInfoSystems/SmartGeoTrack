@@ -1,3 +1,4 @@
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -241,11 +242,18 @@ class _ForgotpasswordScreenState extends State<Forgotpassword>
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
+      var connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        // No internet connection
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No internet connection. Please try again later.')),
+        );
+        return;
+      }
       // Call the API
       showLoadingDialog(context);
       String username = _usernameController.text;
-      var url =
-          Uri.parse('http://182.18.157.215/SmartGeoTrack/API/Login/GetUserOTP');
+      var url = Uri.parse('http://182.18.157.215/SmartGeoTrack/API/Login/GetUserOTP');
 
       // Prepare the request body
       var body = json.encode({"userName": username});

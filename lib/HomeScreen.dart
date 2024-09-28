@@ -61,6 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int? userID;
   int? totalLeadsCount ;
   int? todayLeadsCount ;
+  int?  pendingleadscount;
+  int?  pendingfilerepocount;
   int? dateRangeLeadsCount;
   late Future<List<LeadsModel>> futureLeads;
   bool isLoading = true;
@@ -70,8 +72,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     getuserdata();
     fetchLeadCounts();
+    fetchpendingrecordscount();
 
-    futureLeads = loadleads();
+
     backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
     checkLocationEnabled();
     startService();
@@ -142,6 +145,9 @@ class _HomeScreenState extends State<HomeScreen> {
               final syncService = SyncService(dataAccessHandler);
               syncService.performRefreshTransactionsSync(context);
             } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please check your internet connection.')),
+              );
               Fluttertoast.showToast(
                   msg: "Please check your internet connection.",
                   toastLength: Toast.LENGTH_SHORT,
@@ -339,6 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   return CustomLeadTemplate(
                                     index: index,
                                     lead: lead,
+                                    padding: 0,
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -662,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => ChangePassword(
-                id: 1,
+                id: userID,
               ),
             ),
           );
@@ -882,6 +889,7 @@ class _HomeScreenState extends State<HomeScreen> {
     DateTime now = DateTime.now();
     formattedDate = formatDate(now);
     calenderDate = formattedDate;
+    futureLeads = loadleads();
     print(' formattedDate==$formattedDate'); // Example output: "25th Sep 2024"
   }
 
@@ -981,6 +989,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showSyncingBottomSheet() {
+
     showModalBottomSheet(
         context: context,
         clipBehavior: Clip.antiAlias,
@@ -991,6 +1000,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         builder: (context) {
+
           return Container(
             decoration: const BoxDecoration(
               color: Colors.white,
@@ -1031,15 +1041,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Image.asset('assets/tick.png',
+                      Image.asset('assets/synchronize.png',
                         height: 60,  // Add height as per requirement
                         width: 60,),  // Add width as per requirement), // Corrected here
 
                       const SizedBox(height: 20),
                       // Uncomment and provide total requests if needed
                       // customRow(label: 'Total Requests', data: '3535'),
-                      customRow(label: 'Pending', data: '0'),
-                      customRow(label: 'Last Sync', data: '1 Hour, Ago'),
+                      customRow(label: 'Leads', data: pendingleadscount),
+                      customRow(label: 'File Repository', data: pendingfilerepocount),
+                   //   customRow(label: 'Last Sync', data: '1 Hour, Ago'),
                       const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
@@ -1062,25 +1073,126 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> syncing() async {
-    final dataAccessHandler =
-    Provider.of<DataAccessHandler>(context, listen: false);
+    Navigator.pop(context);
+    final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
     bool isConnected = await CommonStyles.checkInternetConnectivity();
+
     if (isConnected) {
       final syncService = SyncService(dataAccessHandler);
-      syncService.performRefreshTransactionsSync(context,
-          showSuccessBottomSheet: showSyncSuccessBottomSheet);
-    } else {
-      Fluttertoast.showToast(
-          msg: "Please Check Your Internet Connection.",
+
+      try {
+        // Perform sync operation
+        await syncService.performRefreshTransactionsSync(
+          context,
+          showSuccessBottomSheet: showSyncSuccessBottomSheet,
+        );
+
+        // If successful, show the success bottom sheet
+        _showSyncSuccessBottomSheet();
+      } catch (e) {
+        // Handle sync error and show error bottom sheet or toast
+        Fluttertoast.showToast(
+          msg: "Error syncing data. Please try again.",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           timeInSecForIosWeb: 1,
           backgroundColor: Colors.red,
           textColor: Colors.white,
-          fontSize: 16.0);
+          fontSize: 16.0,
+        );
+      }
+    } else {
+      // Show toast for no internet connection
+      Fluttertoast.showToast(
+        msg: "Please Check Your Internet Connection.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
       print("Please check your internet connection.");
     }
   }
+
+  void _showSyncSuccessBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      clipBehavior: Clip.antiAlias,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                color: CommonStyles.listOddColor,
+                padding: const EdgeInsets.all(5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      iconSize: 20,
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    const Text('Sync Success',
+                        style: CommonStyles.txStyF20CbFF5),
+                    const SizedBox(width: 40),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'All data has been synced successfully!',
+                      style: CommonStyles.txStyF14CbFF5.copyWith(
+                        color: CommonStyles.dataTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 60,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: customBtn(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text(
+                          'OK',
+                          style: CommonStyles.txStyF14CwFF5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 
   void showSyncSuccessBottomSheet() {
     showModalBottomSheet(
@@ -1143,7 +1255,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
   }
 
-  Widget customRow({required String label, String? data}) {
+  Widget customRow({required String label, int? data}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -1156,25 +1268,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showSyncSuccessBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle, size: 50, color: Colors.green),
-            SizedBox(height: 20),
-            Text('Sync Offline Data'),
-            SizedBox(height: 10),
-            Text('Data was synced successfully!'),
-          ],
-        ),
-      ),
-    );
-  }
+  // void _showSyncSuccessBottomSheet() {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isDismissible: true,
+  //     builder: (context) => Container(
+  //       padding: const EdgeInsets.all(20),
+  //       child: const Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Icon(Icons.check_circle, size: 50, color: Colors.green),
+  //           SizedBox(height: 20),
+  //           Text('Sync Offline Data'),
+  //           SizedBox(height: 10),
+  //           Text('Data was synced successfully!'),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Future<void> _startSync() async {
     final dataAccessHandler =
@@ -1233,38 +1345,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-//   Future<void> fetchLeadCounts() async {
-//
-//
-//     totalLeadsCount= (await dataAccessHandler.getOnlyOneIntValueFromDb('SELECT COUNT(*) AS totalLeadsCount FROM Leads'));
-//     print('totalLeadsCount====$totalLeadsCount');
-//
-//     String currentDate = getCurrentDate(); // Assuming you have the getCurrentDate() function from the previous example
-//
-// // Update your query to include the current date
-//     todayLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
-//         "SELECT COUNT(*) AS todayLeadsCount FROM Leads WHERE DATE(CreatedDate) = '$currentDate'"
-//     );
-//     dateRangeLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
-//         "SELECT COUNT(*) AS dateRangeLeadsCount FROM Leads WHERE DATE(CreatedDate) BETWEEN '$currentDate' AND '$currentDate'"
-//     );
-//     // Fetch total leads count
-//     // List<Map<String, dynamic>> totalLeadsResult = await db.rawQuery('SELECT COUNT(*) AS totalLeadsCount FROM Leads');
-//     //  todayLeadsCount = (await dataAccessHandler.getOnlyOneIntValueFromDb('SELECT COUNT(*) AS todayLeadsCount FROM Leads WHERE DATE(CreatedDate) = '''));
-//     print('totalLeadsCount====$todayLeadsCount');
-//     // Fetch today's leads count
-//     // List<Map<String, dynamic>> todayLeadsResult = await db.rawQuery(
-//     //     "SELECT COUNT(*) AS todayLeadsCount FROM Leads WHERE DATE(CreatedDate) = ?", ['2024-09-26']);
-//     // todayLeadsCount = todayLeadsResult[0]['todayLeadsCount'];
-//
-//     // Fetch date range leads count
-//     // List<Map<String, dynamic>> dateRangeLeadsResult = await db.rawQuery(
-//     //     "SELECT COUNT(*) AS dateRangeLeadsCount FROM Leads WHERE DATE(CreatedDate) BETWEEN ? AND ?", ['2024-09-25', '2024-09-26']);
-//     // dateRangeLeadsCount = dateRangeLeadsResult[0]['dateRangeLeadsCount'];
-//
-//     // Update the UI
-//     setState(() {});
-//   }
+
   Future<List<LeadsModel>> TodayloadLeads(String today) async {
     try {
       // final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
@@ -1283,10 +1364,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   Future<List<LeadsModel>> loadleads() async {
+    String currentDate = getCurrentDate();
     try {
       final dataAccessHandler =
       Provider.of<DataAccessHandler>(context, listen: false);
-      List<dynamic> leads = await dataAccessHandler.getleads();
+      List<dynamic> leads = await dataAccessHandler.getTodayLeadsuser(currentDate,userID);
       return leads.map((item) => LeadsModel.fromMap(item)).toList();
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
@@ -1303,6 +1385,26 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       isLoading = false; // Stop loading
     });
+
+
+
+
+
+  }
+
+  void fetchpendingrecordscount()  async {
+    setState(() {
+      isLoading = true; // Start loading
+    });
+
+    pendingleadscount = await dataAccessHandler.getOnlyOneIntValueFromDb('SELECT Count(*) AS pendingLeadsCount FROM Leads WHERE ServerUpdatedStatus = 0');
+    pendingfilerepocount = await dataAccessHandler.getOnlyOneIntValueFromDb(
+       'SELECT Count(*) AS pendingrepoCount FROM FileRepositorys WHERE ServerUpdatedStatus = 0');
+
+    setState(() {
+      isLoading = false; // Stop loading
+    });
+
   }
 
 
@@ -1411,7 +1513,7 @@ void onStart(ServiceInstance service) async {
 
     if (permission == LocationPermission.always) {
       service.invoke('on_location_changed', position.toJson());
-      if (_isPositionAccurate(position)) {
+      // if (_isPositionAccurate(position)) {
         if (!isFirstLocationLogged) {
           // Log the first point
           lastLatitude = position.latitude;
@@ -1435,7 +1537,7 @@ void onStart(ServiceInstance service) async {
           await backgroundService
               .syncLocationData(); // Use the existing instance
         }
-      }
+    //  }
       if (_isPositionAccurate(position)) {
         final distance = Geolocator.distanceBetween(
           lastLatitude,

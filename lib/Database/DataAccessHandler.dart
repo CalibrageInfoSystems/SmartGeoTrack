@@ -121,16 +121,21 @@ class DataAccessHandler with ChangeNotifier {
     return results;
   }
 
-  Future<List<Map<String, dynamic>>> gettodayleads() async {
+  Future<List<Map<String, dynamic>>> getTodayLeadsuser(String today, int? userID) async {
     final db = await DatabaseHelper.instance.database;
-    String currentDate = getCurrentDate();
-    String query = 'SELECT * FROM Leads';
-    print('Executing Query: $query');
-    List<Map<String, dynamic>> results = await db.query('Leads');
+
+    // Use query parameters to safely pass in the date and userID
+    String query = 'SELECT * FROM Leads WHERE DATE(CreatedDate) = ? AND CreatedByUserId = ?';
+    print('Executing Query: $query with parameters: $today, $userID');
+
+    // Query the database with the proper filtering
+    List<Map<String, dynamic>> results = await db.rawQuery(query, [today, userID]);
+
     print('Query Results:');
     for (var row in results) {
       print(row);
     }
+
     return results;
   }
 

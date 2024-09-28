@@ -83,16 +83,19 @@ class _AddLeadScreenState extends State<AddLeads>
     });
   }
 
-  // Get current location (latitude and longitude)
+
+
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
+    // Check if GPS is enabled (Internet is not needed, only GPS)
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
+      return Future.error('Location services (GPS) are disabled.');
     }
 
+    // Check location permission
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -101,9 +104,19 @@ class _AddLeadScreenState extends State<AddLeads>
       }
     }
 
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
+    }
+
+    // Get current position using GPS (this works offline)
     _currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+      desiredAccuracy: LocationAccuracy.high, // Uses GPS
+
+
+    );
   }
+
 
   @override
   void initState() {
@@ -547,7 +560,7 @@ class _AddLeadScreenState extends State<AddLeads>
 
       print('LeadCode==$leadCode');
       await _getCurrentLocation();
-
+      print('_currentPosition==$_currentPosition');
       // Check if _currentPosition is null before proceeding
       if (_currentPosition != null) {
         final leadData = {
@@ -632,10 +645,26 @@ class _AddLeadScreenState extends State<AddLeads>
             print('fileData======>$fileData');
             await dataAccessHandler.insertFileRepository(fileData);
           }
-
+          bool isConnected = await CommonStyles.checkInternetConnectivity();
+          if (isConnected) {
+            // Call your login function here
+            final syncService = SyncService(dataAccessHandler);
+            syncService.performRefreshTransactionsSync(context);
+          } else {
+            Fluttertoast.showToast(
+                msg: "Please check your internet connection.",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            print("Please check your internet connection.");
+            //showDialogMessage(context, "Please check your internet connection.");
+          }
           // Trigger Sync for Leads and FileRepository
-          final syncService = SyncService(dataAccessHandler);
-          syncService.performRefreshTransactionsSync(context);
+          // final syncService = SyncService(dataAccessHandler);
+          // syncService.performRefreshTransactionsSync(context);
 
           Navigator.push(
             context,

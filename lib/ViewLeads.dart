@@ -123,7 +123,7 @@ class _ViewLeadsState extends State<ViewLeads> {
                               });
                         },
                         separatorBuilder: (context, index) =>
-                            const SizedBox(height: 0),
+                        const SizedBox(height: 0),
                       );
                     }
                   }
@@ -137,7 +137,7 @@ class _ViewLeadsState extends State<ViewLeads> {
   Future<List<LeadsModel>> loadLeads() async {
     try {
       final dataAccessHandler =
-          Provider.of<DataAccessHandler>(context, listen: false);
+      Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getleads();
       return leads.map((item) => LeadsModel.fromMap(item)).toList();
     } catch (e) {
@@ -148,7 +148,7 @@ class _ViewLeadsState extends State<ViewLeads> {
   Future<List<LeadsModel>> getTodayLeads(String today) async {
     try {
       final dataAccessHandler =
-          Provider.of<DataAccessHandler>(context, listen: false);
+      Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getTodayLeads(today);
       return leads.map((item) => LeadsModel.fromMap(item)).toList();
     } catch (e) {
@@ -159,7 +159,7 @@ class _ViewLeadsState extends State<ViewLeads> {
   Future<List<LeadsModel>> filterTheLeads(String query) async {
     try {
       final dataAccessHandler =
-          Provider.of<DataAccessHandler>(context, listen: false);
+      Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getFilterData(query);
 
       return leads.map((item) => LeadsModel.fromMap(item)).toList();
@@ -217,7 +217,7 @@ class _ViewLeadsState extends State<ViewLeads> {
                           spreadRadius: 2,
                           blurRadius: 5,
                           offset:
-                              const Offset(0, 3), // changes position of shadow
+                          const Offset(0, 3), // changes position of shadow
                         ),
                       ],
                     ),
@@ -236,9 +236,9 @@ class _ViewLeadsState extends State<ViewLeads> {
                         ),
                         border: InputBorder.none, // Remove the underline
                         focusedBorder:
-                            InputBorder.none, // Remove underline when focused
+                        InputBorder.none, // Remove underline when focused
                         enabledBorder:
-                            InputBorder.none, // Remove underline when enabled
+                        InputBorder.none, // Remove underline when enabled
                         isDense: true,
                         contentPadding: EdgeInsets.symmetric(vertical: 10),
                       ),
@@ -284,8 +284,8 @@ class _ViewLeadsState extends State<ViewLeads> {
     setState(() {
       futureLeads = Future.value(copyLeads
           .where((item) =>
-              item.name!.toLowerCase().contains(input.toLowerCase()) ||
-              item.email!.toLowerCase().contains(input.toLowerCase()))
+      item.name!.toLowerCase().contains(input.toLowerCase()) ||
+          item.email!.toLowerCase().contains(input.toLowerCase()))
           .toList());
     });
   }
@@ -513,8 +513,8 @@ class _ViewLeadsState extends State<ViewLeads> {
 
   Future<void> launchFromDatePicker(BuildContext context,
       {required DateTime firstDate,
-      required DateTime lastDate,
-      DateTime? initialDate}) async {
+        required DateTime lastDate,
+        DateTime? initialDate}) async {
     // final DateTime lastDate = DateTime.now();
     // final DateTime firstDate = DateTime(lastDate.year - 100);
     final DateTime? pickedDay = await showDatePicker(
@@ -536,8 +536,8 @@ class _ViewLeadsState extends State<ViewLeads> {
 
   Future<void> launchToDatePicker(BuildContext context,
       {required DateTime firstDate,
-      required DateTime lastDate,
-      DateTime? initialDate}) async {
+        required DateTime lastDate,
+        DateTime? initialDate}) async {
     // final DateTime lastDate = DateTime.now();
     // final DateTime firstDate = DateTime(lastDate.year - 100);
     final DateTime? pickedDay = await showDatePicker(
@@ -828,7 +828,7 @@ class _FilterState extends State<Filter> {
                       spacing: 12.0,
                       children: List<Widget>.generate(
                         widget.dates.length,
-                        (int index) {
+                            (int index) {
                           return ChoiceChip(
                             label: Text(
                               widget.dates[index],
@@ -863,7 +863,7 @@ class _FilterState extends State<Filter> {
                       spacing: 12.0,
                       children: List<Widget>.generate(
                         widget.types.length,
-                        (int index) {
+                            (int index) {
                           return ChoiceChip(
                             label: Text(
                               widget.types[index],

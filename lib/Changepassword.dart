@@ -27,6 +27,7 @@ class _ChangePasswordState extends State<ChangePassword>
       TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isObscure = true;
+  bool _isObscurec = true;
   bool? mobileacess;
 
   @override
@@ -187,7 +188,7 @@ class _ChangePasswordState extends State<ChangePassword>
   TextFormField confirmPassword() {
     return TextFormField(
       controller: _confirmPasswordController,
-      obscureText: _isObscure,
+      obscureText: _isObscurec,
       decoration: InputDecoration(
         labelText: "Confirm Password *",
         hintText: "Enter Confirm Password ",
@@ -197,11 +198,11 @@ class _ChangePasswordState extends State<ChangePassword>
         errorMaxLines: 2,
         suffixIcon: IconButton(
           icon: Icon(
-            _isObscure ? Icons.visibility_off : Icons.visibility,
+            _isObscurec ? Icons.visibility_off : Icons.visibility,
           ),
           onPressed: () {
             setState(() {
-              _isObscure = !_isObscure;
+              _isObscurec = !_isObscurec;
             });
           },
         ),
