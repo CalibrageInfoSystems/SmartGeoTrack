@@ -55,8 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? formattedDate;
   bool isLocationEnabled = false;
   int? userID;
-  int? totalLeadsCount ;
-  int? todayLeadsCount ;
+  int? totalLeadsCount;
+  int? todayLeadsCount;
   int? dateRangeLeadsCount;
   late Future<List<LeadsModel>> futureLeads;
   bool isLoading = true;
@@ -67,7 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchLeadCounts();
 
     futureLeads = loadleads();
-    backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
+    backgroundService =
+        BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
     checkLocationEnabled();
     startService();
   }
@@ -104,11 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
           heading: double.tryParse(event['heading'].toString()) ?? 0.0,
           speed: double.tryParse(event['speed'].toString()) ?? 0.0,
           speedAccuracy:
-          double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
+              double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
           altitudeAccuracy:
-          double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
+              double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
           headingAccuracy:
-          double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
+              double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
         );
         print(
             "on_location_changed: ${position.latitude} -  ${position.longitude}");
@@ -150,8 +151,8 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             await context.read<LocationControllerCubit>().onLocationChanged(
-              location: position,
-            );
+                  location: position,
+                );
           }
         } else {
           print('Position Accuracy: ${position.accuracy}');
@@ -172,7 +173,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
@@ -195,18 +195,22 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // Show loading indicator while data is loading
                       if (isLoading)
-                        const Center(child: CircularProgressIndicator()) // Loading indicator
+                        const Center(
+                            child:
+                                CircularProgressIndicator()) // Loading indicator
                       else ...[
                         // UI content after loading is complete
                         Row(
                           children: [
                             Expanded(
                                 child: customBox(
-                                    title: 'Total Leads', data: totalLeadsCount)),
+                                    title: 'Total Leads',
+                                    data: totalLeadsCount)),
                             const SizedBox(width: 20),
                             Expanded(
                                 child: customBox(
-                                    title: 'Today Leads', data: todayLeadsCount)),
+                                    title: 'Today Leads',
+                                    data: todayLeadsCount)),
                           ],
                         ),
                         const SizedBox(height: 10),
@@ -222,8 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(width: 20),
                             Expanded(
                                 child: customBox(
-                                    title: 'Leads',
-                                    data: dateRangeLeadsCount)),
+                                    title: 'Leads', data: dateRangeLeadsCount)),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -317,11 +320,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         FutureBuilder<List<LeadsModel>>(
                           future: futureLeads,
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const Center(child: CircularProgressIndicator());
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
                             } else if (snapshot.hasError) {
-                              return Center(child: Text('Error: ${snapshot.error}'));
-                            } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                              return Center(
+                                  child: Text('Error: ${snapshot.error}'));
+                            } else if (snapshot.hasData &&
+                                snapshot.data!.isNotEmpty) {
                               List<LeadsModel> futureLeads = snapshot.data!;
                               return ListView.separated(
                                 itemCount: futureLeads.length,
@@ -337,16 +344,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => ViewLeadsInfo(code: lead.code!),
+                                          builder: (context) =>
+                                              ViewLeadsInfo(code: lead.code!),
                                         ),
                                       );
                                     },
                                   );
                                 },
-                                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                                separatorBuilder: (context, index) =>
+                                    const SizedBox(height: 10),
                               );
                             } else {
-                              return const Center(child: Text('No leads available for today'));
+                              return const Center(
+                                  child: Text('No leads available for today'));
                             }
                           },
                         ),
@@ -362,7 +372,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 
   Container leadTemplate(int index) {
     return Container(
@@ -410,8 +419,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ElevatedButton customBtn(
       {Color? backgroundColor = CommonStyles.btnRedBgColor,
-        required Widget child,
-        void Function()? onPressed}) {
+      required Widget child,
+      void Function()? onPressed}) {
     return ElevatedButton(
       onPressed: () {
         onPressed?.call();
@@ -513,15 +522,15 @@ class _HomeScreenState extends State<HomeScreen> {
               style: CommonStyles.txStyF20CbluFF5.copyWith(
                 fontSize: 18,
               )
-            /* style: const TextStyle(
+              /* style: const TextStyle(
                 color: CommonStyles.blueTextColor, fontSize: 20), */
-          ),
+              ),
           Text('$data',
               style: CommonStyles.txStyF20CbFF5.copyWith(
                 fontSize: 40,
               )
-            /* style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold), */
-          ),
+              /* style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold), */
+              ),
         ],
       ),
     );
@@ -571,7 +580,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: CommonStyles.txStyF20CpFF5),
                           Text(
                             // 'string',
-                            '${username!}',
+                            '$username',
                             style: CommonStyles.txStyF20CpFF5.copyWith(
                               fontSize: 25,
                               fontWeight: FontWeight.w900,
@@ -579,7 +588,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           Text(
                             //  '26th Sep 2024',
-                            '${formattedDate!}',
+                            '$formattedDate',
                             style: CommonStyles.txStyF14CbFF5,
                           ),
                         ],
@@ -663,8 +672,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? selectedDate = 'Today';
   Future<void> launchDatePicker(BuildContext context,
       {required DateTime firstDate,
-        required DateTime lastDate,
-        DateTime? initialDate}) async {
+      required DateTime lastDate,
+      DateTime? initialDate}) async {
     // final DateTime lastDate = DateTime.now();
     // final DateTime firstDate = DateTime(lastDate.year - 100);
     final DateTime? pickedDay = await showDatePicker(
@@ -720,7 +729,7 @@ class _HomeScreenState extends State<HomeScreen> {
         msg: "Wait for a while, Initializing the service...");
 
     final permission =
-    await context.read<LocationControllerCubit>().enableGPSWithPermission();
+        await context.read<LocationControllerCubit>().enableGPSWithPermission();
     if (permission) {
       try {
         Position currentPosition = await Geolocator.getCurrentPosition();
@@ -773,7 +782,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const String fileName = 'UsertrackinglogTest.file';
 
     Directory appFolderPath =
-    Directory('/storage/emulated/0/Download/$folderName');
+        Directory('/storage/emulated/0/Download/$folderName');
     if (!appFolderPath.existsSync()) {
       appFolderPath.createSync(recursive: true);
     }
@@ -828,7 +837,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const LoginScreen()),
-                        (Route<dynamic> route) => false);
+                    (Route<dynamic> route) => false);
               },
               child: const Text('OK'),
             ),
@@ -880,7 +889,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return AlertDialog(
           title: const Text("Location Services Disabled"),
           content:
-          const Text("Please enable location services to use this app."),
+              const Text("Please enable location services to use this app."),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -978,7 +987,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> syncing() async {
     final dataAccessHandler =
-    Provider.of<DataAccessHandler>(context, listen: false);
+        Provider.of<DataAccessHandler>(context, listen: false);
     bool isConnected = await CommonStyles.checkInternetConnectivity();
     if (isConnected) {
       final syncService = SyncService(dataAccessHandler);
@@ -1094,7 +1103,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _startSync() async {
     final dataAccessHandler =
-    Provider.of<DataAccessHandler>(context, listen: false);
+        Provider.of<DataAccessHandler>(context, listen: false);
     bool isConnected = await CommonStyles.checkInternetConnectivity();
     if (isConnected) {
       // Call your login function here
@@ -1113,12 +1122,14 @@ class _HomeScreenState extends State<HomeScreen> {
       // Simulate a sync operation
     }
   }
+
   Future<void> fetchLeadCounts() async {
     setState(() {
       isLoading = true; // Start loading
     });
     String currentDate = getCurrentDate();
-    totalLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb('SELECT COUNT(*) AS totalLeadsCount FROM Leads');
+    totalLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
+        'SELECT COUNT(*) AS totalLeadsCount FROM Leads');
     todayLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
         "SELECT COUNT(*) AS todayLeadsCount FROM Leads WHERE DATE(CreatedDate) = '$currentDate'");
     dateRangeLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
@@ -1173,22 +1184,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String getCurrentDate() {
     DateTime now = DateTime.now();
-    String formattedDate = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    String formattedDate =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
     return formattedDate;
   }
-
 
   Future<List<LeadsModel>> loadleads() async {
     try {
       final dataAccessHandler =
-      Provider.of<DataAccessHandler>(context, listen: false);
+          Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getleads();
       return leads.map((item) => LeadsModel.fromMap(item)).toList();
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
     }
   }
-
 }
 
 class BackgroundService {
@@ -1196,7 +1206,7 @@ class BackgroundService {
   final DataAccessHandler dataAccessHandler; // Declare DataAccessHandler
   late SyncServiceB syncService; // Declare SyncService
   final FlutterBackgroundService flutterBackgroundService =
-  FlutterBackgroundService();
+      FlutterBackgroundService();
   static const double MAX_ACCURACY_THRESHOLD = 10.0;
   static const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
   static const double MIN_DISTANCE_THRESHOLD = 50.0;
@@ -1269,7 +1279,7 @@ void onStart(ServiceInstance service) async {
   // Pass the DataAccessHandler to the BackgroundService
   final dataAccessHandler = DataAccessHandler(); // Initialize this properly
   final backgroundService =
-  BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
+      BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) async {
@@ -1311,8 +1321,7 @@ void onStart(ServiceInstance service) async {
               from: '997');
 
           appendLog(
-              'Latitude: ${position.latitude}, Longitude: ${position
-                  .longitude}. Timestamp: $timestamp');
+              'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
 
           // Sync the data to the server
           await backgroundService
@@ -1373,7 +1382,7 @@ void appendLog(String text) async {
   const String fileName = 'UsertrackinglogTest.file';
 
   Directory appFolderPath =
-  Directory('/storage/emulated/0/Download/$folderName');
+      Directory('/storage/emulated/0/Download/$folderName');
   if (!appFolderPath.existsSync()) {
     appFolderPath.createSync(recursive: true);
   }
@@ -1410,7 +1419,7 @@ class StatCard extends StatelessWidget {
         children: [
           Text(value,
               style:
-              const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+                  const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(label, style: const TextStyle(fontSize: 18)),
         ],

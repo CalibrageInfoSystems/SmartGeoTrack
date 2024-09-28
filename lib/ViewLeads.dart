@@ -152,7 +152,7 @@ class _ViewLeadsState extends State<ViewLeads> {
   Future<List<LeadsModel>> filterTheLeads(String query) async {
     try {
       final dataAccessHandler =
-      Provider.of<DataAccessHandler>(context, listen: false);
+          Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getFilterData(query);
 
       return leads.map((item) => LeadsModel.fromMap(item)).toList();
@@ -272,6 +272,21 @@ class _ViewLeadsState extends State<ViewLeads> {
                       initialDate: selectedFromDate);
                 },
                 onSubmit: (date, category) {
+                  /* final result = FilterModel(
+                    date: getDate(date),
+                    category: getCategory(category),
+                    fromDate: validateDate(fromDateController.text),
+                    toDate: validateDate(toDateController.text),
+                  );
+                  print(
+                      'Result: ${result.date} ${result.category} ${result.fromDate} ${result.toDate}');
+
+                  final query = buildLeadsQuery(result.date, result.category,
+                      result.fromDate, result.toDate);
+                  Navigator.pop(context);
+                  setState(() {
+                    futureLeads = filterTheLeads(query);
+                  }); */
                   print('test: $selectedFromDate');
                   if (fromDateController.text.isNotEmpty &&
                       toDateController.text.isEmpty) {
@@ -310,8 +325,8 @@ class _ViewLeadsState extends State<ViewLeads> {
                       fromDate: validateDate(fromDateController.text),
                       toDate: validateDate(toDateController.text),
                     );
-                    // print(
-                    //     'Result: ${result.date} ${result.category} ${result.fromDate} ${result.toDate}');
+                    print(
+                        'Result: ${result.date} ${result.category} ${result.fromDate} ${result.toDate}');
 
                     final query = buildLeadsQuery(result.date, result.category,
                         result.fromDate, result.toDate);
@@ -320,6 +335,16 @@ class _ViewLeadsState extends State<ViewLeads> {
                       futureLeads = filterTheLeads(query);
                     });
                   }
+                },
+                onClear: () {
+                  setState(() {
+                    dateChipValue = -1;
+                    typeChipValue = -1;
+                    fromDateController.clear();
+                    toDateController.clear();
+                    futureLeads = loadLeads();
+                    Navigator.pop(context);
+                  });
                 },
               ),
             );
@@ -381,6 +406,9 @@ class _ViewLeadsState extends State<ViewLeads> {
   }
 
   String? getDate(int? date) {
+    if (date == null) {
+      return null;
+    }
     final now = DateTime.now();
 
     switch (date) {
@@ -476,7 +504,7 @@ class Filter extends StatefulWidget {
   final void Function()? onToDate;
   final void Function()? onFromDate;
   final void Function(int?, int?) onSubmit;
-  final void Function()? onClearPressed;
+  final void Function()? onClear;
   final TextEditingController? fromDateController;
   final TextEditingController? toDateController;
 
@@ -493,13 +521,14 @@ class Filter extends StatefulWidget {
     this.onSelectedDateChip,
     this.onSelectedTypeChip,
     required this.onSubmit,
-    this.onClearPressed,
+    this.onClear,
   });
 
   @override
   State<Filter> createState() => _FilterState();
 }
 
+/* 
 class _FilterState extends State<Filter> {
   int? selectedDateIndex;
   int? selectedTypeIndex;
@@ -509,6 +538,8 @@ class _FilterState extends State<Filter> {
     super.initState();
     selectedDateIndex = widget.dateChipValue;
     selectedTypeIndex = widget.typeChipValue;
+    print('selectedDateIndex: $selectedDateIndex');
+    print('selectedTypeIndex: $selectedTypeIndex');
   }
 
   @override
@@ -644,7 +675,7 @@ class _FilterState extends State<Filter> {
                     const SizedBox(width: 20),
                     Expanded(
                       child: customBtn(
-                          onPressed: widget.onClearPressed,
+                          onPressed: widget.onClear,
                           child: const Text(
                             'Clear',
                             style: CommonStyles.txStyF14CwFF5,
@@ -669,6 +700,197 @@ class _FilterState extends State<Filter> {
       onPressed: () {
         onPressed?.call();
       },
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        backgroundColor: backgroundColor,
+      ),
+      child: child,
+    );
+  }
+}
+ */
+class _FilterState extends State<Filter> {
+  int? selectedDateIndex;
+  int? selectedTypeIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedDateIndex = widget.dateChipValue;
+    selectedTypeIndex = widget.typeChipValue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const SizedBox(width: 40),
+              const Text('Filter', style: CommonStyles.txStyF20CbFF5),
+              IconButton(
+                  icon: const Icon(
+                    Icons.close,
+                  ),
+                  iconSize: 20,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  })
+            ],
+          ),
+          const SizedBox(height: 5),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 12.0,
+                      children: List<Widget>.generate(
+                        widget.dates.length,
+                        (int index) {
+                          return ChoiceChip(
+                            label: Text(
+                              widget.dates[index],
+                            ),
+                            selectedColor: CommonStyles.btnBlueBgColor,
+                            backgroundColor: CommonStyles.whiteColor,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(
+                                    color: CommonStyles.btnBlueBgColor)),
+                            selected: selectedDateIndex == index,
+                            onSelected: (bool selected) {
+                              if (widget.onSelectedDateChip != null) {
+                                widget
+                                    .onSelectedDateChip!(selected ? index : -1);
+                                setState(() {
+                                  selectedDateIndex = selected ? index : null;
+                                });
+                              }
+                            },
+                          );
+                        },
+                      ).toList(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 12.0,
+                      children: List<Widget>.generate(
+                        widget.types.length,
+                        (int index) {
+                          return ChoiceChip(
+                            label: Text(
+                              widget.types[index],
+                            ),
+                            selectedColor: CommonStyles.btnBlueBgColor,
+                            backgroundColor: CommonStyles.whiteColor,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(
+                                    color: CommonStyles.btnBlueBgColor)),
+                            selected: selectedTypeIndex == index,
+                            onSelected: (bool selected) {
+                              if (widget.onSelectedTypeChip != null) {
+                                widget
+                                    .onSelectedTypeChip!(selected ? index : -1);
+                                setState(() {
+                                  selectedTypeIndex = selected ? index : null;
+                                });
+                              }
+                            },
+                          );
+                        },
+                      ).toList(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20.0),
+                CustomTextField(
+                  label: 'From Date',
+                  readOnly: true,
+                  suffixIcon: const Icon(Icons.calendar_month_outlined),
+                  onTap: widget.onFromDate,
+                  controller: widget.fromDateController,
+                ),
+                const SizedBox(height: 15.0),
+                CustomTextField(
+                  label: 'To Date',
+                  readOnly: true,
+                  suffixIcon: const Icon(Icons.calendar_month_outlined),
+                  onTap: widget.onToDate,
+                  controller: widget.toDateController,
+                ),
+                const SizedBox(height: 20.0),
+                Row(
+                  children: [
+                    Expanded(
+                      child: customBtn(
+                        onPressed: () {
+                          widget.onSubmit(selectedDateIndex, selectedTypeIndex);
+                        },
+                        child: const Text(
+                          'Submit',
+                          style: CommonStyles.txStyF14CwFF5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: customBtn(
+                        onPressed: () {
+                          // Clear the chip selection
+                          setState(() {
+                            selectedDateIndex = null;
+                            selectedTypeIndex = null;
+                          });
+                          // Call the onClear function to reset the parent state
+                          if (widget.onClear != null) {
+                            widget.onClear!();
+                          }
+                        },
+                        child: const Text(
+                          'Clear',
+                          style: CommonStyles.txStyF14CwFF5,
+                        ),
+                        backgroundColor: CommonStyles.btnBlueBgColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ElevatedButton customBtn({
+    Color? backgroundColor = CommonStyles.btnRedBgColor,
+    required Widget child,
+    void Function()? onPressed,
+  }) {
+    return ElevatedButton(
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 15),
         backgroundColor: backgroundColor,
