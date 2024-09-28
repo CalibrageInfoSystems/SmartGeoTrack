@@ -83,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    initializeBackgroundService();
+ //   initializeBackgroundService();
   }
 
   Future<void> initializeBackgroundService() async {
@@ -1475,6 +1475,7 @@ class BackgroundService {
 }
 
 @pragma('vm:entry-point')
+@pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   Palm3FoilDatabase? palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
@@ -1482,13 +1483,17 @@ void onStart(ServiceInstance service) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int? userID = prefs.getInt('userID');
 
-  // You need to maintain a way to get the userId or DataAccessHandler here.
-  //final userId = userID; // Replace with the actual way to get userId
+  // Function to check if lat-long already exists in the database
+  Future<bool> checkIfLocationExists(double latitude, double longitude) async {
+    final queryResult = await palm3FoilDatabase!.getLocationByLatLong(
+        latitude, longitude);
+    return queryResult.isNotEmpty;
+  }
 
-  // Pass the DataAccessHandler to the BackgroundService
-  final dataAccessHandler = DataAccessHandler(); // Initialize this properly
-  final backgroundService =
-  BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
+  // Initialize DataAccessHandler properly
+  final dataAccessHandler = DataAccessHandler();
+  final backgroundService = BackgroundService(
+      userId: userID, dataAccessHandler: dataAccessHandler);
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) async {
@@ -1513,31 +1518,33 @@ void onStart(ServiceInstance service) async {
 
     if (permission == LocationPermission.always) {
       service.invoke('on_location_changed', position.toJson());
-      // if (_isPositionAccurate(position)) {
-        if (!isFirstLocationLogged) {
-          // Log the first point
-          lastLatitude = position.latitude;
-          lastLongitude = position.longitude;
-          isFirstLocationLogged = true;
-          DateTime timestamp = DateTime.now();
 
+      if (!isFirstLocationLogged) {
+        lastLatitude = position.latitude;
+        lastLongitude = position.longitude;
+        isFirstLocationLogged = true;
+        DateTime timestamp = DateTime.now();
+
+        // Check if the location already exists before inserting
+        bool locationExists = await checkIfLocationExists(
+            position.latitude, position.longitude);
+
+        if (!locationExists) {
           await palm3FoilDatabase!.insertLocationValues(
               latitude: position.latitude,
               longitude: position.longitude,
               createdByUserId: userID,
-              // Use the actual userID
               serverUpdatedStatus: false,
               from: '997');
 
-          appendLog(
-              'Latitude: ${position.latitude}, Longitude: ${position
-                  .longitude}. Timestamp: $timestamp');
+          appendLog('Latitude: ${position.latitude}, Longitude: ${position
+              .longitude}. Timestamp: $timestamp');
 
           // Sync the data to the server
-          await backgroundService
-              .syncLocationData(); // Use the existing instance
+          await backgroundService.syncLocationData();
         }
-    //  }
+      }
+
       if (_isPositionAccurate(position)) {
         final distance = Geolocator.distanceBetween(
           lastLatitude,
@@ -1551,19 +1558,25 @@ void onStart(ServiceInstance service) async {
           lastLongitude = position.longitude;
           DateTime timestamp = DateTime.now();
 
-          await palm3FoilDatabase!.insertLocationValues(
-              latitude: position.latitude,
-              longitude: position.longitude,
-              createdByUserId: userID,
-              serverUpdatedStatus: false,
-              from: '1023');
+          // Check if the location already exists before inserting
+          bool locationExists = await checkIfLocationExists(
+              position.latitude, position.longitude);
 
-          appendLog(
-              'Background Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
+          if (!locationExists) {
+            await palm3FoilDatabase!.insertLocationValues(
+                latitude: position.latitude,
+                longitude: position.longitude,
+                createdByUserId: userID,
+                serverUpdatedStatus: false,
+                from: '1023');
 
-          // Sync the data to the server
-          await backgroundService
-              .syncLocationData(); // Use the existing instance
+            appendLog('Background Latitude: ${position
+                .latitude}, Longitude: ${position
+                .longitude}. Distance: $distance, Timestamp: $timestamp');
+
+            // Sync the data to the server
+            await backgroundService.syncLocationData();
+          }
         }
       }
     }

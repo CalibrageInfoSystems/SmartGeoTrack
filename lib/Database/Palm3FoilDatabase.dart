@@ -266,6 +266,17 @@ class Palm3FoilDatabase {
 
     return results;
   }
+  Future<List<Map<String, dynamic>>> getLocationByLatLong(double latitude, double longitude) async {
+    // Query to check if the location with the same latitude and longitude exists
+    final db = await DatabaseHelper.instance.database; // Assuming `database` is your database instance
+    final result = await db.query(
+      'GeoBoundaries', // Replace with your actual table name
+      where: 'latitude = ? AND longitude = ?',
+      whereArgs: [latitude, longitude],
+    );
+
+    return result;
+  }
 
 }
 
