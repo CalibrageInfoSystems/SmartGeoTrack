@@ -71,7 +71,7 @@ class CustomLeadTemplate extends StatelessWidget {
                             builder: (context) => const ViewLeadsInfo()));
                     
                   }, */
-                  child: const Icon(Icons.arrow_circle_right_outlined),
+                  child: Image.asset('assets/nextcircle.png'),
                 ),
               ],
             ),

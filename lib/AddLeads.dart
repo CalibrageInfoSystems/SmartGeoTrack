@@ -253,7 +253,6 @@ class _AddLeadScreenState extends State<AddLeads>
                             .hasMatch(value)) {
                           return 'Please enter a valid email address';
                         }
-
                         return null;
                       },
                     ),
