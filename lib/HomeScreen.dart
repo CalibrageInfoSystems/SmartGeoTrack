@@ -341,6 +341,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   return CustomLeadTemplate(
                                     index: index,
                                     lead: lead,
+                                    padding: 0,
                                     onTap: () {
                                       Navigator.push(
                                         context,
@@ -624,16 +625,15 @@ class _HomeScreenState extends State<HomeScreen> {
         if (value == 'Logout') {
           showLogoutDialog();
         } else if (value == 'Change Password') {
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) =>  Changepassword(),
-          //   ),
-          // );
-        }
-        else{
-
-        }
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChangePassword(
+                id: 1,
+              ),
+            ),
+          );
+        } else {}
       },
       itemBuilder: (BuildContext context) {
         return menuItems.map((String choice) {

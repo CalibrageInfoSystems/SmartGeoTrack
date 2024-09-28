@@ -351,12 +351,17 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
             spacing: 20,
             children: [
               ...lead.map(
-                (lead) => Image.file(
-                  File(lead['FileLocation']),
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.cover,
-                ),
+                (lead) {
+                  print('imagePath: ${lead['FileLocation']},');
+                  return Image.file(File(lead['FileLocation']),
+                      width: 70, height: 70, fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                    return SvgPicture.asset('assets/fileuploadicon.svg',
+                        width: 70,
+                        height: 70,
+                        color: CommonStyles.btnBlueBgColor);
+                  });
+                },
               ),
               /* Image.file(
                     File(lead['FileLocation']),
@@ -375,7 +380,6 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
   }
 
   Container leadInfo(LeadInfoModel lead) {
-    print('lat ,Longs info ${lead.latitude! == lead.longitude!},');
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -393,17 +397,22 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                 '${lead.name}',
                 style: CommonStyles.txStyF16CpFF5,
               ),
-              IconButton(
+              GestureDetector(
+                onTap: () => _openMap(lead.latitude!, lead.longitude!),
+                child: const Icon(Icons.location_on,
+                    color: CommonStyles.formFieldErrorBorderColor),
+              ),
+              /*  IconButton(
                 icon: const Icon(Icons.location_on,
                     color: CommonStyles.formFieldErrorBorderColor),
                 onPressed: () {
-                  print('lat ,Longs ${lead.latitude! == lead.longitude!}');
                   _openMap(lead.latitude!,
-                      lead.longitude!); // Call the function to open maps
+                      lead.longitude!);
                 },
-              ),
+              ), */
             ],
           ),
+          const SizedBox(height: 5),
           if (lead.companyName != null)
             listCustomText(
               '${lead.companyName}',

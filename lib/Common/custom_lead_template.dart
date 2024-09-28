@@ -13,14 +13,19 @@ class CustomLeadTemplate extends StatelessWidget {
   final int index;
   final LeadsModel lead;
   final void Function()? onTap;
+  final double? padding;
 
   const CustomLeadTemplate(
-      {super.key, required this.index, required this.lead, this.onTap});
+      {super.key,
+      required this.index,
+      required this.lead,
+      this.onTap,
+      this.padding});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: EdgeInsets.symmetric(horizontal: padding ?? 16),
       child: Container(
         padding: const EdgeInsets.all(20),
         margin: const EdgeInsets.symmetric(vertical: 8.0),
