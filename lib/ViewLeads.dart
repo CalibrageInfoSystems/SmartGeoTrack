@@ -36,13 +36,20 @@ class _ViewLeadsState extends State<ViewLeads> {
 
   TextEditingController fromDateController = TextEditingController();
   TextEditingController toDateController = TextEditingController();
+  TextEditingController searchController = TextEditingController();
 
   late Future<List<LeadsModel>> futureLeads;
+  late List<LeadsModel> copyLeads;
 
   @override
   void initState() {
     super.initState();
     futureLeads = loadLeads();
+    futureLeads.then((data) {
+      setState(() {
+        copyLeads = data;
+      });
+    });
   }
 
   @override
@@ -163,59 +170,124 @@ class _ViewLeadsState extends State<ViewLeads> {
 
   Container filterAndSearch() {
     return Container(
-      height: 60,
       color: CommonStyles.listOddColor,
       alignment: Alignment.center,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
+      child: Column(
         children: [
-          ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  elevation: 0,
-                  backgroundColor: CommonStyles.whiteColor,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 5, horizontal: 10)),
-              onPressed: () => openFilter(context),
-              child: const Row(
-                children: [
-                  Icon(
-                    Icons.filter_alt,
-                    color: CommonStyles.dataTextColor,
-                  ),
-                  Text(
-                    'Filter',
-                    style: TextStyle(color: CommonStyles.dataTextColor),
-                  ),
-                ],
-              )),
-          const SizedBox(width: 10),
-          Expanded(
-              child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      backgroundColor: CommonStyles.whiteColor,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 5, horizontal: 10)),
-                  onPressed: () {},
-                  child: const Row(
-                    children: [
-                      Icon(
-                        Icons.search_rounded,
-                        color: CommonStyles.dataTextColor,
+          SizedBox(
+            height: 45,
+            child: Row(
+              children: [
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: CommonStyles.whiteColor,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 5, horizontal: 10)),
+                    onPressed: () => openFilter(context),
+                    child: const SizedBox(
+                      height: 45,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.filter_alt,
+                            color: CommonStyles.dataTextColor,
+                          ),
+                          Text(
+                            'Filter',
+                            style: TextStyle(color: CommonStyles.dataTextColor),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'Search',
-                        style: TextStyle(color: CommonStyles.dataTextColor),
+                    )),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Container(
+                    height: 45, // Set the height of the container
+                    decoration: BoxDecoration(
+                      color: CommonStyles.whiteColor,
+                      borderRadius: BorderRadius.circular(12),
+                      // Optional: Add a shadow for elevation effect
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset:
+                              const Offset(0, 3), // changes position of shadow
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: searchController,
+                      onChanged: (value) {
+                        filterLeadsBasedOnCompanyNameAndEmail(value);
+                      },
+                      decoration: const InputDecoration(
+                        hintText: 'Search',
+                        hintStyle: TextStyle(color: CommonStyles.dataTextColor),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          size: 25,
+                          color: CommonStyles.dataTextColor,
+                        ),
+                        border: InputBorder.none, // Remove the underline
+                        focusedBorder:
+                            InputBorder.none, // Remove underline when focused
+                        enabledBorder:
+                            InputBorder.none, // Remove underline when enabled
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 10),
                       ),
-                    ],
-                  ))),
+                      style: const TextStyle(color: CommonStyles.dataTextColor),
+                    ),
+                  ),
+                )
+
+                /* Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: CommonStyles.whiteColor,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 5, horizontal: 10)),
+                    onPressed: () {},
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.search_rounded,
+                          color: CommonStyles.dataTextColor,
+                        ),
+                        Text(
+                          'Search',
+                          style: TextStyle(color: CommonStyles.dataTextColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                ), */
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
         ],
       ),
     );
+  }
+
+  void filterLeadsBasedOnCompanyNameAndEmail(String input) {
+    setState(() {
+      futureLeads = Future.value(copyLeads
+          .where((item) =>
+              item.name!.toLowerCase().contains(input.toLowerCase()) ||
+              item.email!.toLowerCase().contains(input.toLowerCase()))
+          .toList());
+    });
   }
 
   List<String> dates = ['Today', 'This Week', 'Month'];
