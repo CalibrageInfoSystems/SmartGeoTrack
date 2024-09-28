@@ -36,7 +36,8 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
 
   Future<List<LeadInfoModel>> getLeadInfoByCode(String code) async {
     try {
-      final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
+      final dataAccessHandler =
+          Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> result = await dataAccessHandler.getLeadInfoByCode(code);
       List<LeadInfoModel> leads =
           result.map((item) => LeadInfoModel.fromJson(item)).toList();
@@ -108,7 +109,12 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                 future: futureLeadInfo,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CommonStyles.customShimmer(child: leadInfoShimmer());
+                    return Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        CommonStyles.customShimmer(child: leadInfoShimmer()),
+                      ],
+                    );
                   } else if (snapshot.hasError) {
                     return Text(
                         snapshot.error
@@ -135,8 +141,13 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                 future: futureLeadImages,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CommonStyles.customShimmer(
-                        child: leadInfoShimmer(height: 100));
+                    return Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        CommonStyles.customShimmer(
+                            child: leadInfoShimmer(height: 100)),
+                      ],
+                    );
                   } else if (snapshot.hasError) {
                     return Text(
                         snapshot.error
@@ -163,8 +174,13 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                 future: futureLeadDocs,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CommonStyles.customShimmer(
-                        child: leadInfoShimmer(height: 100));
+                    return Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        CommonStyles.customShimmer(
+                            child: leadInfoShimmer(height: 100)),
+                      ],
+                    );
                   } else if (snapshot.hasError) {
                     return Text(
                         snapshot.error
@@ -191,7 +207,12 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                 future: futureLeadInfo,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CommonStyles.customShimmer(child: leadInfoShimmer());
+                    return Column(
+                      children: [
+                        const SizedBox(height: 12),
+                        CommonStyles.customShimmer(child: leadInfoShimmer()),
+                      ],
+                    );
                   } else if (snapshot.hasError) {
                     return Text(
                         snapshot.error
@@ -245,8 +266,9 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                   label: 'Updated At',
                   data: CommonStyles.formatDateString(lead.createdDate)),
               updatedDetailItem(
-                  label: 'Updated By',
-                  data:username,)
+                label: 'Updated By',
+                data: username,
+              )
             ],
           ),
         ),
@@ -353,7 +375,7 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
   }
 
   Container leadInfo(LeadInfoModel lead) {
-    print('lat ,Longs info ${lead.latitude!  == lead.longitude!},');
+    print('lat ,Longs info ${lead.latitude! == lead.longitude!},');
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -375,13 +397,13 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                 icon: const Icon(Icons.location_on,
                     color: CommonStyles.formFieldErrorBorderColor),
                 onPressed: () {
-                  print('lat ,Longs ${lead.latitude!  == lead.longitude!}');
-                  _openMap(lead.latitude!, lead.longitude!); // Call the function to open maps
+                  print('lat ,Longs ${lead.latitude! == lead.longitude!}');
+                  _openMap(lead.latitude!,
+                      lead.longitude!); // Call the function to open maps
                 },
               ),
             ],
           ),
-
           if (lead.companyName != null)
             listCustomText(
               '${lead.companyName}',
@@ -442,7 +464,8 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
   }
 
   void _openMap(double latitude, double longitude) async {
-    String googleUrl = 'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+    String googleUrl =
+        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
     if (await canLaunch(googleUrl)) {
       await launch(googleUrl);
     } else {

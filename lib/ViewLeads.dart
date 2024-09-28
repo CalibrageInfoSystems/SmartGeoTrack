@@ -287,37 +287,26 @@ class _ViewLeadsState extends State<ViewLeads> {
                   setState(() {
                     futureLeads = filterTheLeads(query);
                   }); */
+
                   print('test: $selectedFromDate');
                   if (fromDateController.text.isNotEmpty &&
                       toDateController.text.isEmpty) {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Please select To Date',
-                        ),
-                      ),
-                    );
+
+                    showSnackBar('Please select To Date');
                   } else if (fromDateController.text.isEmpty &&
                       toDateController.text.isNotEmpty) {
                     Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Please select From Date',
-                        ),
-                      ),
-                    );
-                  } else if (isFromDateGreaterThanToDate(
-                      selectedFromDate.toString(), selectedToDate.toString())) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'From Date cannot be greater than To Date',
-                        ),
-                      ),
-                    );
+
+                    showSnackBar('Please select From Date');
+                  } else if (selectedFromDate != null &&
+                      selectedToDate != null) {
+                    if (isFromDateGreaterThanToDate(selectedFromDate.toString(),
+                        selectedToDate.toString())) {
+                      Navigator.pop(context);
+
+                      showSnackBar('From Date cannot be greater than To Date');
+                    }
                   } else {
                     final result = FilterModel(
                       date: getDate(date),
@@ -351,6 +340,12 @@ class _ViewLeadsState extends State<ViewLeads> {
           },
         );
       },
+    );
+  }
+
+  void showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
