@@ -247,4 +247,15 @@ class DataAccessHandler with ChangeNotifier {
     String formattedDate = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
     return formattedDate;
   }
+  Future<List<Map<String, double>>> fetchLatLongsFromDatabase() async {
+
+    final db = await DatabaseHelper.instance.database;
+
+    List<Map<String, dynamic>> queryResult = await db.query('GeoBoundaries', columns: ['Latitude', 'Longitude']);
+
+    return queryResult.map((row) => {
+      'lat': row['Latitude'] as double,
+      'lng': row['Longitude'] as double,
+    }).toList();
+  }
 }

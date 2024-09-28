@@ -33,6 +33,8 @@ import '_showSyncingBottomSheet.dart';
 import 'location_service/logic/location_controller/location_controller_cubit.dart';
 import 'location_service/notification/notification.dart';
 import 'location_service/tools/background_service.dart';
+import 'dart:math' show cos, sqrt, asin;
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,13 +56,15 @@ class _HomeScreenState extends State<HomeScreen> {
   final dataAccessHandler = DataAccessHandler();
   String? username;
   String? formattedDate;
+  String? calenderDate;
   bool isLocationEnabled = false;
   int? userID;
-  int? totalLeadsCount;
-  int? todayLeadsCount;
+  int? totalLeadsCount ;
+  int? todayLeadsCount ;
   int? dateRangeLeadsCount;
   late Future<List<LeadsModel>> futureLeads;
   bool isLoading = true;
+  double totalDistance = 0.0;
   @override
   void initState() {
     super.initState();
@@ -68,8 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchLeadCounts();
 
     futureLeads = loadleads();
-    backgroundService =
-        BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
+    backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
     checkLocationEnabled();
     startService();
   }
@@ -106,11 +109,11 @@ class _HomeScreenState extends State<HomeScreen> {
           heading: double.tryParse(event['heading'].toString()) ?? 0.0,
           speed: double.tryParse(event['speed'].toString()) ?? 0.0,
           speedAccuracy:
-              double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
+          double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
           altitudeAccuracy:
-              double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
+          double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
           headingAccuracy:
-              double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
+          double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
         );
         print(
             "on_location_changed: ${position.latitude} -  ${position.longitude}");
@@ -152,8 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             await context.read<LocationControllerCubit>().onLocationChanged(
-                  location: position,
-                );
+              location: position,
+            );
           }
         } else {
           print('Position Accuracy: ${position.accuracy}');
@@ -174,6 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
@@ -196,22 +200,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // Show loading indicator while data is loading
                       if (isLoading)
-                        const Center(
-                            child:
-                                CircularProgressIndicator()) // Loading indicator
+                        const Center(child: CircularProgressIndicator()) // Loading indicator
                       else ...[
                         // UI content after loading is complete
                         Row(
                           children: [
                             Expanded(
                                 child: customBox(
-                                    title: 'Total Leads',
-                                    data: totalLeadsCount)),
+                                    title: 'Total Leads', data: totalLeadsCount)),
                             const SizedBox(width: 20),
                             Expanded(
                                 child: customBox(
-                                    title: 'Today Leads',
-                                    data: todayLeadsCount)),
+                                    title: 'Today Leads', data: todayLeadsCount)),
                           ],
                         ),
                         const SizedBox(height: 10),
@@ -220,14 +220,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         Row(
                           children: [
                             Expanded(
-                                child: customBox(
+                                child: dcustomBox(
                                     title: 'Km\'s Travel',
-                                    data: 677,
+                                    data:totalDistance.toStringAsFixed(2), // Round to 2 decimal places
                                     bgImg: 'assets/bg_image2.jpg')),
                             const SizedBox(width: 20),
                             Expanded(
                                 child: customBox(
-                                    title: 'Leads', data: dateRangeLeadsCount)),
+                                    title: 'Leads',
+                                    data: dateRangeLeadsCount)),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -295,6 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: customBtn(
+                    // onPressed: _showSyncingBottomSheet
                             onPressed: showSyncSuccessBottomSheet,
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -321,15 +323,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         FutureBuilder<List<LeadsModel>>(
                           future: futureLeads,
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
                             } else if (snapshot.hasError) {
-                              return Center(
-                                  child: Text('Error: ${snapshot.error}'));
-                            } else if (snapshot.hasData &&
-                                snapshot.data!.isNotEmpty) {
+                              return Center(child: Text('Error: ${snapshot.error}'));
+                            } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                               List<LeadsModel> futureLeads = snapshot.data!;
                               return ListView.separated(
                                 itemCount: futureLeads.length,
@@ -341,24 +339,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                   return CustomLeadTemplate(
                                     index: index,
                                     lead: lead,
-                                    padding: 0,
                                     onTap: () {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              ViewLeadsInfo(code: lead.code!),
+                                          builder: (context) => ViewLeadsInfo(code: lead.code!),
                                         ),
                                       );
                                     },
                                   );
                                 },
-                                separatorBuilder: (context, index) =>
-                                    const SizedBox(height: 10),
+                                separatorBuilder: (context, index) => const SizedBox(height: 10),
                               );
                             } else {
-                              return const Center(
-                                  child: Text('No leads available for today'));
+                              return const Center(child: Text('No leads available for today'));
                             }
                           },
                         ),
@@ -374,6 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   Container leadTemplate(int index) {
     return Container(
@@ -421,8 +416,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ElevatedButton customBtn(
       {Color? backgroundColor = CommonStyles.btnRedBgColor,
-      required Widget child,
-      void Function()? onPressed}) {
+        required Widget child,
+        void Function()? onPressed}) {
     return ElevatedButton(
       onPressed: () {
         onPressed?.call();
@@ -473,9 +468,9 @@ class _HomeScreenState extends State<HomeScreen> {
               initialDate: DateTime.now(),
             );
           },
-          child: const Row(
+          child:  Row(
             children: [
-              Text('March 2020', style: CommonStyles.txStyF14CbFF5),
+              Text(calenderDate!, style: CommonStyles.txStyF14CbFF5),
               SizedBox(width: 5),
               Icon(
                 Icons.calendar_today_outlined,
@@ -497,7 +492,45 @@ class _HomeScreenState extends State<HomeScreen> {
   //     ],
   //   );
   // }
-
+  Container dcustomBox({
+    required String title,
+    String? data,
+    String bgImg = 'assets/bg_image1.jpg',
+  }) {
+    return Container(
+      height: 110,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        image: DecorationImage(
+          image: AssetImage(bgImg),
+          fit: BoxFit.cover,
+        ),
+        border: Border.all(
+          color: CommonStyles.blueTextColor,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(title,
+              style: CommonStyles.txStyF20CbluFF5.copyWith(
+                fontSize: 18,
+              )
+            /* style: const TextStyle(
+                color: CommonStyles.blueTextColor, fontSize: 20), */
+          ),
+          Text('$data',
+              style: CommonStyles.txStyF20CbFF5.copyWith(
+                fontSize: 40,
+              )
+            /* style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold), */
+          ),
+        ],
+      ),
+    );
+  }
   Container customBox({
     required String title,
     int? data,
@@ -524,15 +557,15 @@ class _HomeScreenState extends State<HomeScreen> {
               style: CommonStyles.txStyF20CbluFF5.copyWith(
                 fontSize: 18,
               )
-              /* style: const TextStyle(
+            /* style: const TextStyle(
                 color: CommonStyles.blueTextColor, fontSize: 20), */
-              ),
+          ),
           Text('$data',
               style: CommonStyles.txStyF20CbFF5.copyWith(
                 fontSize: 40,
               )
-              /* style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold), */
-              ),
+            /* style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold), */
+          ),
         ],
       ),
     );
@@ -582,7 +615,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: CommonStyles.txStyF20CpFF5),
                           Text(
                             // 'string',
-                            '$username',
+                            '${username!}',
                             style: CommonStyles.txStyF20CpFF5.copyWith(
                               fontSize: 25,
                               fontWeight: FontWeight.w900,
@@ -590,7 +623,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           Text(
                             //  '26th Sep 2024',
-                            '$formattedDate',
+                            '${formattedDate!}',
                             style: CommonStyles.txStyF14CbFF5,
                           ),
                         ],
@@ -655,6 +688,28 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             selectedOption = value;
           });
+          // Handle date selection and print accordingly
+          if (value == 'Today') {
+            String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+            print("Today: $today");
+            fetchdatewiseleads(today,today);
+
+          } else if (value == 'This Week') {
+            DateTime now = DateTime.now();
+            int currentWeekDay = now.weekday;
+            DateTime firstDayOfWeek = now.subtract(Duration(days: currentWeekDay - 1)); // Monday
+            String monday = DateFormat('yyyy-MM-dd').format(firstDayOfWeek);
+            String today = DateFormat('yyyy-MM-dd').format(now);
+            fetchdatewiseleads(monday,today);
+            print("This Week: $monday to $today");
+          } else if (value == 'Month') {
+            DateTime now = DateTime.now();
+            DateTime firstDayOfMonth = DateTime(now.year, now.month, 1);
+            String firstDay = DateFormat('yyyy-MM-dd').format(firstDayOfMonth);
+            String today = DateFormat('yyyy-MM-dd').format(now);
+            print("This Month: $firstDay to $today");
+            fetchdatewiseleads(firstDay,today);
+          }
         },
         itemBuilder: (BuildContext context) {
           return dateItems.map((String choice) {
@@ -677,11 +732,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ));
   }
 
+
   String? selectedDate = 'Today';
   Future<void> launchDatePicker(BuildContext context,
       {required DateTime firstDate,
-      required DateTime lastDate,
-      DateTime? initialDate}) async {
+        required DateTime lastDate,
+        DateTime? initialDate}) async {
     // final DateTime lastDate = DateTime.now();
     // final DateTime firstDate = DateTime(lastDate.year - 100);
     final DateTime? pickedDay = await showDatePicker(
@@ -694,6 +750,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (pickedDay != null) {
       selectedDate = pickedDay.toString();
+
+      String datefromcalender = DateFormat('yyyy-MM-dd').format(pickedDay);
+      calenderDate = formatDate(pickedDay);
+      fetchdatewiseleads(datefromcalender,datefromcalender);
+
       print('pickedDay: $pickedDay');
     }
   }
@@ -737,7 +798,7 @@ class _HomeScreenState extends State<HomeScreen> {
         msg: "Wait for a while, Initializing the service...");
 
     final permission =
-        await context.read<LocationControllerCubit>().enableGPSWithPermission();
+    await context.read<LocationControllerCubit>().enableGPSWithPermission();
     if (permission) {
       try {
         Position currentPosition = await Geolocator.getCurrentPosition();
@@ -790,7 +851,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const String fileName = 'UsertrackinglogTest.file';
 
     Directory appFolderPath =
-        Directory('/storage/emulated/0/Download/$folderName');
+    Directory('/storage/emulated/0/Download/$folderName');
     if (!appFolderPath.existsSync()) {
       appFolderPath.createSync(recursive: true);
     }
@@ -820,6 +881,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String roleName = prefs.getString('roleName') ?? '';
     DateTime now = DateTime.now();
     formattedDate = formatDate(now);
+    calenderDate = formattedDate;
     print(' formattedDate==$formattedDate'); // Example output: "25th Sep 2024"
   }
 
@@ -845,7 +907,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const LoginScreen()),
-                    (Route<dynamic> route) => false);
+                        (Route<dynamic> route) => false);
               },
               child: const Text('OK'),
             ),
@@ -897,7 +959,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return AlertDialog(
           title: const Text("Location Services Disabled"),
           content:
-              const Text("Please enable location services to use this app."),
+          const Text("Please enable location services to use this app."),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -995,7 +1057,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> syncing() async {
     final dataAccessHandler =
-        Provider.of<DataAccessHandler>(context, listen: false);
+    Provider.of<DataAccessHandler>(context, listen: false);
     bool isConnected = await CommonStyles.checkInternetConnectivity();
     if (isConnected) {
       final syncService = SyncService(dataAccessHandler);
@@ -1111,7 +1173,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _startSync() async {
     final dataAccessHandler =
-        Provider.of<DataAccessHandler>(context, listen: false);
+    Provider.of<DataAccessHandler>(context, listen: false);
     bool isConnected = await CommonStyles.checkInternetConnectivity();
     if (isConnected) {
       // Call your login function here
@@ -1130,18 +1192,36 @@ class _HomeScreenState extends State<HomeScreen> {
       // Simulate a sync operation
     }
   }
-
   Future<void> fetchLeadCounts() async {
     setState(() {
       isLoading = true; // Start loading
     });
     String currentDate = getCurrentDate();
-    totalLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
-        'SELECT COUNT(*) AS totalLeadsCount FROM Leads');
+    totalLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb('SELECT COUNT(*) AS totalLeadsCount FROM Leads');
     todayLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
         "SELECT COUNT(*) AS todayLeadsCount FROM Leads WHERE DATE(CreatedDate) = '$currentDate'");
     dateRangeLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
         "SELECT COUNT(*) AS dateRangeLeadsCount FROM Leads WHERE DATE(CreatedDate) BETWEEN '$currentDate' AND '$currentDate'");
+
+    double calculateDistance(lat1, lon1, lat2, lon2) {
+      var p = 0.017453292519943295; // Pi/180 to convert degrees to radians
+      var c = cos;
+      var a = 0.5 - c((lat2 - lat1) * p)/2 +
+          c(lat1 * p) * c(lat2 * p) *
+              (1 - c((lon2 - lon1) * p))/2;
+      return 12742 * asin(sqrt(a)); // Radius of Earth * arc
+    }
+
+    // Replace this list with dynamically fetched data
+    List<Map<String, double>> data = await dataAccessHandler.fetchLatLongsFromDatabase();
+
+    print('Data: $data km');
+
+
+    for (var i = 0; i < data.length - 1; i++) {
+      totalDistance += calculateDistance(data[i]["lat"], data[i]["lng"], data[i + 1]["lat"], data[i + 1]["lng"]);
+    }
+    print('Total Distance: $totalDistance km');
 
     setState(() {
       isLoading = false; // Stop loading
@@ -1192,21 +1272,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String getCurrentDate() {
     DateTime now = DateTime.now();
-    String formattedDate =
-        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    String formattedDate = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
     return formattedDate;
   }
+
 
   Future<List<LeadsModel>> loadleads() async {
     try {
       final dataAccessHandler =
-          Provider.of<DataAccessHandler>(context, listen: false);
+      Provider.of<DataAccessHandler>(context, listen: false);
       List<dynamic> leads = await dataAccessHandler.getleads();
       return leads.map((item) => LeadsModel.fromMap(item)).toList();
     } catch (e) {
       throw Exception('catch: ${e.toString()}');
     }
   }
+
+  Future<void> fetchdatewiseleads(String startday, String today) async {
+    setState(() {
+      isLoading = true; // Start loading
+    });
+    dateRangeLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
+        "SELECT COUNT(*) AS dateRangeLeadsCount FROM Leads WHERE DATE(CreatedDate) BETWEEN '$startday' AND '$today'");
+    print('dateRangeLeadsCount==1240 :  $dateRangeLeadsCount');
+    setState(() {
+      isLoading = false; // Stop loading
+    });
+  }
+
+
 }
 
 class BackgroundService {
@@ -1214,7 +1308,7 @@ class BackgroundService {
   final DataAccessHandler dataAccessHandler; // Declare DataAccessHandler
   late SyncServiceB syncService; // Declare SyncService
   final FlutterBackgroundService flutterBackgroundService =
-      FlutterBackgroundService();
+  FlutterBackgroundService();
   static const double MAX_ACCURACY_THRESHOLD = 10.0;
   static const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
   static const double MIN_DISTANCE_THRESHOLD = 50.0;
@@ -1287,7 +1381,7 @@ void onStart(ServiceInstance service) async {
   // Pass the DataAccessHandler to the BackgroundService
   final dataAccessHandler = DataAccessHandler(); // Initialize this properly
   final backgroundService =
-      BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
+  BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) async {
@@ -1312,7 +1406,7 @@ void onStart(ServiceInstance service) async {
 
     if (permission == LocationPermission.always) {
       service.invoke('on_location_changed', position.toJson());
-    //  if (_isPositionAccurate(position)) {
+      if (_isPositionAccurate(position)) {
         if (!isFirstLocationLogged) {
           // Log the first point
           lastLatitude = position.latitude;
@@ -1329,13 +1423,14 @@ void onStart(ServiceInstance service) async {
               from: '997');
 
           appendLog(
-              'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
+              'Latitude: ${position.latitude}, Longitude: ${position
+                  .longitude}. Timestamp: $timestamp');
 
           // Sync the data to the server
           await backgroundService
               .syncLocationData(); // Use the existing instance
         }
-
+      }
       if (_isPositionAccurate(position)) {
         final distance = Geolocator.distanceBetween(
           lastLatitude,
@@ -1390,7 +1485,7 @@ void appendLog(String text) async {
   const String fileName = 'UsertrackinglogTest.file';
 
   Directory appFolderPath =
-      Directory('/storage/emulated/0/Download/$folderName');
+  Directory('/storage/emulated/0/Download/$folderName');
   if (!appFolderPath.existsSync()) {
     appFolderPath.createSync(recursive: true);
   }
@@ -1427,7 +1522,7 @@ class StatCard extends StatelessWidget {
         children: [
           Text(value,
               style:
-                  const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+              const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(label, style: const TextStyle(fontSize: 18)),
         ],
@@ -1436,120 +1531,4 @@ class StatCard extends StatelessWidget {
   }
 }
 
-// class HomeScreen extends StatefulWidget {
-//   @override
-//   _HomeScreenState createState() => _HomeScreenState();
-// }
-//
-// class _HomeScreenState extends State<HomeScreen> {
-//   late BackgroundService backgroundService;
-//   late double lastLatitude;
-//   late double lastLongitude;
-//
-//   static const double MAX_ACCURACY_THRESHOLD = 10.0;
-//   static const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
-//   static const double MIN_DISTANCE_THRESHOLD = 50.0;
-//   static const double MIN_SPEED_THRESHOLD = 0.2;
-//   @override
-//   void initState() {
-//     super.initState();
-//     // Initialization code if needed
-//   }
-//   @pragma('vm:entry-point')
-//   @override
-//   Future<void> didChangeDependencies() async {
-//     await context.read<NotificationService>().initialize(context);
-//
-//     //Start the service automatically if it was activated before closing the application
-//     if (await backgroundService.instance.isRunning()) {
-//       await backgroundService.initializeService();
-//     }
-//     backgroundService.instance.on('on_location_changed').listen((event) async {
-//       if (event != null) {
-//         final position =  Position(
-//           longitude: double.tryParse(event['longitude'].toString()) ?? 0.0,
-//           latitude: double.tryParse(event['latitude'].toString()) ?? 0.0,
-//           timestamp: DateTime.fromMillisecondsSinceEpoch(
-//             event['timestamp'].toInt(),
-//             isUtc: true,
-//           ),
-//           accuracy: double.tryParse(event['accuracy'].toString()) ?? 0.0,
-//           altitude: double.tryParse(event['altitude'].toString()) ?? 0.0,
-//           heading: double.tryParse(event['heading'].toString()) ?? 0.0,
-//           speed: double.tryParse(event['speed'].toString()) ?? 0.0,
-//           speedAccuracy: double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
-//           altitudeAccuracy:double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
-//             headingAccuracy : double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
-//         );
-//
-//         await context
-//             .read<LocationControllerCubit>()
-//             .onLocationChanged(location: position);
-//       }
-//     });
-//
-//     super.didChangeDependencies();
-//   }
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: appBar(),
-//       backgroundColor: Colors.white,
-//      body:
-//      Column(
-//        mainAxisAlignment: MainAxisAlignment.center,
-//        children: [
-//          ElevatedButton(
-//            onPressed: startService,
-//            child: const Text("Login"),
-//          ),
-//          const SizedBox(height: 15),
-//          ElevatedButton(
-//            onPressed: stopService,
-//            child: const Text("Logout"),
-//          ),
-//        ],
-//      ),
-//     );
-//   }
-//
-//   AppBar appBar() {
-//     return AppBar(
-//       backgroundColor: const Color(0xffe46f5d),
-//       leading: Builder(
-//         builder: (context) => IconButton(
-//           icon: const Icon(
-//             Icons.menu,
-//             color: Colors.white, // Assuming CommonStyles.whiteColor is Colors.white
-//           ),
-//           onPressed: () {
-//             Scaffold.of(context).openDrawer();
-//           },
-//         ),
-//       ),
-//       title: const Text('Home Screen'), // Update the title as needed
-//     );
-//   }
-//
-//   Future<void> startService() async {
-//     await Fluttertoast.showToast(msg: "Wait for a while, Initializing the service...");
-//
-//     final permission = await context.read<LocationControllerCubit>().enableGPSWithPermission();
-//     if (permission) {
-//       Position currentPosition = await Geolocator.getCurrentPosition();
-//       lastLatitude = currentPosition.latitude;
-//       lastLongitude = currentPosition.longitude;
-//
-//       await context.read<LocationControllerCubit>().locationFetchByDeviceGPS();
-//       await backgroundService.initializeService();
-//       backgroundService.setServiceAsForeGround();
-//
-//
-//     }
-//   }
-//
-//   void stopService() {
-//     backgroundService.stopService();
-//     context.read<LocationControllerCubit>().stopLocationFetch();
-//   }
-// }
+
