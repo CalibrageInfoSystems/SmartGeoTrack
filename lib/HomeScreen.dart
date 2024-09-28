@@ -1312,7 +1312,7 @@ void onStart(ServiceInstance service) async {
 
     if (permission == LocationPermission.always) {
       service.invoke('on_location_changed', position.toJson());
-      if (_isPositionAccurate(position)) {
+    //  if (_isPositionAccurate(position)) {
         if (!isFirstLocationLogged) {
           // Log the first point
           lastLatitude = position.latitude;
@@ -1335,7 +1335,7 @@ void onStart(ServiceInstance service) async {
           await backgroundService
               .syncLocationData(); // Use the existing instance
         }
-      }
+
       if (_isPositionAccurate(position)) {
         final distance = Geolocator.distanceBetween(
           lastLatitude,
