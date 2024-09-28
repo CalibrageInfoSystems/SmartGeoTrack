@@ -359,25 +359,25 @@ class _LoginScreenState extends State<LoginScreen>
               mobileacess = data['user']['isMobileAccess'];
 
               print('mobileacess  for ${ data['user']['username']} ===$mobileacess');
-              // if (mobileacess!) { //TODO
-              //   // If true, navigate to HomeScreen
-              //   Navigator.push(
-              //     context,
-              //     MaterialPageRoute(builder: (context) => const HomeScreen()),
-              //   );
-              // } else {
-              //   // If false, show an error message
-              //   ScaffoldMessenger.of(context).showSnackBar(
-              //     SnackBar(
-              //       content: Text('Mobile access is not allowed for ${data['user']['username']}'),
-              //     ),
-              //   );
-              // }
+              if (mobileacess!) { //TODO
+                // If true, navigate to HomeScreen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                );
+              } else {
+                // If false, show an error message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Mobile access is not allowed for ${data['user']['username']}'),
+                  ),
+                );
+              }
               // if(mobileacess)
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
-              );
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => const HomeScreen()),
+              // );
 
               // Navigator.push(
               //   context,

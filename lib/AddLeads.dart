@@ -49,6 +49,7 @@ class _AddLeadScreenState extends State<AddLeads>
   int? userID;
   String? _errorMessage;
   String? Username;
+  String? empCode;
   void _pickFile() async {
     // Ensure the combined count of images and files is less than 3 before allowing the file picker
     if (_images.length + _files.length < 3) {
@@ -503,7 +504,7 @@ class _AddLeadScreenState extends State<AddLeads>
       _validateTotalItems();
 
     //  String? empCode = await fetchEmpCode(Username!, context); //TODO
-      String? empCode ="ROJATEST";
+   //   String? empCode ="ROJATEST";
       final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
 
       print('empCode===$empCode');
@@ -731,7 +732,8 @@ class _AddLeadScreenState extends State<AddLeads>
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userID = prefs.getInt('userID');
     Username = prefs.getString('username') ?? '';
-    String firstName = prefs.getString('firstName') ?? '';
+    empCode = prefs.getString('empCode') ?? '';
+   // String firstName = prefs.getString('empCode') ?? '';
     String email = prefs.getString('email') ?? '';
     String mobileNumber = prefs.getString('mobileNumber') ?? '';
     String roleName = prefs.getString('roleName') ?? '';

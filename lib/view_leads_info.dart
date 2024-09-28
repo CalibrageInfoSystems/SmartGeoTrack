@@ -5,9 +5,11 @@ import 'package:open_file/open_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartgetrack/Database/DataAccessHandler.dart';
 import 'package:smartgetrack/Model/lead_info_model.dart';
 import 'package:smartgetrack/common_styles.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ViewLeadsInfo extends StatefulWidget {
   final String code;
@@ -21,10 +23,11 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
   late Future<List<LeadInfoModel>> futureLeadInfo;
   late Future<List<Map<String, dynamic>>> futureLeadImages;
   late Future<List<Map<String, dynamic>>> futureLeadDocs;
-
+  String? username;
   @override
   void initState() {
     super.initState();
+    getusername();
     futureLeadInfo = getLeadInfoByCode(widget.code);
 
     futureLeadImages = getLeadImagesByCode(widget.code);
@@ -243,7 +246,7 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                   data: CommonStyles.formatDateString(lead.createdDate)),
               updatedDetailItem(
                   label: 'Updated By',
-                  data: CommonStyles.formatDateString(lead.updatedDate)),
+                  data:username,)
             ],
           ),
         ),
@@ -350,6 +353,7 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
   }
 
   Container leadInfo(LeadInfoModel lead) {
+    print('lat ,Longs info ${lead.latitude!  == lead.longitude!},');
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -367,15 +371,17 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
                 '${lead.name}',
                 style: CommonStyles.txStyF16CpFF5,
               ),
-              /* IconButton(
-                      icon: const Icon(Icons.location_on,
-                          color: CommonStyles.formFieldErrorBorderColor),
-                      onPressed: () {},
-                    ), */
-              const Icon(Icons.location_on,
-                  color: CommonStyles.formFieldErrorBorderColor),
+              IconButton(
+                icon: const Icon(Icons.location_on,
+                    color: CommonStyles.formFieldErrorBorderColor),
+                onPressed: () {
+                  print('lat ,Longs ${lead.latitude!  == lead.longitude!}');
+                  _openMap(lead.latitude!, lead.longitude!); // Call the function to open maps
+                },
+              ),
             ],
           ),
+
           if (lead.companyName != null)
             listCustomText(
               '${lead.companyName}',
@@ -433,5 +439,20 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
       text,
       style: CommonStyles.txStyF16CbFF5,
     );
+  }
+
+  void _openMap(double latitude, double longitude) async {
+    String googleUrl = 'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+    if (await canLaunch(googleUrl)) {
+      await launch(googleUrl);
+    } else {
+      throw 'Could not open the map.';
+    }
+  }
+
+  Future<void> getusername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    username = prefs.getString('username') ?? '';
   }
 }

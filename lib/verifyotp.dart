@@ -18,8 +18,9 @@ class verifyotp extends StatefulWidget {
 
 class _verifyotpScreenState extends State<verifyotp>
     with SingleTickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
+ // final _formKey = GlobalKey<FormState>();
   final TextEditingController _otpController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>(); // Declare the form key
 
   void showLoadingDialog(BuildContext context) {
     showDialog(
@@ -179,84 +180,82 @@ class _verifyotpScreenState extends State<verifyotp>
                   width: 1,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 15),
-                  // OTP TextField
-                  TextFormField(
-                    controller: _otpController,
-                    decoration: InputDecoration(
-                      labelText: "OTP *",
-                      hintText: "Enter OTP",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 10),
-                    ),
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter OTP';
-                      } else if (value.length != 6) {
-                        return 'OTP must be 6 digits';
-                      } else if (!RegExp(r'^\d{6}$').hasMatch(value)) {
-                        return 'Only digits allowed';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  // Resend OTP Button
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        // Implement resend OTP functionality here
-                        resendotpmethod();
-                      },
-                      child: const Text(
-                        "Resend OTP?",
-                        style: TextStyle(color: CommonStyles.blueheader),
-                      ),
-                    ),
-                  ),
-
-                  // Verify OTP Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 45,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _validateOtp();
-                        // if (_formKey.currentState!.validate()) {
-                        //   _validateOtp();
-                        // }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        backgroundColor: CommonStyles.buttonbg,
-                        shape: RoundedRectangleBorder(
+              child: Form( // Wrap with Form widget
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 15),
+                    // OTP TextField
+                    TextFormField(
+                      controller: _otpController,
+                      decoration: InputDecoration(
+                        labelText: "OTP *",
+                        hintText: "Enter OTP",
+                        border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 10),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Verify OTP",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter OTP';
+                        } else if (value.length != 6) {
+                          return 'OTP must be 6 digits';
+                        } else if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+                          return 'Only digits allowed';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    // Resend OTP Button
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: resendotpmethod,
+                        child: const Text(
+                          "Resend OTP?",
+                          style: TextStyle(color: CommonStyles.blueheader),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    // Verify OTP Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 45,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            _validateOtp(); // Call OTP validation if form is valid
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          backgroundColor: CommonStyles.buttonbg,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Verify OTP",
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -265,58 +264,62 @@ class _verifyotpScreenState extends State<verifyotp>
     );
   }
 
+
+
   void _validateOtp() async {
-    showLoadingDialog(context);
-    String otp = _otpController.text;
-    var url =
-        Uri.parse('http://182.18.157.215/SmartGeoTrack/API/Login/ValidOTP');
+    if (_formKey.currentState!.validate()) {
+      showLoadingDialog(context);
+      String otp = _otpController.text;
+      var url =
+      Uri.parse('http://182.18.157.215/SmartGeoTrack/API/Login/ValidOTP');
 
-    // Prepare the request body
-    var body = json.encode({
-      "otp": otp,
-      "userName": widget.username,
-    });
+      // Prepare the request body
+      var body = json.encode({
+        "otp": otp,
+        "userName": widget.username,
+      });
 
-    // Make the POST request
-    var response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: body,
-    );
-    Navigator.of(context).pop();
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
+      // Make the POST request
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
+      Navigator.of(context).pop();
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
 
-      // Check if API was successful
-      if (data['isSuccess']) {
-        // Extract userId and userName from the response
-        var listResult = data['listResult'];
-        if (listResult.isNotEmpty) {
-          int userId = listResult[0]['userId'];
-          String userName = listResult[0]['userName'];
+        // Check if API was successful
+        if (data['isSuccess']) {
+          // Extract userId and userName from the response
+          var listResult = data['listResult'];
+          if (listResult.isNotEmpty) {
+            int userId = listResult[0]['userId'];
+            String userName = listResult[0]['userName'];
 
-          // Navigate to NewPassword screen with userId and userName
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => NewPassword(id: userId, username: userName),
-            ),
+            // Navigate to NewPassword screen with userId and userName
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    NewPassword(id: userId, username: userName),
+              ),
+            );
+          }
+        } else {
+          // Show error message if OTP is invalid
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['endUserMessage'] ?? 'Invalid OTP')),
           );
         }
       } else {
-        // Show error message if OTP is invalid
+        // Handle error when API call fails
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['endUserMessage'] ?? 'Invalid OTP')),
+          SnackBar(content: Text('API Error: ${response.statusCode}')),
         );
       }
-    } else {
-      // Handle error when API call fails
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('API Error: ${response.statusCode}')),
-      );
     }
   }
-
   void resendotpmethod() async {
     var url =
         Uri.parse('http://182.18.157.215/SmartGeoTrack/API/Login/GetUserOTP');

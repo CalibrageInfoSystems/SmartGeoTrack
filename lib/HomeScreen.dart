@@ -17,12 +17,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartgetrack/Common/Constants.dart';
 import 'package:smartgetrack/LoginScreen.dart';
 import 'package:smartgetrack/common_styles.dart';
+import 'package:smartgetrack/view_leads_info.dart';
 
 import 'AddLeads.dart';
+import 'Common/custom_lead_template.dart';
 import 'Database/DataAccessHandler.dart';
+import 'Database/DatabaseHelper.dart';
 import 'Database/Palm3FoilDatabase.dart';
 import 'Database/SyncService.dart';
 import 'Database/SyncServiceB.dart';
+import 'Model/LeadsModel.dart';
 import 'ViewLeads.dart';
 import '_showSyncingBottomSheet.dart';
 import 'location_service/logic/location_controller/location_controller_cubit.dart';
@@ -51,12 +55,19 @@ class _HomeScreenState extends State<HomeScreen> {
   String? formattedDate;
   bool isLocationEnabled = false;
   int? userID;
+  int? totalLeadsCount ;
+  int? todayLeadsCount ;
+  int? dateRangeLeadsCount;
+  late Future<List<LeadsModel>> futureLeads;
+  bool isLoading = true;
   @override
   void initState() {
     super.initState();
     getuserdata();
-    backgroundService =
-        BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
+    fetchLeadCounts();
+
+    futureLeads = loadleads();
+    backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
     checkLocationEnabled();
     startService();
   }
@@ -93,11 +104,11 @@ class _HomeScreenState extends State<HomeScreen> {
           heading: double.tryParse(event['heading'].toString()) ?? 0.0,
           speed: double.tryParse(event['speed'].toString()) ?? 0.0,
           speedAccuracy:
-              double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
+          double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
           altitudeAccuracy:
-              double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
+          double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
           headingAccuracy:
-              double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
+          double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
         );
         print(
             "on_location_changed: ${position.latitude} -  ${position.longitude}");
@@ -139,8 +150,8 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             await context.read<LocationControllerCubit>().onLocationChanged(
-                  location: position,
-                );
+              location: position,
+            );
           }
         } else {
           print('Position Accuracy: ${position.accuracy}');
@@ -161,6 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
@@ -175,22 +187,26 @@ class _HomeScreenState extends State<HomeScreen> {
             header(size),
             Positioned.fill(
               top: 240,
-              // top: 230,
               child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Show loading indicator while data is loading
+                      if (isLoading)
+                        const Center(child: CircularProgressIndicator()) // Loading indicator
+                      else ...[
+                        // UI content after loading is complete
                         Row(
                           children: [
                             Expanded(
                                 child: customBox(
-                                    title: 'Total Leads', data: '123')),
+                                    title: 'Total Leads', data: totalLeadsCount)),
                             const SizedBox(width: 20),
                             Expanded(
                                 child: customBox(
-                                    title: 'Today Leads', data: '321')),
+                                    title: 'Today Leads', data: todayLeadsCount)),
                           ],
                         ),
                         const SizedBox(height: 10),
@@ -201,11 +217,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             Expanded(
                                 child: customBox(
                                     title: 'Km\'s Travel',
-                                    data: '255',
+                                    data: 677,
                                     bgImg: 'assets/bg_image2.jpg')),
                             const SizedBox(width: 20),
                             Expanded(
-                                child: customBox(title: 'Leads', data: '47')),
+                                child: customBox(
+                                    title: 'Leads',
+                                    data: dateRangeLeadsCount)),
                           ],
                         ),
                         const SizedBox(height: 20),
@@ -241,30 +259,31 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(width: 20),
                             Expanded(
                               child: customBtn(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const ViewLeads(),
-                                      ),
-                                    );
-                                  },
-                                  child: const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.view_list_rounded,
-                                        size: 18,
-                                        color: CommonStyles.whiteColor,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'View Leads',
-                                        style: CommonStyles.txStyF14CwFF5,
-                                      ),
-                                    ],
-                                  ),
-                                  backgroundColor: CommonStyles.btnBlueBgColor),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const ViewLeads(),
+                                    ),
+                                  );
+                                },
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.view_list_rounded,
+                                      size: 18,
+                                      color: CommonStyles.whiteColor,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'View Leads',
+                                      style: CommonStyles.txStyF14CwFF5,
+                                    ),
+                                  ],
+                                ),
+                                backgroundColor: CommonStyles.btnBlueBgColor,
+                              ),
                             ),
                           ],
                         ),
@@ -272,36 +291,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: customBtn(
-                            onPressed:
-                                showSyncSuccessBottomSheet, // Pass the function reference, not the result of the function call
-                            // Uncomment this part if you want to add the internet connectivity check
-                            /* onPressed: () async {
-                              final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
-                              bool isConnected = await CommonStyles.checkInternetConnectivity();
-                              if (isConnected) {
-                                // Call your login function here
-                                final syncService = SyncService(dataAccessHandler);
-                                syncService.performRefreshTransactionsSync(context);
-
-                              } else {
-                                Fluttertoast.showToast(
-                                    msg: "Please Check Your Internet Connection.",
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.CENTER,
-                                    timeInSecForIosWeb: 1,
-                                    backgroundColor: Colors.red,
-                                    textColor: Colors.white,
-                                    fontSize: 16.0
-                                );
-                                print("Please check your internet connection.");
-                              }
-                            }, */
+                            onPressed: showSyncSuccessBottomSheet,
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons
-                                      .sync, // Changed to sync icon for relevance
+                                  Icons.sync,
                                   size: 18,
                                   color: CommonStyles.whiteColor,
                                 ),
@@ -319,25 +314,55 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Today Leads',
                           style: CommonStyles.txStyF16CbFF5,
                         ),
-                        ListView.separated(
-                          itemCount: 10,
-                          physics: const NeverScrollableScrollPhysics(),
-                          shrinkWrap: true,
-                          padding: EdgeInsets.zero,
-                          itemBuilder: (context, index) => leadTemplate(index),
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 10),
+                        FutureBuilder<List<LeadsModel>>(
+                          future: futureLeads,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
+                            } else if (snapshot.hasError) {
+                              return Center(child: Text('Error: ${snapshot.error}'));
+                            } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                              List<LeadsModel> futureLeads = snapshot.data!;
+                              return ListView.separated(
+                                itemCount: futureLeads.length,
+                                physics: const NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                padding: EdgeInsets.zero,
+                                itemBuilder: (context, index) {
+                                  final lead = futureLeads[index];
+                                  return CustomLeadTemplate(
+                                    index: index,
+                                    lead: lead,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ViewLeadsInfo(code: lead.code!),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                              );
+                            } else {
+                              return const Center(child: Text('No leads available for today'));
+                            }
+                          },
                         ),
-                        const SizedBox(height: 10),
                       ],
-                    ),
-                  )),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
 
   Container leadTemplate(int index) {
     return Container(
@@ -385,8 +410,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   ElevatedButton customBtn(
       {Color? backgroundColor = CommonStyles.btnRedBgColor,
-      required Widget child,
-      void Function()? onPressed}) {
+        required Widget child,
+        void Function()? onPressed}) {
     return ElevatedButton(
       onPressed: () {
         onPressed?.call();
@@ -452,19 +477,19 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
-  Row leadsSection() {
-    return Row(
-      children: [
-        Expanded(child: customBox(title: 'Total Leads', data: '123')),
-        const SizedBox(width: 20),
-        Expanded(child: customBox(title: 'Total Leads', data: '321')),
-      ],
-    );
-  }
+  // Row leadsSection() {
+  //   return Row(
+  //     children: [
+  //       Expanded(child: customBox(title: 'Total Leads', data: '123')),
+  //       const SizedBox(width: 20),
+  //       Expanded(child: customBox(title: 'Total Leads', data: '321')),
+  //     ],
+  //   );
+  // }
 
   Container customBox({
     required String title,
-    String? data,
+    int? data,
     String bgImg = 'assets/bg_image1.jpg',
   }) {
     return Container(
@@ -488,15 +513,15 @@ class _HomeScreenState extends State<HomeScreen> {
               style: CommonStyles.txStyF20CbluFF5.copyWith(
                 fontSize: 18,
               )
-              /* style: const TextStyle(
+            /* style: const TextStyle(
                 color: CommonStyles.blueTextColor, fontSize: 20), */
-              ),
+          ),
           Text('$data',
               style: CommonStyles.txStyF20CbFF5.copyWith(
                 fontSize: 40,
               )
-              /* style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold), */
-              ),
+            /* style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold), */
+          ),
         ],
       ),
     );
@@ -545,16 +570,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Text('Hello,',
                               style: CommonStyles.txStyF20CpFF5),
                           Text(
-                            'string',
-                            //  '${username!}',
+                            // 'string',
+                            '${username!}',
                             style: CommonStyles.txStyF20CpFF5.copyWith(
                               fontSize: 25,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
-                          const Text(
-                            '26th Sep 2024',
-                            // '${formattedDate}',
+                          Text(
+                            //  '26th Sep 2024',
+                            '${formattedDate!}',
                             style: CommonStyles.txStyF14CbFF5,
                           ),
                         ],
@@ -638,8 +663,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? selectedDate = 'Today';
   Future<void> launchDatePicker(BuildContext context,
       {required DateTime firstDate,
-      required DateTime lastDate,
-      DateTime? initialDate}) async {
+        required DateTime lastDate,
+        DateTime? initialDate}) async {
     // final DateTime lastDate = DateTime.now();
     // final DateTime firstDate = DateTime(lastDate.year - 100);
     final DateTime? pickedDay = await showDatePicker(
@@ -695,7 +720,7 @@ class _HomeScreenState extends State<HomeScreen> {
         msg: "Wait for a while, Initializing the service...");
 
     final permission =
-        await context.read<LocationControllerCubit>().enableGPSWithPermission();
+    await context.read<LocationControllerCubit>().enableGPSWithPermission();
     if (permission) {
       try {
         Position currentPosition = await Geolocator.getCurrentPosition();
@@ -748,7 +773,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const String fileName = 'UsertrackinglogTest.file';
 
     Directory appFolderPath =
-        Directory('/storage/emulated/0/Download/$folderName');
+    Directory('/storage/emulated/0/Download/$folderName');
     if (!appFolderPath.existsSync()) {
       appFolderPath.createSync(recursive: true);
     }
@@ -803,7 +828,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     context,
                     MaterialPageRoute(
                         builder: (context) => const LoginScreen()),
-                    (Route<dynamic> route) => false);
+                        (Route<dynamic> route) => false);
               },
               child: const Text('OK'),
             ),
@@ -855,7 +880,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return AlertDialog(
           title: const Text("Location Services Disabled"),
           content:
-              const Text("Please enable location services to use this app."),
+          const Text("Please enable location services to use this app."),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -953,7 +978,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> syncing() async {
     final dataAccessHandler =
-        Provider.of<DataAccessHandler>(context, listen: false);
+    Provider.of<DataAccessHandler>(context, listen: false);
     bool isConnected = await CommonStyles.checkInternetConnectivity();
     if (isConnected) {
       final syncService = SyncService(dataAccessHandler);
@@ -1069,7 +1094,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _startSync() async {
     final dataAccessHandler =
-        Provider.of<DataAccessHandler>(context, listen: false);
+    Provider.of<DataAccessHandler>(context, listen: false);
     bool isConnected = await CommonStyles.checkInternetConnectivity();
     if (isConnected) {
       // Call your login function here
@@ -1088,6 +1113,82 @@ class _HomeScreenState extends State<HomeScreen> {
       // Simulate a sync operation
     }
   }
+  Future<void> fetchLeadCounts() async {
+    setState(() {
+      isLoading = true; // Start loading
+    });
+    String currentDate = getCurrentDate();
+    totalLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb('SELECT COUNT(*) AS totalLeadsCount FROM Leads');
+    todayLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
+        "SELECT COUNT(*) AS todayLeadsCount FROM Leads WHERE DATE(CreatedDate) = '$currentDate'");
+    dateRangeLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
+        "SELECT COUNT(*) AS dateRangeLeadsCount FROM Leads WHERE DATE(CreatedDate) BETWEEN '$currentDate' AND '$currentDate'");
+
+    setState(() {
+      isLoading = false; // Stop loading
+    });
+  }
+
+//   Future<void> fetchLeadCounts() async {
+//
+//
+//     totalLeadsCount= (await dataAccessHandler.getOnlyOneIntValueFromDb('SELECT COUNT(*) AS totalLeadsCount FROM Leads'));
+//     print('totalLeadsCount====$totalLeadsCount');
+//
+//     String currentDate = getCurrentDate(); // Assuming you have the getCurrentDate() function from the previous example
+//
+// // Update your query to include the current date
+//     todayLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
+//         "SELECT COUNT(*) AS todayLeadsCount FROM Leads WHERE DATE(CreatedDate) = '$currentDate'"
+//     );
+//     dateRangeLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
+//         "SELECT COUNT(*) AS dateRangeLeadsCount FROM Leads WHERE DATE(CreatedDate) BETWEEN '$currentDate' AND '$currentDate'"
+//     );
+//     // Fetch total leads count
+//     // List<Map<String, dynamic>> totalLeadsResult = await db.rawQuery('SELECT COUNT(*) AS totalLeadsCount FROM Leads');
+//     //  todayLeadsCount = (await dataAccessHandler.getOnlyOneIntValueFromDb('SELECT COUNT(*) AS todayLeadsCount FROM Leads WHERE DATE(CreatedDate) = '''));
+//     print('totalLeadsCount====$todayLeadsCount');
+//     // Fetch today's leads count
+//     // List<Map<String, dynamic>> todayLeadsResult = await db.rawQuery(
+//     //     "SELECT COUNT(*) AS todayLeadsCount FROM Leads WHERE DATE(CreatedDate) = ?", ['2024-09-26']);
+//     // todayLeadsCount = todayLeadsResult[0]['todayLeadsCount'];
+//
+//     // Fetch date range leads count
+//     // List<Map<String, dynamic>> dateRangeLeadsResult = await db.rawQuery(
+//     //     "SELECT COUNT(*) AS dateRangeLeadsCount FROM Leads WHERE DATE(CreatedDate) BETWEEN ? AND ?", ['2024-09-25', '2024-09-26']);
+//     // dateRangeLeadsCount = dateRangeLeadsResult[0]['dateRangeLeadsCount'];
+//
+//     // Update the UI
+//     setState(() {});
+//   }
+  Future<List<LeadsModel>> TodayloadLeads(String today) async {
+    try {
+      // final dataAccessHandler = Provider.of<DataAccessHandler>(context, listen: false);
+      List<dynamic> leads = await dataAccessHandler.getTodayLeads(today);
+      return leads.map((item) => LeadsModel.fromMap(item)).toList();
+    } catch (e) {
+      throw Exception('catch: ${e.toString()}');
+    }
+  }
+
+  String getCurrentDate() {
+    DateTime now = DateTime.now();
+    String formattedDate = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    return formattedDate;
+  }
+
+
+  Future<List<LeadsModel>> loadleads() async {
+    try {
+      final dataAccessHandler =
+      Provider.of<DataAccessHandler>(context, listen: false);
+      List<dynamic> leads = await dataAccessHandler.getleads();
+      return leads.map((item) => LeadsModel.fromMap(item)).toList();
+    } catch (e) {
+      throw Exception('catch: ${e.toString()}');
+    }
+  }
+
 }
 
 class BackgroundService {
@@ -1095,7 +1196,7 @@ class BackgroundService {
   final DataAccessHandler dataAccessHandler; // Declare DataAccessHandler
   late SyncServiceB syncService; // Declare SyncService
   final FlutterBackgroundService flutterBackgroundService =
-      FlutterBackgroundService();
+  FlutterBackgroundService();
   static const double MAX_ACCURACY_THRESHOLD = 10.0;
   static const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
   static const double MIN_DISTANCE_THRESHOLD = 50.0;
@@ -1168,7 +1269,7 @@ void onStart(ServiceInstance service) async {
   // Pass the DataAccessHandler to the BackgroundService
   final dataAccessHandler = DataAccessHandler(); // Initialize this properly
   final backgroundService =
-      BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
+  BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) async {
@@ -1193,28 +1294,31 @@ void onStart(ServiceInstance service) async {
 
     if (permission == LocationPermission.always) {
       service.invoke('on_location_changed', position.toJson());
+      if (_isPositionAccurate(position)) {
+        if (!isFirstLocationLogged) {
+          // Log the first point
+          lastLatitude = position.latitude;
+          lastLongitude = position.longitude;
+          isFirstLocationLogged = true;
+          DateTime timestamp = DateTime.now();
 
-      if (!isFirstLocationLogged) {
-        // Log the first point
-        lastLatitude = position.latitude;
-        lastLongitude = position.longitude;
-        isFirstLocationLogged = true;
-        DateTime timestamp = DateTime.now();
+          await palm3FoilDatabase!.insertLocationValues(
+              latitude: position.latitude,
+              longitude: position.longitude,
+              createdByUserId: userID,
+              // Use the actual userID
+              serverUpdatedStatus: false,
+              from: '997');
 
-        await palm3FoilDatabase!.insertLocationValues(
-            latitude: position.latitude,
-            longitude: position.longitude,
-            createdByUserId: userID, // Use the actual userID
-            serverUpdatedStatus: false,
-            from: '997');
+          appendLog(
+              'Latitude: ${position.latitude}, Longitude: ${position
+                  .longitude}. Timestamp: $timestamp');
 
-        appendLog(
-            'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Timestamp: $timestamp');
-
-        // Sync the data to the server
-        await backgroundService.syncLocationData(); // Use the existing instance
+          // Sync the data to the server
+          await backgroundService
+              .syncLocationData(); // Use the existing instance
+        }
       }
-
       if (_isPositionAccurate(position)) {
         final distance = Geolocator.distanceBetween(
           lastLatitude,
@@ -1269,7 +1373,7 @@ void appendLog(String text) async {
   const String fileName = 'UsertrackinglogTest.file';
 
   Directory appFolderPath =
-      Directory('/storage/emulated/0/Download/$folderName');
+  Directory('/storage/emulated/0/Download/$folderName');
   if (!appFolderPath.existsSync()) {
     appFolderPath.createSync(recursive: true);
   }
@@ -1306,7 +1410,7 @@ class StatCard extends StatelessWidget {
         children: [
           Text(value,
               style:
-                  const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+              const TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(label, style: const TextStyle(fontSize: 18)),
         ],
