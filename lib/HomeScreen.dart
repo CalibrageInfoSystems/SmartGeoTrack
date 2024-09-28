@@ -20,6 +20,7 @@ import 'package:smartgetrack/common_styles.dart';
 import 'package:smartgetrack/view_leads_info.dart';
 
 import 'AddLeads.dart';
+import 'Changepassword.dart';
 import 'Common/custom_lead_template.dart';
 import 'Database/DataAccessHandler.dart';
 import 'Database/DatabaseHelper.dart';
@@ -605,8 +606,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<String> menuItems = [
-    'Profile',
-    'Settings',
+    'Change Password',
     'Logout',
   ];
   List<String> dateItems = [
@@ -623,8 +623,16 @@ class _HomeScreenState extends State<HomeScreen> {
       onSelected: (String value) {
         if (value == 'Logout') {
           showLogoutDialog();
-        } else {
-          print('Selected: $value');
+        } else if (value == 'Change Password') {
+          // Navigator.push(
+          //   context,
+          //   MaterialPageRoute(
+          //     builder: (context) =>  Changepassword(),
+          //   ),
+          // );
+        }
+        else{
+
         }
       },
       itemBuilder: (BuildContext context) {
