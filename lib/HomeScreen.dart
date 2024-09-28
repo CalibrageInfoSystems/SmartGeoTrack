@@ -296,8 +296,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: customBtn(
-                    // onPressed: _showSyncingBottomSheet
-                            onPressed: showSyncSuccessBottomSheet,
+                     onPressed: _showSyncingBottomSheet,
+                           // onPressed: showSyncSuccessBottomSheet,
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -1025,16 +1025,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                          'Please don\'t close the app while syncing is in progress.',
-                          style: CommonStyles.txStyF14CbFF5
-                              .copyWith(color: CommonStyles.dataTextColor)),
+                        'Please don\'t close the app while syncing is in progress.',
+                        style: CommonStyles.txStyF14CbFF5.copyWith(
+                          color: CommonStyles.dataTextColor,
+                        ),
+                      ),
                       const SizedBox(height: 10),
-                      SvgPicture.asset('assets/fileDownloadIcon.svg',
-                          color: CommonStyles.btnBlueBgColor,
-                          width: 70,
-                          height: 70),
+                      Image.asset('assets/tick.png',
+                        height: 60,  // Add height as per requirement
+                        width: 60,),  // Add width as per requirement), // Corrected here
+
                       const SizedBox(height: 20),
-                      customRow(label: 'Total Requests', data: '3535'),
+                      // Uncomment and provide total requests if needed
+                      // customRow(label: 'Total Requests', data: '3535'),
                       customRow(label: 'Pending', data: '0'),
                       customRow(label: 'Last Sync', data: '1 Hour, Ago'),
                       const SizedBox(height: 20),
@@ -1042,13 +1045,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: double.infinity,
                         child: customBtn(
                           onPressed: syncing,
-                          child: const Text('Sync',
-                              style: CommonStyles.txStyF14CwFF5),
+                          child: const Text(
+                            'Sync',
+                            style: CommonStyles.txStyF14CwFF5,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
+
               ],
             ),
           );
@@ -1121,10 +1127,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 20),
-                      SvgPicture.asset('assets/fileDownloadIcon.svg',
-                          color: CommonStyles.btnBlueBgColor,
-                          width: 70,
-                          height: 70),
+                      Image.asset('assets/tick.png',
+                        height: 80,  // Add height as per requirement
+                        width: 80),  // Add width as per requirement),
                       const SizedBox(height: 20),
                       const Text('Data was synced successfully',
                           style: CommonStyles.txStyF14CbFF5),

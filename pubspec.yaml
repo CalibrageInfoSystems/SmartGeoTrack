@@ -96,3 +96,6 @@ flutter:
     - assets/fileuploadicon.svg
     - assets/right_arrow.png
     - assets/fileDownloadIcon.svg
+    - assets/synchronize.png
+    - assets/tick.png
+    - assets/nextcircle.png
