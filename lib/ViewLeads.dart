@@ -232,7 +232,7 @@ class _ViewLeadsState extends State<ViewLeads> {
                         filterLeadsBasedOnCompanyNameAndEmail(value);
                       },
                       decoration: const InputDecoration(
-                        hintText: 'Search',
+                        hintText: 'Search with Mobile number or Name',
                         hintStyle: TextStyle(color: CommonStyles.dataTextColor),
                         prefixIcon: Icon(
                           Icons.search_rounded,
@@ -289,8 +289,8 @@ class _ViewLeadsState extends State<ViewLeads> {
     setState(() {
       futureLeads = Future.value(copyLeads
           .where((item) =>
-              item.name!.toLowerCase().contains(input.toLowerCase()) ||
-              item.email!.toLowerCase().contains(input.toLowerCase()))
+              item.phoneNumber!.toLowerCase().contains(input.toLowerCase()) ||
+              item.name!.toLowerCase().contains(input.toLowerCase()))
           .toList());
     });
   }
@@ -409,7 +409,7 @@ class _ViewLeadsState extends State<ViewLeads> {
 
   void makeQueryAndFilter(int? date, int? category, BuildContext context) {
     final result = FilterModel(
-      date: getDate(date),
+      date: date,
       category: getCategory(category),
       fromDate: validateDate(fromDateController.text),
       toDate: validateDate(toDateController.text),
@@ -455,7 +455,7 @@ class _ViewLeadsState extends State<ViewLeads> {
 
     return outputFormat.format(dateTime);
   }
-
+/* 
   String buildLeadsQuery(
       String? date, int? category, String? fromDate, String? toDate) {
     String query = 'SELECT * FROM Leads';
@@ -482,24 +482,81 @@ class _ViewLeadsState extends State<ViewLeads> {
 
     return query;
   }
+ */
+
+  String buildLeadsQuery(
+      int? date, int? category, String? fromDate, String? toDate) {
+    String query = 'SELECT * FROM Leads';
+    List<String> conditions = [];
+
+    // Get the current date
+    DateTime currentDate = DateTime.now();
+    String formattedCurrentDate = DateFormat('yyyy-MM-dd').format(currentDate);
+
+    // Compute the first day of the current week (Monday)
+    DateTime weekFirstDay =
+        currentDate.subtract(Duration(days: currentDate.weekday - 1));
+    String formattedWeekFirstDay =
+        DateFormat('yyyy-MM-dd').format(weekFirstDay);
+
+    // Compute the first day of the current month
+    DateTime monthFirstDay = DateTime(currentDate.year, currentDate.month, 1);
+    String formattedMonthFirstDay =
+        DateFormat('yyyy-MM-dd').format(monthFirstDay);
+
+    if (date != null) {
+      if (date == 0) {
+        // Today
+        conditions.add('DATE(CreatedDate) = "$formattedCurrentDate"');
+      } else if (date == 1) {
+        // This week (between Monday and today)
+        conditions.add(
+            'DATE(CreatedDate) BETWEEN "$formattedWeekFirstDay" AND "$formattedCurrentDate"');
+      } else if (date == 2) {
+        // This month (between the 1st of the month and today)
+        conditions.add(
+            'DATE(CreatedDate) BETWEEN "$formattedMonthFirstDay" AND "$formattedCurrentDate"');
+      }
+    }
+
+    // If no date filter, apply fromDate and toDate if available
+    if (date == null && fromDate != null && toDate != null) {
+      conditions.add('DATE(CreatedDate) BETWEEN "$fromDate" AND "$toDate"');
+    }
+
+    // Category filter
+    if (category != null) {
+      conditions.add('IsCompany = $category');
+    }
+
+    // Construct the query
+    if (conditions.isNotEmpty) {
+      query += ' WHERE ${conditions.join(' AND ')}';
+    }
+
+    return query;
+  }
 
   String? getDate(int? date) {
     if (date == null) {
       return null;
     }
     final now = DateTime.now();
-
+// SELECT * FROM Leads WHERE DATE(CreatedDate) BETWEEN "2024-09-03" AND "2024-09-24"
     switch (date) {
       case 0: // Today
         return _formatDate(now);
 
       case 1: // This Week (Get Monday of the current week)
         final monday = now.subtract(Duration(days: now.weekday - 1));
-        return _formatDate(monday);
+        final week = 'BETWEEN ${_formatDate(monday)} AND ${_formatDate(now)}';
+        return week;
 
       case 2: // Month (Get the first day of the current month)
         final firstDayOfMonth = DateTime(now.year, now.month, 1);
-        return _formatDate(firstDayOfMonth);
+        final month =
+            'BETWEEN ${_formatDate(firstDayOfMonth)} AND ${_formatDate(now)}';
+        return month;
 
       default:
         return null;
@@ -979,7 +1036,7 @@ class _FilterState extends State<Filter> {
 }
 
 class FilterModel {
-  String? date;
+  int? date;
   int? category;
   String? fromDate;
   String? toDate;
