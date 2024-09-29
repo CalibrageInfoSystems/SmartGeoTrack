@@ -365,7 +365,6 @@ class _ViewLeadsState extends State<ViewLeads> {
                     futureLeads = filterTheLeads(query);
                   }); */
 
-                  print('test: $selectedFromDate');
                   if (fromDateController.text.isNotEmpty &&
                       toDateController.text.isEmpty) {
                     Navigator.pop(context);
@@ -383,23 +382,11 @@ class _ViewLeadsState extends State<ViewLeads> {
                       Navigator.pop(context);
 
                       showSnackBar('From Date cannot be greater than To Date');
+                    } else {
+                      makeQueryAndFilter(date, category, context);
                     }
                   } else {
-                    final result = FilterModel(
-                      date: getDate(date),
-                      category: getCategory(category),
-                      fromDate: validateDate(fromDateController.text),
-                      toDate: validateDate(toDateController.text),
-                    );
-                    print(
-                        'Result: ${result.date} ${result.category} ${result.fromDate} ${result.toDate}');
-
-                    final query = buildLeadsQuery(result.date, result.category,
-                        result.fromDate, result.toDate);
-                    Navigator.pop(context);
-                    setState(() {
-                      futureLeads = filterTheLeads(query);
-                    });
+                    makeQueryAndFilter(date, category, context);
                   }
                 },
                 onClear: () {
@@ -418,6 +405,25 @@ class _ViewLeadsState extends State<ViewLeads> {
         );
       },
     );
+  }
+
+  void makeQueryAndFilter(int? date, int? category, BuildContext context) {
+    final result = FilterModel(
+      date: getDate(date),
+      category: getCategory(category),
+      fromDate: validateDate(fromDateController.text),
+      toDate: validateDate(toDateController.text),
+    );
+    print(
+        'Result: ${result.date} ${result.category} ${result.fromDate} ${result.toDate}');
+
+    final query = buildLeadsQuery(
+        result.date, result.category, result.fromDate, result.toDate);
+    print('Result: $query');
+    Navigator.pop(context);
+    setState(() {
+      futureLeads = filterTheLeads(query);
+    });
   }
 
   void showSnackBar(String message) {
