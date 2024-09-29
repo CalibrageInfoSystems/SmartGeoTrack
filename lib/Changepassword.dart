@@ -57,6 +57,7 @@ class _ChangePasswordState extends State<ChangePassword>
         return Future.value(true);
       },
       child: Scaffold(
+        backgroundColor: CommonStyles.whiteColor,
         appBar: appBar(context),
         body: changePasswordTemplate(),
       ),
@@ -75,12 +76,6 @@ class _ChangePasswordState extends State<ChangePassword>
         'Change Password',
         //  style: CommonStyles.txStyF14CbFF5,
       ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.more_vert_rounded),
-        ),
-      ],
     );
   }
 
@@ -95,7 +90,7 @@ class _ChangePasswordState extends State<ChangePassword>
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const Row(
+              /*  const Row(
                 children: [
                   Icon(
                     Icons.location_pin,
@@ -113,7 +108,7 @@ class _ChangePasswordState extends State<ChangePassword>
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 20), */
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -158,14 +153,8 @@ class _ChangePasswordState extends State<ChangePassword>
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            /* Icon(
-                                          Icons.perm_identity,
-                                          color: CommonStyles.whiteColor,
-                                          size: 20,
-                                        ),
-                                        SizedBox(width: 10), */
                             Text(
-                              "Submit",
+                              "Change Password",
                               style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.white,

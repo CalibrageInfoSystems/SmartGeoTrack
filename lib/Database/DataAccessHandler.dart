@@ -10,13 +10,9 @@ import 'package:path/path.dart';
 import 'DatabaseHelper.dart';
 
 class DataAccessHandler with ChangeNotifier {
-
-
-
   Future<void> deleteRow(String tableName) async {
     try {
       final db = await DatabaseHelper.instance.database;
-      ;
       await db.delete(tableName);
       print('Deleted all rows from $tableName');
     } catch (e) {
@@ -24,11 +20,10 @@ class DataAccessHandler with ChangeNotifier {
     }
   }
 
-  Future<void> insertData(String tableName,
-      List<Map<String, dynamic>> data) async {
+  Future<void> insertData(
+      String tableName, List<Map<String, dynamic>> data) async {
     try {
       final db = await DatabaseHelper.instance.database;
-      ;
       for (var item in data) {
         await db.insert(tableName, item);
       }
@@ -47,7 +42,7 @@ class DataAccessHandler with ChangeNotifier {
   //   );
   // }
   Future<int> insertLead(Map<String, dynamic> leadData) async {
-    final db = await DatabaseHelper.instance.database;;
+    final db = await DatabaseHelper.instance.database;
 
     // Validate lead data before insertion
     // if (!isValidLeadData(leadData)) {
@@ -68,7 +63,7 @@ class DataAccessHandler with ChangeNotifier {
   }
 
   Future<int> insertFileRepository(Map<String, dynamic> fileData) async {
-    final db = await DatabaseHelper.instance.database;;
+    final db = await DatabaseHelper.instance.database;
     return await db.insert(
       'FileRepositorys',
       fileData,
@@ -80,7 +75,7 @@ class DataAccessHandler with ChangeNotifier {
     debugPrint("@@@ query $query");
     try {
       List<Map<String, dynamic>> result =
-      await (await DatabaseHelper.instance.database).rawQuery(query);
+          await (await DatabaseHelper.instance.database).rawQuery(query);
       if (result.isNotEmpty) {
         return result.first.values.first as int;
       }
@@ -91,11 +86,11 @@ class DataAccessHandler with ChangeNotifier {
     }
   }
 
-  Future<String?> getOnlyOneStringValueFromDb(String query,
-      List<dynamic> params) async {
+  Future<String?> getOnlyOneStringValueFromDb(
+      String query, List<dynamic> params) async {
     List<Map<String, dynamic>> result;
     try {
-      final db = await await DatabaseHelper.instance.database;
+      final db = await DatabaseHelper.instance.database;
       result = await db.rawQuery(query, params);
 
       if (result.isNotEmpty && result.first.isNotEmpty) {
@@ -108,28 +103,27 @@ class DataAccessHandler with ChangeNotifier {
     }
   }
 
-
-  Future<List<Map<String, dynamic>>> getleads() async {
+  Future<List<Map<String, dynamic>>> getleads(
+      {required int createdByUserId}) async {
     final db = await DatabaseHelper.instance.database;
-    String query = 'SELECT * FROM Leads';
-    print('Executing Query: $query');
-    List<Map<String, dynamic>> results = await db.query('Leads');
-    print('Query Results:');
-    for (var row in results) {
-      print(row);
-    }
+    String query = 'SELECT * FROM Leads WHERE CreatedByUserId = ?';
+    List<Map<String, dynamic>> results =
+        await db.rawQuery(query, [createdByUserId]);
     return results;
   }
 
-  Future<List<Map<String, dynamic>>> getTodayLeadsuser(String today, int? userID) async {
+  Future<List<Map<String, dynamic>>> getTodayLeadsuser(
+      String today, int? userID) async {
     final db = await DatabaseHelper.instance.database;
 
     // Use query parameters to safely pass in the date and userID
-    String query = 'SELECT * FROM Leads WHERE DATE(CreatedDate) = ? AND CreatedByUserId = ?';
+    String query =
+        'SELECT * FROM Leads WHERE DATE(CreatedDate) = ? AND CreatedByUserId = ?';
     print('Executing Query: $query with parameters: $today, $userID');
 
     // Query the database with the proper filtering
-    List<Map<String, dynamic>> results = await db.rawQuery(query, [today, userID]);
+    List<Map<String, dynamic>> results =
+        await db.rawQuery(query, [today, userID]);
 
     print('Query Results:');
     for (var row in results) {
@@ -138,7 +132,6 @@ class DataAccessHandler with ChangeNotifier {
 
     return results;
   }
-
 
   Future<List<Map<String, dynamic>>> getTodayLeads(String today) async {
     final db = await DatabaseHelper.instance.database;
@@ -170,8 +163,8 @@ class DataAccessHandler with ChangeNotifier {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getLeadImagesByCode(String leadsCode,
-      String fileExtension) async {
+  Future<List<Map<String, dynamic>>> getLeadImagesByCode(
+      String leadsCode, String fileExtension) async {
     try {
       final db = await DatabaseHelper.instance.database;
       String query =
@@ -204,8 +197,8 @@ class DataAccessHandler with ChangeNotifier {
     }
   } */
 
-  Future<List<Map<String, dynamic>>> getLeadDocsByCode(String leadsCode,
-      List<String> fileExtensions) async {
+  Future<List<Map<String, dynamic>>> getLeadDocsByCode(
+      String leadsCode, List<String> fileExtensions) async {
     try {
       final db = await DatabaseHelper.instance.database;
 
@@ -236,7 +229,7 @@ class DataAccessHandler with ChangeNotifier {
 
     if (result.isNotEmpty) {
       return result.first['FileName']
-      as String; // Assuming FileName contains Base64
+          as String; // Assuming FileName contains Base64
     }
     return null; // Return null if no image found
   }
@@ -249,11 +242,13 @@ class DataAccessHandler with ChangeNotifier {
 
   String getCurrentDate() {
     DateTime now = DateTime.now();
-    String formattedDate = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    String formattedDate =
+        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
     return formattedDate;
   }
-  Future<List<Map<String, double>>> fetchLatLongsFromDatabase(String startDate, String endDate) async {
 
+  Future<List<Map<String, double>>> fetchLatLongsFromDatabase(
+      String startDate, String endDate) async {
     final db = await DatabaseHelper.instance.database;
 
     List<Map<String, dynamic>> queryResult = await db.query(
@@ -262,11 +257,12 @@ class DataAccessHandler with ChangeNotifier {
       where: 'DATE(CreatedDate) BETWEEN ? AND ?',
       whereArgs: [startDate, endDate], // Arguments for the WHERE clause
     );
-print('distance query ==  $queryResult');
-    return queryResult.map((row) => {
-      'lat': row['Latitude'] as double,
-      'lng': row['Longitude'] as double,
-    }).toList();
+    print('distance query ==  $queryResult');
+    return queryResult
+        .map((row) => {
+              'lat': row['Latitude'] as double,
+              'lng': row['Longitude'] as double,
+            })
+        .toList();
   }
-
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
@@ -140,9 +142,9 @@ class SyncService {
   //
   //   print('Fetched Data: $refreshTransactionsDataMap');
   // }
-
   Future<void> performRefreshTransactionsSync(BuildContext context,
-      {void Function()? showSuccessBottomSheet}) async {
+      {void Function()? showSuccessBottomSheet,
+      void Function()? onComplete}) async {
     await getRefreshSyncTransDataMap();
 
     if (refreshTransactionsDataMap.isNotEmpty) {
@@ -163,16 +165,22 @@ class SyncService {
           );
 
           if (response.statusCode == 200) {
-            // Execute the SQL update query after successful sync
-            await _updateServerUpdatedStatus(
-                tableName); // Ensure this is awaited
+            await _updateServerUpdatedStatus(tableName);
 
             transactionsCheck++;
-            if (transactionsCheck < refreshTableNamesList.length) {
+
+            for (int transactionsCheck = 0;
+                transactionsCheck < refreshTableNamesList.length;
+                transactionsCheck++) {
               await _syncTransactionsDataToCloud(
                   context, refreshTableNamesList[transactionsCheck]);
-            } else {
-              _showSnackBar(context, "Sync is successful!");
+            }
+
+            _showSnackBar(context, "Sync is successful!");
+
+            // Call onComplete after the loop ends
+            if (onComplete != null) {
+              onComplete(); // Ensure the callback is invoked
             }
           } else {
             _showSnackBar(
@@ -187,7 +195,10 @@ class SyncService {
           await _syncTransactionsDataToCloud(
               context, refreshTableNamesList[transactionsCheck]);
         } else {
-          showSuccessBottomSheet;
+          // Call showSuccessBottomSheet when loop ends
+          if (showSuccessBottomSheet != null) {
+            showSuccessBottomSheet(); // Ensure the callback is invoked
+          }
         }
       }
     }
