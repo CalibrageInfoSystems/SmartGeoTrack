@@ -326,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: customBtn(
-                            onPressed: isButtonEnabled ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => ViewLeads())) : null, // Navigate if enabled
+                            onPressed: isButtonEnabled ? () => syncing : null, // Navigate if enabled
                             backgroundColor: isButtonEnabled ? CommonStyles.btnRedBgColor : CommonStyles.hintTextColor, // Set background color based on enabled/disabled state
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,

@@ -365,6 +365,10 @@ class _LoginScreenState extends State<LoginScreen>
               if (mobileacess!) {
                 //TODO
                 // If true, navigate to HomeScreen
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => const Test()),
+                // );
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const HomeScreen()),

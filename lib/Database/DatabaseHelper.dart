@@ -89,7 +89,7 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> result = await db.query(
       'geoBoundaries',
       where: 'ServerUpdatedStatus = ?',
-      whereArgs: [false],
+      whereArgs: [0],
     );
 
     return result.map((row) => GeoBoundariesModel.fromMap(row)).toList();
@@ -100,7 +100,7 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> result = await db.query(
       'Leads',
       where: 'ServerUpdatedStatus = ?',
-      whereArgs: [false],
+      whereArgs: [0],
     );
     print('Leads fetched: $result');
 
@@ -112,7 +112,7 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> result = await db.query(
       'FileRepositorys',
       where: 'ServerUpdatedStatus = ?',
-      whereArgs: [false],
+      whereArgs: [0],
     );
     print('fileRepository fetched: $result');
 
