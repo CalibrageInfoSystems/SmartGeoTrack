@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartgetrack/Common/Constants.dart';
 import 'package:smartgetrack/LoginScreen.dart';
 import 'package:smartgetrack/common_styles.dart';
+import 'package:smartgetrack/sync_screen.dart';
 import 'package:smartgetrack/view_leads_info.dart';
 
 import 'AddLeads.dart';
@@ -326,7 +327,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: customBtn(
-                            onPressed: isButtonEnabled ? () => syncing : null, // Navigate if enabled
+                            onPressed: isButtonEnabled
+                                ? () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                     SyncScreen())) : null, // Navigate if enabled
                             backgroundColor: isButtonEnabled ? CommonStyles.btnRedBgColor : CommonStyles.hintTextColor, // Set background color based on enabled/disabled state
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -826,51 +832,97 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
   Future<void> startService() async {
-    await Fluttertoast.showToast(
-        msg: "Wait for a while, Initializing the service...");
+    await Fluttertoast.showToast(msg: "Wait for a while, Initializing the service...");
 
-    final permission =
-    await context.read<LocationControllerCubit>().enableGPSWithPermission();
+    // Step 1: Request location permissions (foreground & background)
+    final permission = await context.read<LocationControllerCubit>().enableGPSWithPermission();
+    print('permission $permission');
+    // Step 2: Check if permission granted for foreground location
     if (permission) {
       try {
+        // Step 3: Check for background location permission (if required)
+        final backgroundPermission = await Geolocator.checkPermission();
+        if (backgroundPermission != LocationPermission.always) {
+          final result = await Geolocator.requestPermission();
+          if (result != LocationPermission.always) {
+            await Fluttertoast.showToast(msg: "Background location permission denied. Service could not start.");
+            return;
+          }
+        }
+
+        // Step 4: Fetch the current location
         Position currentPosition = await Geolocator.getCurrentPosition();
         lastLatitude = currentPosition.latitude;
         lastLongitude = currentPosition.longitude;
-        try {
-          palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
-          // Call printTables after creating the databas
-          // dbUpgradeCall();
-        } catch (e) {
-          print('Error while getting master data: ${e.toString()}');
-        }
-        // Debug prints
-        print('Location permission granted');
-        print(
-            'Current Position: Latitude: ${currentPosition.latitude}, Longitude: ${currentPosition.longitude}');
 
-        await context
-            .read<LocationControllerCubit>()
-            .locationFetchByDeviceGPS();
+        // Step 5: Initialize the background service and set it as foreground
+        await context.read<LocationControllerCubit>().locationFetchByDeviceGPS();
         await backgroundService.initializeService();
         backgroundService.setServiceAsForeground();
 
-        // Show Toast after service starts
+        // Debug prints to check the current position
+        print('Location permission granted');
+        print('Current Position: Latitude: ${currentPosition.latitude}, Longitude: ${currentPosition.longitude}');
+
+        // Show success toast
         await Fluttertoast.showToast(msg: "Service started successfully!");
 
-        // Debug prints
+        // Debug prints for location
         print('lastLatitude===>$lastLatitude, lastLongitude===>$lastLongitude');
       } catch (e) {
         print('Error fetching current position: $e');
-        await Fluttertoast.showToast(msg: "Error: Service could not start.");
+        await Fluttertoast.showToast(msg: "Error: Service could not start due to an error.");
       }
     } else {
       print('Location permission denied');
-      await Fluttertoast.showToast(
-          msg: "Location permission denied. Service could not start.");
+      await Fluttertoast.showToast(msg: "Location permission denied. Service could not start.");
     }
   }
+  // Future<void> startService() async {
+  //   await Fluttertoast.showToast(
+  //       msg: "Wait for a while, Initializing the service...");
+  //
+  //   final permission =
+  //   await context.read<LocationControllerCubit>().enableGPSWithPermission();
+  //   if (permission) {
+  //     try {
+  //       Position currentPosition = await Geolocator.getCurrentPosition();
+  //       lastLatitude = currentPosition.latitude;
+  //       lastLongitude = currentPosition.longitude;
+  //       try {
+  //         palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
+  //         // Call printTables after creating the databas
+  //         // dbUpgradeCall();
+  //       } catch (e) {
+  //         print('Error while getting master data: ${e.toString()}');
+  //       }
+  //       // Debug prints
+  //       print('Location permission granted');
+  //       print(
+  //           'Current Position: Latitude: ${currentPosition.latitude}, Longitude: ${currentPosition.longitude}');
+  //
+  //       await context
+  //           .read<LocationControllerCubit>()
+  //           .locationFetchByDeviceGPS();
+  //       await backgroundService.initializeService();
+  //       backgroundService.setServiceAsForeground();
+  //
+  //       // Show Toast after service starts
+  //       await Fluttertoast.showToast(msg: "Service started successfully!");
+  //
+  //       // Debug prints
+  //       print('lastLatitude===>$lastLatitude, lastLongitude===>$lastLongitude');
+  //     } catch (e) {
+  //       print('Error fetching current position: $e');
+  //       await Fluttertoast.showToast(msg: "Error: Service could not start.");
+  //     }
+  //   } else {
+  //     print('Location permission denied');
+  //     await Fluttertoast.showToast(
+  //         msg: "Location permission denied. Service could not start.");
+  //   }
+  // }
 
   void stopService() {
     backgroundService.stopService();
@@ -1295,47 +1347,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // void _showSyncSuccessBottomSheet() {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     isDismissible: true,
-  //     builder: (context) => Container(
-  //       padding: const EdgeInsets.all(20),
-  //       child: const Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           Icon(Icons.check_circle, size: 50, color: Colors.green),
-  //           SizedBox(height: 20),
-  //           Text('Sync Offline Data'),
-  //           SizedBox(height: 10),
-  //           Text('Data was synced successfully!'),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
-  Future<void> _startSync() async {
-    final dataAccessHandler =
-    Provider.of<DataAccessHandler>(context, listen: false);
-    bool isConnected = await CommonStyles.checkInternetConnectivity();
-    if (isConnected) {
-      // Call your login function here
-      final syncService = SyncService(dataAccessHandler);
-      syncService.performRefreshTransactionsSync(context);
-      _showSyncSuccessBottomSheet();
-    } else {
-      Fluttertoast.showToast(
-          msg: "Please Check Your Internet Connection.",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0);
-      // Simulate a sync operation
-    }
-  }
+
+
   Future<void> fetchLeadCounts() async {
     setState(() {
       isLoading = true; // Start loading
@@ -1467,6 +1481,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
 }
 
+
+
 class BackgroundService {
   int? userId;
   final DataAccessHandler dataAccessHandler; // Declare DataAccessHandler
@@ -1530,41 +1546,25 @@ class BackgroundService {
     }
   }
 }
-
-
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   Palm3FoilDatabase? palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
 
+
+
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int? userID = prefs.getInt('userID');
 
-  // Function to check if lat-long already exists in the database
-  Future<bool> checkIfLocationExists(double latitude, double longitude) async {
-    final queryResult = await palm3FoilDatabase!.getLocationByLatLong(
-        latitude, longitude);
-    return queryResult.isNotEmpty;
-  }
-
   // Initialize DataAccessHandler properly
   final dataAccessHandler = DataAccessHandler();
-  final backgroundService = BackgroundService(
-      userId: userID, dataAccessHandler: dataAccessHandler);
+  final backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
 
   if (service is AndroidServiceInstance) {
-    service.on('setAsForeground').listen((event) async {
-      await service.setAsForegroundService();
-    });
-
-    service.on('setAsBackground').listen((event) async {
-      await service.setAsBackgroundService();
+    service.on("stop_service").listen((event) async {
+      await service.stopSelf();
     });
   }
-
-  service.on("stop_service").listen((event) async {
-    await service.stopSelf();
-  });
 
   double lastLatitude = 0.0;
   double lastLongitude = 0.0;
@@ -1580,26 +1580,11 @@ void onStart(ServiceInstance service) async {
         lastLatitude = position.latitude;
         lastLongitude = position.longitude;
         isFirstLocationLogged = true;
-        DateTime timestamp = DateTime.now();
 
-        // Check if the location already exists before inserting
-        bool locationExists = await checkIfLocationExists(
-            position.latitude, position.longitude);
+        // Insert location when the app starts
+        await insertLocationToDatabase(palm3FoilDatabase, position, userID);
 
-        if (!locationExists) {
-          await palm3FoilDatabase!.insertLocationValues(
-              latitude: position.latitude,
-              longitude: position.longitude,
-              createdByUserId: userID,
-              serverUpdatedStatus: false,
-              from: '997');
-
-          appendLog('Latitude: ${position.latitude}, Longitude: ${position
-              .longitude}. Timestamp: $timestamp');
-
-          // Sync the data to the server
-          await backgroundService.syncLocationData();
-        }
+        await backgroundService.syncLocationData();
       }
 
       if (_isPositionAccurate(position)) {
@@ -1613,37 +1598,39 @@ void onStart(ServiceInstance service) async {
         if (distance >= 50.0) {
           lastLatitude = position.latitude;
           lastLongitude = position.longitude;
-          DateTime timestamp = DateTime.now();
 
-          // Check if the location already exists before inserting
-          bool locationExists = await checkIfLocationExists(
-              position.latitude, position.longitude);
+          // Insert location points when the distance exceeds the threshold
+          await insertLocationToDatabase(palm3FoilDatabase, position, userID);
 
-          if (!locationExists) {
-            await palm3FoilDatabase!.insertLocationValues(
-                latitude: position.latitude,
-                longitude: position.longitude,
-                createdByUserId: userID,
-                serverUpdatedStatus: false,
-                from: '1023');
-
-            appendLog('Background Latitude: ${position
-                .latitude}, Longitude: ${position
-                .longitude}. Distance: $distance, Timestamp: $timestamp');
-
-            // Sync the data to the server
-            await backgroundService.syncLocationData();
-          }
+          await backgroundService.syncLocationData();
         }
       }
     }
   });
 }
+// Function to insert location into the database
+Future<void> insertLocationToDatabase(Palm3FoilDatabase? database, Position position, int? userID) async {
+  bool locationExists = await checkIfLocationExists(database, position.latitude, position.longitude);
 
-// Function to check if the position is accurate enough
-// bool _isPositionAccurate(Position position) {
-//   return position.accuracy < 20.0; // Use an accuracy threshold of 20 meters
-// }
+  if (!locationExists) {
+    await database!.insertLocationValues(
+      latitude: position.latitude,
+      longitude: position.longitude,
+      createdByUserId: userID,
+      serverUpdatedStatus: false,
+      from: '997', // Replace with appropriate source if needed
+    );
+
+    appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}.');
+  } else {
+    print("Location already exists in the database.");
+  }
+}
+Future<bool> checkIfLocationExists(Palm3FoilDatabase? database, double latitude, double longitude) async {
+  final queryResult = await database!.getLocationByLatLong(latitude, longitude);
+  return queryResult.isNotEmpty;
+}
+
 double MAX_ACCURACY_THRESHOLD = 10.0;
 const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
 const double MIN_DISTANCE_THRESHOLD = 50.0;
