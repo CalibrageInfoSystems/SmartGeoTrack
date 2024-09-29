@@ -486,41 +486,39 @@ class _ViewLeadsState extends State<ViewLeads> {
 
   String buildLeadsQuery(
       int? date, int? category, String? fromDate, String? toDate) {
+    print('buildLeadsQuery: $date $category $fromDate $toDate');
     String query = 'SELECT * FROM Leads';
     List<String> conditions = [];
 
-    // Get the current date
     DateTime currentDate = DateTime.now();
     String formattedCurrentDate = DateFormat('yyyy-MM-dd').format(currentDate);
 
-    // Compute the first day of the current week (Monday)
     DateTime weekFirstDay =
         currentDate.subtract(Duration(days: currentDate.weekday - 1));
     String formattedWeekFirstDay =
         DateFormat('yyyy-MM-dd').format(weekFirstDay);
 
-    // Compute the first day of the current month
     DateTime monthFirstDay = DateTime(currentDate.year, currentDate.month, 1);
     String formattedMonthFirstDay =
         DateFormat('yyyy-MM-dd').format(monthFirstDay);
 
     if (date != null) {
       if (date == 0) {
-        // Today
         conditions.add('DATE(CreatedDate) = "$formattedCurrentDate"');
       } else if (date == 1) {
-        // This week (between Monday and today)
         conditions.add(
             'DATE(CreatedDate) BETWEEN "$formattedWeekFirstDay" AND "$formattedCurrentDate"');
       } else if (date == 2) {
-        // This month (between the 1st of the month and today)
         conditions.add(
             'DATE(CreatedDate) BETWEEN "$formattedMonthFirstDay" AND "$formattedCurrentDate"');
       }
     }
 
-    // If no date filter, apply fromDate and toDate if available
-    if (date == null && fromDate != null && toDate != null) {
+    if (date != 0 &&
+        date != 1 &&
+        date != 2 &&
+        fromDate != null &&
+        toDate != null) {
       conditions.add('DATE(CreatedDate) BETWEEN "$fromDate" AND "$toDate"');
     }
 
