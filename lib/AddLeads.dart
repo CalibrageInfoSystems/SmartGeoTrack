@@ -83,8 +83,6 @@ class _AddLeadScreenState extends State<AddLeads>
     });
   }
 
-
-
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -112,11 +110,8 @@ class _AddLeadScreenState extends State<AddLeads>
     // Get current position using GPS (this works offline)
     _currentPosition = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high, // Uses GPS
-
-
     );
   }
-
 
   @override
   void initState() {
@@ -529,7 +524,7 @@ class _AddLeadScreenState extends State<AddLeads>
       showLoadingDialog(context);
       _validateTotalItems();
 
-      //  String? empCode = await fetchEmpCode(Username!, context); //TODO
+      //  String? empCode = await fetchEmpCode(Username!, context);
       //   String? empCode ="ROJATEST";
       final dataAccessHandler =
           Provider.of<DataAccessHandler>(context, listen: false);
@@ -649,7 +644,14 @@ class _AddLeadScreenState extends State<AddLeads>
           if (isConnected) {
             // Call your login function here
             final syncService = SyncService(dataAccessHandler);
-            syncService.performRefreshTransactionsSync(context);
+            syncService
+                .performRefreshTransactionsSync(context)
+                .whenComplete(() {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+              );
+            });
           } else {
             Fluttertoast.showToast(
                 msg: "Please check your internet connection.",
@@ -665,11 +667,6 @@ class _AddLeadScreenState extends State<AddLeads>
           // Trigger Sync for Leads and FileRepository
           // final syncService = SyncService(dataAccessHandler);
           // syncService.performRefreshTransactionsSync(context);
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
 
           // Clear all input fields and images
           _nameController.clear();
