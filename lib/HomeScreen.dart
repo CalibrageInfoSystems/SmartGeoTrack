@@ -63,10 +63,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int? todayLeadsCount ;
   int?  pendingleadscount;
   int?  pendingfilerepocount;
+  int?  pendingboundarycount;
   int? dateRangeLeadsCount;
   late Future<List<LeadsModel>> futureLeads;
   bool isLoading = true;
   double totalDistance = 0.0;
+  bool isButtonEnabled = false;
   @override
   void initState() {
     super.initState();
@@ -299,28 +301,53 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         const SizedBox(height: 20),
+                     //    SizedBox(
+                     //      width: double.infinity,
+                     //      child: customBtn(
+                     // onPressed: _showSyncingBottomSheet,
+                     //       // onPressed: showSyncSuccessBottomSheet,
+                     //        child: const Row(
+                     //          mainAxisAlignment: MainAxisAlignment.center,
+                     //          children: [
+                     //            Icon(
+                     //              Icons.sync,
+                     //              size: 18,
+                     //              color: CommonStyles.whiteColor,
+                     //            ),
+                     //            SizedBox(width: 8),
+                     //            Text(
+                     //              'Sync Data',
+                     //              style: CommonStyles.txStyF14CwFF5,
+                     //            ),
+                     //          ],
+                     //        ),
+                     //      ),
+                     //    ),
                         SizedBox(
                           width: double.infinity,
                           child: customBtn(
-                     onPressed: _showSyncingBottomSheet,
-                           // onPressed: showSyncSuccessBottomSheet,
-                            child: const Row(
+                            onPressed: isButtonEnabled ? () => Navigator.push(context, MaterialPageRoute(builder: (context) => ViewLeads())) : null, // Navigate if enabled
+                            backgroundColor: isButtonEnabled ? CommonStyles.btnRedBgColor : CommonStyles.hintTextColor, // Set background color based on enabled/disabled state
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
                                   Icons.sync,
                                   size: 18,
-                                  color: CommonStyles.whiteColor,
+                                  color: isButtonEnabled ? CommonStyles.whiteColor : CommonStyles.disabledTextColor, // Adjust icon color when disabled
                                 ),
                                 SizedBox(width: 8),
                                 Text(
                                   'Sync Data',
-                                  style: CommonStyles.txStyF14CwFF5,
+                                  style: isButtonEnabled ? CommonStyles.txStyF14CwFF5 : CommonStyles.txStyF14CwFF5.copyWith(color: CommonStyles.disabledTextColor), // Adjust text color when disabled
                                 ),
                               ],
                             ),
                           ),
                         ),
+
+
+
                         const SizedBox(height: 20),
                         const Text(
                           'Today Leads',
@@ -1330,7 +1357,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // Replace this list with dynamically fetched data
-    List<Map<String, double>> data = await dataAccessHandler.fetchLatLongsFromDatabase();
+    // Fetch latitude and longitude data for the given date range
+    List<Map<String, double>> data = await dataAccessHandler.fetchLatLongsFromDatabase(currentDate, currentDate);
+
 
     print('Data: $data km');
 
@@ -1382,6 +1411,27 @@ class _HomeScreenState extends State<HomeScreen> {
     dateRangeLeadsCount = await dataAccessHandler.getOnlyOneIntValueFromDb(
         "SELECT COUNT(*) AS dateRangeLeadsCount FROM Leads WHERE DATE(CreatedDate) BETWEEN '$startday' AND '$today'");
     print('dateRangeLeadsCount==1240 :  $dateRangeLeadsCount');
+    double calculateDistance(lat1, lon1, lat2, lon2) {
+      var p = 0.017453292519943295; // Pi/180 to convert degrees to radians
+      var c = cos;
+      var a = 0.5 - c((lat2 - lat1) * p)/2 +
+          c(lat1 * p) * c(lat2 * p) *
+              (1 - c((lon2 - lon1) * p))/2;
+      return 12742 * asin(sqrt(a)); // Radius of Earth * arc
+    }
+
+    // Replace this list with dynamically fetched data
+    // Fetch latitude and longitude data for the given date range
+    List<Map<String, double>> data = await dataAccessHandler.fetchLatLongsFromDatabase(startday, today);
+
+
+    print('Data: $data km');
+
+
+    for (var i = 0; i < data.length - 1; i++) {
+      totalDistance += calculateDistance(data[i]["lat"], data[i]["lng"], data[i + 1]["lat"], data[i + 1]["lng"]);
+    }
+    print('Total Distance: $totalDistance km');
     setState(() {
       isLoading = false; // Stop loading
     });
@@ -1392,19 +1442,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   }
 
-  void fetchpendingrecordscount()  async {
+  void fetchpendingrecordscount() async {
     setState(() {
       isLoading = true; // Start loading
     });
 
-    pendingleadscount = await dataAccessHandler.getOnlyOneIntValueFromDb('SELECT Count(*) AS pendingLeadsCount FROM Leads WHERE ServerUpdatedStatus = 0');
+    // Fetch pending counts
+    pendingleadscount = await dataAccessHandler.getOnlyOneIntValueFromDb(
+        'SELECT Count(*) AS pendingLeadsCount FROM Leads WHERE ServerUpdatedStatus = 0');
     pendingfilerepocount = await dataAccessHandler.getOnlyOneIntValueFromDb(
-       'SELECT Count(*) AS pendingrepoCount FROM FileRepositorys WHERE ServerUpdatedStatus = 0');
+        'SELECT Count(*) AS pendingrepoCount FROM FileRepositorys WHERE ServerUpdatedStatus = 0');
+    pendingboundarycount = await dataAccessHandler.getOnlyOneIntValueFromDb(
+        'SELECT Count(*) AS pendingboundaryCount FROM GeoBoundaries WHERE ServerUpdatedStatus = 0');
+
+    // Enable button if any of the counts are greater than 0
+    isButtonEnabled = pendingleadscount! > 0 || pendingfilerepocount! > 0 ||
+        pendingboundarycount! > 0;
 
     setState(() {
       isLoading = false; // Stop loading
     });
-
   }
 
 
@@ -1474,7 +1531,7 @@ class BackgroundService {
   }
 }
 
-@pragma('vm:entry-point')
+
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();

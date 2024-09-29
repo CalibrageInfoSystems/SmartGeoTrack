@@ -51,101 +51,11 @@
 //   @override
 //   void didChangeDependencies() {
 //     super.didChangeDependencies();
-//     initializeBackgroundService();
+//
 //   }
 //
-//   Future<void> initializeBackgroundService() async {
-//     if (await backgroundService.instance.isRunning()) {
-//       print('Background service is already running.');
-//       await backgroundService.initializeService();
-//     } else {
-//       print('Background service is not running. Starting now...');
-//     }
 //
-//     // Add logging here
-//     backgroundService.instance.on('on_location_changed').listen((event) async {
-//       print('Received location update event');
 //
-//       // backgroundService.instance.on('on_location_changed').listen((event) async {
-//       if (event != null) {
-//         final position = Position(
-//           longitude: double.tryParse(event['longitude'].toString()) ?? 0.0,
-//           latitude: double.tryParse(event['latitude'].toString()) ?? 0.0,
-//           timestamp: DateTime.fromMillisecondsSinceEpoch(
-//             event['timestamp'].toInt(),
-//             isUtc: true,
-//           ),
-//           accuracy: double.tryParse(event['accuracy'].toString()) ?? 0.0,
-//           altitude: double.tryParse(event['altitude'].toString()) ?? 0.0,
-//           heading: double.tryParse(event['heading'].toString()) ?? 0.0,
-//           speed: double.tryParse(event['speed'].toString()) ?? 0.0,
-//           speedAccuracy:
-//           double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
-//           altitudeAccuracy:
-//           double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
-//           headingAccuracy:
-//           double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
-//         );
-//         print("on_location_changed: ${position.latitude} -  ${ position.longitude}");
-//         if (_isPositionAccurate(position) ) {
-//           double distance = Geolocator.distanceBetween(
-//               lastLatitude, lastLongitude, position.latitude, position.longitude);
-//
-//           if (distance >= MIN_DISTANCE_THRESHOLD) {
-//             lastLatitude = position.latitude;
-//             lastLongitude = position.longitude;
-//             DateTime timestamp = DateTime.now();
-//             // Insert location into the database
-//             // await dataAccessHandler!.insertLocationValues(
-//             //   latitude: position.latitude,
-//             //   longitude: position.longitude,
-//             //   createdByUserId:6,  // replace userID with the actual value
-//             //   serverUpdatedStatus: false,
-//             // );
-//
-//             appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
-//             //  await sendLocationToAPI(position.latitude, position.longitude, timestamp);
-//             bool isConnected = await CommonStyles.checkInternetConnectivity();
-//             if (isConnected) {
-//               // Call your login function here
-//               final syncService = SyncService(dataAccessHandler);
-//               syncService.performRefreshTransactionsSync(context);
-//             } else {
-//               Fluttertoast.showToast(
-//                   msg: "Please check your internet connection.",
-//                   toastLength: Toast.LENGTH_SHORT,
-//                   gravity: ToastGravity.CENTER,
-//                   timeInSecForIosWeb: 1,
-//                   backgroundColor: Colors.red,
-//                   textColor: Colors.white,
-//                   fontSize: 16.0
-//               );
-//               print("Please check your internet connection.");
-//               //showDialogMessage(context, "Please check your internet connection.");
-//             }
-//
-//             await context.read<LocationControllerCubit>().onLocationChanged(
-//               location: position,
-//             );
-//           }
-//         }
-//         else{
-//           print('Position Accuracy: ${position.accuracy}');
-//           print('Speed Accuracy: ${position.speedAccuracy}');
-//           print('Speed: ${position.speed}');
-//         }
-//       }
-//     });
-//   }
-//
-//   bool _isPositionAccurate(Position position) {
-//     print('Position Accuracy:106=== ${position.accuracy}');
-//     print('Speed Accuracy:107=== ${position.speedAccuracy}');
-//     print('Speed:108=== ${position.speed}');
-//     return position.accuracy <= MAX_ACCURACY_THRESHOLD &&
-//         position.speedAccuracy <= MAX_SPEED_ACCURACY_THRESHOLD &&
-//         position.speed >= MIN_SPEED_THRESHOLD;
-//   }
 //
 //   @override
 //   Widget build(BuildContext context) {
