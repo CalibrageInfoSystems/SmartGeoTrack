@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:open_file/open_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartgetrack/Database/DataAccessHandler.dart';
@@ -352,15 +354,22 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
             children: [
               ...lead.map(
                 (lead) {
-                  print('imagePath: ${lead['FileLocation']},');
-                  return Image.file(File(lead['FileLocation']),
-                      width: 70, height: 70, fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                    return SvgPicture.asset('assets/fileuploadicon.svg',
+                  return GestureDetector(
+                    onTap: () => showZoomedAttachment(lead['FileLocation']),
+                    child: Image.file(
+                      File(lead['FileLocation']),
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          SvgPicture.asset(
+                        'assets/fileuploadicon.svg',
                         width: 70,
                         height: 70,
-                        color: CommonStyles.btnBlueBgColor);
-                  });
+                        color: CommonStyles.btnBlueBgColor,
+                      ),
+                    ),
+                  );
                 },
               ),
               /* Image.file(
@@ -376,6 +385,67 @@ class _ViewLeadsInfoState extends State<ViewLeadsInfo> {
           )
         ],
       ),
+    );
+  }
+
+  void showZoomedAttachment(String imagePath) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.white,
+            ),
+            width: double.infinity,
+            height: 500,
+            child: Stack(
+              children: [
+                Center(
+                  child: PhotoViewGallery.builder(
+                    itemCount: 1,
+                    builder: (context, index) {
+                      return PhotoViewGalleryPageOptions(
+                        imageProvider:
+                            FileImage(File(imagePath)), // Use FileImage
+                        minScale: PhotoViewComputedScale.contained,
+                        maxScale: PhotoViewComputedScale.covered,
+                      );
+                    },
+                    scrollDirection: Axis.vertical,
+                    scrollPhysics: const PageScrollPhysics(),
+                    allowImplicitScrolling: true,
+                    backgroundDecoration: const BoxDecoration(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.red,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
