@@ -6,6 +6,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartgetrack/HomeScreen.dart';
+import 'package:smartgetrack/LoginScreen.dart';
+import 'Common/Constants.dart';
 import 'common_styles.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -298,12 +300,21 @@ class _ChangePasswordState extends State<ChangePassword>
             final data = json.decode(response.body);
 
             if (data['isSuccess']) {
-              _showErrorDialog(data['endUserMessage']);
-              Future.delayed(const Duration(seconds: 2), () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                );
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(data['endUserMessage']),
+                ),
+              );
+
+              //showErrorDialog(data['endUserMessage']);
+              Future.delayed(const Duration(seconds: 2), () async {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                prefs.setBool(Constants.isLogin, false);
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                        (Route<dynamic> route) => false);
               });
             } else {
               // Show error message
@@ -327,7 +338,21 @@ class _ChangePasswordState extends State<ChangePassword>
           fontSize: 16.0);
     }
   }
-
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+     //   title: Text('$title'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
   void _showErrorDialog(String message, {String? title = 'Error'}) {
     showDialog(
       context: context,

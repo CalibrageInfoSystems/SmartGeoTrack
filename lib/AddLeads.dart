@@ -50,24 +50,58 @@ class _AddLeadScreenState extends State<AddLeads>
   String? _errorMessage;
   String? Username;
   String? empCode;
+  // void _pickFile() async {
+  //   // Ensure the combined count of images and files is less than 3 before allowing the file picker
+  //   if (_images.length + _files.length < 3) {
+  //     FilePickerResult? result = await FilePicker.platform.pickFiles(
+  //       allowMultiple: true,
+  //       type: FileType.custom,
+  //       allowedExtensions: ['pdf', 'xls', 'xlsx'],
+  //     );
+  //
+  //     if (result != null) {
+  //       // Limit the number of files added to not exceed the total of 3 files + images
+  //       int availableSlots = 3 - (_images.length + _files.length);
+  //       List<PlatformFile> selectedFiles =
+  //           result.files.take(availableSlots).toList();
+  //
+  //       setState(() {
+  //         _files.addAll(selectedFiles);
+  //       });
+  //     }
+  //   } else {
+  //     // Show an error or handle the case when the limit is reached
+  //     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+  //         content: Text(
+  //             'You can upload a maximum of 3 files and images combined.')));
+  //   }
+  // }
+
   void _pickFile() async {
-    // Ensure the combined count of images and files is less than 3 before allowing the file picker
-    if (_images.length + _files.length < 3) {
+   if(_images.length + _files.length < 3) {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'xls', 'xlsx'],
+        allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'xlsx', 'csv', 'pptx'],
       );
 
       if (result != null) {
-        // Limit the number of files added to not exceed the total of 3 files + images
-        int availableSlots = 3 - (_images.length + _files.length);
-        List<PlatformFile> selectedFiles =
-            result.files.take(availableSlots).toList();
+        PlatformFile file = result.files.first;
+        String? fileExtension = file.extension?.toLowerCase();
+        if (fileExtension != null &&
+            !['jpg', 'jpeg', 'png', 'gif', 'bmp'].contains(fileExtension)) {
+          int availableSlots = 3 - (_images.length + _files.length);
+          List<PlatformFile> selectedFiles =
+          result.files.take(availableSlots).toList();
 
-        setState(() {
-          _files.addAll(selectedFiles);
-        });
+          setState(() {
+            _files.addAll(selectedFiles);
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Please select a non-image file.')));
+       // return _showInvalidFileDialog();
+        }
       }
     } else {
       // Show an error or handle the case when the limit is reached
@@ -76,6 +110,8 @@ class _AddLeadScreenState extends State<AddLeads>
               'You can upload a maximum of 3 files and images combined.')));
     }
   }
+
+
 
   void _deleteFile(int index) {
     setState(() {
@@ -162,10 +198,12 @@ class _AddLeadScreenState extends State<AddLeads>
                       decoration: InputDecoration(
                         labelText: "Name *",
                         hintText: "Enter Name",
+                        counterText: "",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
+                      maxLength: 30,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please Enter Name';
@@ -199,10 +237,12 @@ class _AddLeadScreenState extends State<AddLeads>
                             decoration: InputDecoration(
                               labelText: "Company Name *",
                               hintText: "Enter Company Name",
+                              counterText: "",
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
+                            maxLength: 50,
                             validator: (value) {
                               if (_isCompany &&
                                   (value == null || value.isEmpty)) {
@@ -246,13 +286,16 @@ class _AddLeadScreenState extends State<AddLeads>
                     const SizedBox(height: 10),
                     TextFormField(
                       controller: _emailController,
+
                       decoration: InputDecoration(
                         labelText: "Email *",
                         hintText: "Enter Email",
+                        counterText: "",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
+                      maxLength: 30,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please Enter Email';
@@ -674,7 +717,7 @@ class _AddLeadScreenState extends State<AddLeads>
           _phoneNumberController.clear();
           _emailController.clear();
           _commentsController.clear();
-          _images.clear();
+          _imagepath.clear();
         } catch (e) {
           print('Error inserting lead data: $e');
           // Handle database insertion failure
@@ -749,6 +792,7 @@ class _AddLeadScreenState extends State<AddLeads>
   // Method to delete image from the list
   void _deleteImage(int index) {
     setState(() {
+      _imagepath.removeAt(index);
       _images.removeAt(index);
     });
   }

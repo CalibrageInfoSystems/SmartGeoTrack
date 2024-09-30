@@ -24,6 +24,7 @@ class _NewPasswordScreenState extends State<NewPassword>
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   bool _isObscure = true;
+  bool _isObscuree = true;
 
   @override
   void initState() {
@@ -186,7 +187,7 @@ class _NewPasswordScreenState extends State<NewPassword>
                     // New Password TextField
                     TextFormField(
                       controller: _newPasswordController,
-                      obscureText: _isObscure, // Toggle between true and false
+                      obscureText: _isObscuree, // Toggle between true and false
                       decoration: InputDecoration(
                         labelText: "New Password *",
                         hintText: "Enter New Password ",
@@ -197,14 +198,14 @@ class _NewPasswordScreenState extends State<NewPassword>
                             vertical: 10, horizontal: 10),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _isObscure
+                            _isObscuree
                                 ? Icons.visibility_off
                                 : Icons.visibility, // Toggle icon
                           ),
                           onPressed: () {
                             setState(() {
-                              _isObscure =
-                                  !_isObscure; // Toggle password visibility
+                              _isObscuree =
+                                  !_isObscuree; // Toggle password visibility
                             });
                           },
                         ),

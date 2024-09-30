@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late BackgroundService backgroundService;
   late double lastLatitude;
   late double lastLongitude;
-
+  DateTime? initialDateOnDatePicker;
   static const double MAX_ACCURACY_THRESHOLD = 10.0;
   static const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
   static const double MIN_DISTANCE_THRESHOLD = 50.0;
@@ -60,12 +60,12 @@ class _HomeScreenState extends State<HomeScreen> {
   String? calenderDate;
   bool isLocationEnabled = false;
   int? userID;
-  int? totalLeadsCount ;
-  int? todayLeadsCount ;
+  int? totalLeadsCount = 0;
+  int? todayLeadsCount = 0;
   int?  pendingleadscount;
   int?  pendingfilerepocount;
   int?  pendingboundarycount;
-  int? dateRangeLeadsCount;
+  int? dateRangeLeadsCount = 0;
   late Future<List<LeadsModel>> futureLeads;
   bool isLoading = true;
   double totalDistance = 0.0;
@@ -81,6 +81,12 @@ class _HomeScreenState extends State<HomeScreen> {
     backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
     checkLocationEnabled();
     startService();
+    // Refresh the screen after data loading is complete
+    Future.delayed(Duration.zero, () {
+      setState(() {
+        isLoading = false; // Update loading state
+      });
+    });
   }
 
   @override
@@ -89,108 +95,20 @@ class _HomeScreenState extends State<HomeScreen> {
  //   initializeBackgroundService();
   }
 
-  Future<void> initializeBackgroundService() async {
-    if (await backgroundService.instance.isRunning()) {
-      print('Background service is already running.');
-      await backgroundService.initializeService();
-    } else {
-      print('Background service is not running. Starting now...');
-    }
 
-    // Add logging here
-    backgroundService.instance.on('on_location_changed').listen((event) async {
-      print('Received location update event');
-
-      // backgroundService.instance.on('on_location_changed').listen((event) async {
-      if (event != null) {
-        final position = Position(
-          longitude: double.tryParse(event['longitude'].toString()) ?? 0.0,
-          latitude: double.tryParse(event['latitude'].toString()) ?? 0.0,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(
-            event['timestamp'].toInt(),
-            isUtc: true,
-          ),
-          accuracy: double.tryParse(event['accuracy'].toString()) ?? 0.0,
-          altitude: double.tryParse(event['altitude'].toString()) ?? 0.0,
-          heading: double.tryParse(event['heading'].toString()) ?? 0.0,
-          speed: double.tryParse(event['speed'].toString()) ?? 0.0,
-          speedAccuracy:
-          double.tryParse(event['speed_accuracy'].toString()) ?? 0.0,
-          altitudeAccuracy:
-          double.tryParse(event['altitude_accuracy'].toString()) ?? 0.0,
-          headingAccuracy:
-          double.tryParse(event['heading_accuracy'].toString()) ?? 0.0,
-        );
-        print(
-            "on_location_changed: ${position.latitude} -  ${position.longitude}");
-        if (_isPositionAccurate(position)) {
-          double distance = Geolocator.distanceBetween(lastLatitude,
-              lastLongitude, position.latitude, position.longitude);
-
-          if (distance >= MIN_DISTANCE_THRESHOLD) {
-            lastLatitude = position.latitude;
-            lastLongitude = position.longitude;
-            DateTime timestamp = DateTime.now();
-            // Insert location into the database
-            await palm3FoilDatabase!.insertLocationValues(
-                latitude: position.latitude,
-                longitude: position.longitude,
-                createdByUserId: userID, // replace userID with the actual value
-                serverUpdatedStatus: false,
-                from: '116');
-
-            appendLog(
-                'Latitude: ${position.latitude}, Longitude: ${position.longitude}. Distance: $distance, Timestamp: $timestamp');
-            //  await sendLocationToAPI(position.latitude, position.longitude, timestamp);
-            bool isConnected = await CommonStyles.checkInternetConnectivity();
-            if (isConnected) {
-              // Call your login function here
-              final syncService = SyncService(dataAccessHandler);
-              syncService.performRefreshTransactionsSync(context);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please check your internet connection.')),
-              );
-              Fluttertoast.showToast(
-                  msg: "Please check your internet connection.",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.CENTER,
-                  timeInSecForIosWeb: 1,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                  fontSize: 16.0);
-              print("Please check your internet connection.");
-              //showDialogMessage(context, "Please check your internet connection.");
-            }
-
-            await context.read<LocationControllerCubit>().onLocationChanged(
-              location: position,
-            );
-          }
-        } else {
-          print('Position Accuracy: ${position.accuracy}');
-          print('Speed Accuracy: ${position.speedAccuracy}');
-          print('Speed: ${position.speed}');
-        }
-      }
-    });
-  }
-
-  bool _isPositionAccurate(Position position) {
-    print('Position Accuracy:106=== ${position.accuracy}');
-    print('Speed Accuracy:107=== ${position.speedAccuracy}');
-    print('Speed:108=== ${position.speed}');
-    return position.accuracy <= MAX_ACCURACY_THRESHOLD &&
-        position.speedAccuracy <= MAX_SPEED_ACCURACY_THRESHOLD &&
-        position.speed >= MIN_SPEED_THRESHOLD;
-  }
 
   @override
 
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
-    return WillPopScope(
+    return RefreshIndicator(
+        onRefresh: () async {
+          // Re-fetch data and refresh UI
+          fetchpendingrecordscount();
+          setState(() {});
+        },
+        child:
+  WillPopScope(
       onWillPop: () async {
         exit(0);
       },
@@ -406,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
 
@@ -510,7 +428,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           child:  Row(
             children: [
-              Text(calenderDate!, style: CommonStyles.txStyF14CbFF5),
+              Text(calenderDate ?? formatDate(DateTime.now()), style: CommonStyles.txStyF14CbFF5),
               SizedBox(width: 5),
               Icon(
                 Icons.calendar_today_outlined,
@@ -523,15 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
-  // Row leadsSection() {
-  //   return Row(
-  //     children: [
-  //       Expanded(child: customBox(title: 'Total Leads', data: '123')),
-  //       const SizedBox(width: 20),
-  //       Expanded(child: customBox(title: 'Total Leads', data: '321')),
-  //     ],
-  //   );
-  // }
+
   Container dcustomBox({
     required String title,
     String? data,
@@ -653,9 +563,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           const Text('Hello,',
                               style: CommonStyles.txStyF20CpFF5),
-                          Text(
+
+                              Text(username ?? '',
                             // 'string',
-                            '${username!}',
                             style: CommonStyles.txStyF20CpFF5.copyWith(
                               fontSize: 25,
                               fontWeight: FontWeight.w900,
@@ -727,6 +637,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onSelected: (String value) {
           setState(() {
             selectedOption = value;
+            totalDistance = 0.0; // Reset total distance when a new option is selected
           });
           // Handle date selection and print accordingly
           if (value == 'Today') {
@@ -782,7 +693,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // final DateTime firstDate = DateTime(lastDate.year - 100);
     final DateTime? pickedDay = await showDatePicker(
       context: context,
-      initialDate: initialDate ?? DateTime.now(),
+      initialDate: initialDateOnDatePicker ?? DateTime.now(),
       initialEntryMode: DatePickerEntryMode.calendarOnly,
       firstDate: firstDate,
       lastDate: lastDate,
@@ -790,7 +701,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (pickedDay != null) {
       selectedDate = pickedDay.toString();
-
+      initialDateOnDatePicker = pickedDay;
       String datefromcalender = DateFormat('yyyy-MM-dd').format(pickedDay);
       calenderDate = formatDate(pickedDay);
       fetchdatewiseleads(datefromcalender,datefromcalender);
@@ -967,7 +878,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String roleName = prefs.getString('roleName') ?? '';
     DateTime now = DateTime.now();
     formattedDate = formatDate(now);
-    calenderDate = formattedDate;
+  //  calenderDate = formattedDate;
     futureLeads = loadleads();
     print(' formattedDate==$formattedDate'); // Example output: "25th Sep 2024"
   }
@@ -1067,89 +978,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showSyncingBottomSheet() {
 
-    showModalBottomSheet(
-        context: context,
-        clipBehavior: Clip.antiAlias,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        builder: (context) {
-
-          return Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  color: CommonStyles.listOddColor,
-                  padding: const EdgeInsets.all(5),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                          icon: const Icon(
-                            Icons.close,
-                          ),
-                          iconSize: 20,
-                          onPressed: () {
-                            Navigator.pop(context);
-                          }),
-                      const Text('Sync Offline Data',
-                          style: CommonStyles.txStyF20CbFF5),
-                      const SizedBox(width: 40),
-                    ],
-                  ),
-                ),
-                //MARK: Here
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Please don\'t close the app while syncing is in progress.',
-                        style: CommonStyles.txStyF14CbFF5.copyWith(
-                          color: CommonStyles.dataTextColor,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Image.asset('assets/synchronize.png',
-                        height: 60,  // Add height as per requirement
-                        width: 60,),  // Add width as per requirement), // Corrected here
-
-                      const SizedBox(height: 20),
-                      // Uncomment and provide total requests if needed
-                      // customRow(label: 'Total Requests', data: '3535'),
-                      customRow(label: 'Leads', data: pendingleadscount),
-                      customRow(label: 'File Repository', data: pendingfilerepocount),
-                   //   customRow(label: 'Last Sync', data: '1 Hour, Ago'),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: customBtn(
-                          onPressed: syncing,
-                          child: const Text(
-                            'Sync',
-                            style: CommonStyles.txStyF14CwFF5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              ],
-            ),
-          );
-        });
-  }
 
   Future<void> syncing() async {
     Navigator.pop(context);
@@ -1440,7 +1269,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
     print('Data: $data km');
-
+    totalDistance = 0.0;
 
     for (var i = 0; i < data.length - 1; i++) {
       totalDistance += calculateDistance(data[i]["lat"], data[i]["lng"], data[i + 1]["lat"], data[i + 1]["lng"]);
@@ -1468,6 +1297,11 @@ class _HomeScreenState extends State<HomeScreen> {
         'SELECT Count(*) AS pendingrepoCount FROM FileRepositorys WHERE ServerUpdatedStatus = 0');
     pendingboundarycount = await dataAccessHandler.getOnlyOneIntValueFromDb(
         'SELECT Count(*) AS pendingboundaryCount FROM GeoBoundaries WHERE ServerUpdatedStatus = 0');
+    print('pendingleadscount: $pendingleadscount ');
+    print('pendingfilerepocount: $pendingfilerepocount');
+    print('pendingboundarycount: $pendingboundarycount ');
+
+
 
     // Enable button if any of the counts are greater than 0
     isButtonEnabled = pendingleadscount! > 0 || pendingfilerepocount! > 0 ||
@@ -1493,6 +1327,7 @@ class BackgroundService {
   static const double MAX_SPEED_ACCURACY_THRESHOLD = 5.0;
   static const double MIN_DISTANCE_THRESHOLD = 50.0;
   static const double MIN_SPEED_THRESHOLD = 0.2;
+
   BackgroundService({required this.userId, required this.dataAccessHandler}) {
     // Initialize SyncService with DataAccessHandler
     syncService = SyncServiceB(
@@ -1551,13 +1386,17 @@ void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   Palm3FoilDatabase? palm3FoilDatabase = await Palm3FoilDatabase.getInstance();
 
+  String currentDate = getCurrentDate();
 
-
+// Make sure to initialize this
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int? userID = prefs.getInt('userID');
 
   // Initialize DataAccessHandler properly
   final dataAccessHandler = DataAccessHandler();
+
+
+  SyncServiceB syncService = SyncServiceB(dataAccessHandler);
   final backgroundService = BackgroundService(userId: userID, dataAccessHandler: dataAccessHandler);
 
   if (service is AndroidServiceInstance) {
@@ -1573,20 +1412,26 @@ void onStart(ServiceInstance service) async {
   Geolocator.getPositionStream().listen((Position position) async {
     final permission = await Geolocator.checkPermission();
 
+    // String selectedLatLong = await palm3FoilDatabase!.getLatLongs( //todo
+    //     "SELECT Latitude, Longitude FROM GeoBoundaries WHERE DATE(CreatedDate) = '$currentDate' ORDER BY Id DESC LIMIT 1"
+    // );
+    //
+    // print('selectedLatLong==$selectedLatLong');
     if (permission == LocationPermission.always) {
       service.invoke('on_location_changed', position.toJson());
+      if (_isPositionAccurate(position)) {
+        if (!isFirstLocationLogged) {
+          lastLatitude = position.latitude;
+          lastLongitude = position.longitude;
+          isFirstLocationLogged = true;
 
-      if (!isFirstLocationLogged) {
-        lastLatitude = position.latitude;
-        lastLongitude = position.longitude;
-        isFirstLocationLogged = true;
+          // Insert location when the app starts
+          await insertLocationToDatabase(
+              palm3FoilDatabase, position, userID, syncService);
 
-        // Insert location when the app starts
-        await insertLocationToDatabase(palm3FoilDatabase, position, userID);
-
-        await backgroundService.syncLocationData();
+   //      await backgroundService.syncLocationData();
+        }
       }
-
       if (_isPositionAccurate(position)) {
         final distance = Geolocator.distanceBetween(
           lastLatitude,
@@ -1600,32 +1445,93 @@ void onStart(ServiceInstance service) async {
           lastLongitude = position.longitude;
 
           // Insert location points when the distance exceeds the threshold
-          await insertLocationToDatabase(palm3FoilDatabase, position, userID);
+          await insertLocationToDatabase(palm3FoilDatabase, position, userID,syncService);
 
-          await backgroundService.syncLocationData();
+      //    await backgroundService.syncLocationData();
         }
       }
     }
   });
 }
-// Function to insert location into the database
-Future<void> insertLocationToDatabase(Palm3FoilDatabase? database, Position position, int? userID) async {
+
+String getCurrentDate() {
+  DateTime now = DateTime.now();
+  String formattedDate = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+  return formattedDate;
+
+
+}
+
+Future<void> insertLocationToDatabase(
+    Palm3FoilDatabase? database, Position position, int? userID, SyncServiceB syncService) async {
+
+
   bool locationExists = await checkIfLocationExists(database, position.latitude, position.longitude);
 
   if (!locationExists) {
+    // Insert the location data into the database
     await database!.insertLocationValues(
       latitude: position.latitude,
       longitude: position.longitude,
       createdByUserId: userID,
-      serverUpdatedStatus: false,
+      serverUpdatedStatus: false, // Initially false, will be updated after successful sync
       from: '997', // Replace with appropriate source if needed
     );
 
     appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}.');
+    print("Location inserted successfully.");
   } else {
     print("Location already exists in the database.");
   }
+
+  // Check if the network is available and then sync data
+  bool isConnected = await CommonStyles.checkInternetConnectivity();
+  if (isConnected) {
+    try {
+      // Perform the sync operation
+      await syncService.performRefreshTransactionsSync();
+      print("Location data synced successfully.");
+    } catch (e) {
+      print("Error syncing location data: $e");
+    }
+  } else {
+    Fluttertoast.showToast(
+        msg: "Please check your internet connection.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0);
+    print("Network is not available. Data will be synced later.");
+  }
 }
+
+// Helper method to check network availability (stub example)
+Future<bool> checkNetworkAvailability() async {
+  // Add your logic here to check for network availability
+  // Example: Use Connectivity package or similar
+  return true; // Assume network is available for this example
+}
+
+// // Function to insert location into the database
+// Future<void> insertLocationToDatabase(Palm3FoilDatabase? database, Position position, int? userID) async {
+//   bool locationExists = await checkIfLocationExists(database, position.latitude, position.longitude);
+//
+//   if (!locationExists) {
+//     await database!.insertLocationValues(
+//       latitude: position.latitude,
+//       longitude: position.longitude,
+//       createdByUserId: userID,
+//       serverUpdatedStatus: false,
+//       from: '997', // Replace with appropriate source if needed
+//     );
+//
+//     appendLog('Latitude: ${position.latitude}, Longitude: ${position.longitude}.');
+//   } else {
+//     print("Location already exists in the database.");
+//   }
+// }
 Future<bool> checkIfLocationExists(Palm3FoilDatabase? database, double latitude, double longitude) async {
   final queryResult = await database!.getLocationByLatLong(latitude, longitude);
   return queryResult.isNotEmpty;

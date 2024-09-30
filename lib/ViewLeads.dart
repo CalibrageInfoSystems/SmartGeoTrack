@@ -489,7 +489,8 @@ class _ViewLeadsState extends State<ViewLeads> {
     print('buildLeadsQuery: $date $category $fromDate $toDate');
     String query = 'SELECT * FROM Leads';
     List<String> conditions = [];
-
+    print('Result dates: $fromDate $toDate');
+    print('Result date: $date');
     DateTime currentDate = DateTime.now();
     String formattedCurrentDate = DateFormat('yyyy-MM-dd').format(currentDate);
 

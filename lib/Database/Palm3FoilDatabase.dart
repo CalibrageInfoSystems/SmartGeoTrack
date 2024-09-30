@@ -244,6 +244,27 @@ class Palm3FoilDatabase {
       print('Error retrieving tables: $e');
     }
   }
+  Future<String> getLatLongs(String query) async {
+    String latlongData = "";
+    Database db =  await DatabaseHelper.instance.database;
+    try {
+      List<Map<String, dynamic>> result = await db.rawQuery(query);
+
+      if (result.isNotEmpty) {
+        result.forEach((row) {
+          double lat = row.values.elementAt(0);
+          double long = row.values.elementAt(1);
+          latlongData = "$lat-$long";
+        });
+      }
+    } catch (e) {
+      print("Error: $e");
+    } finally {
+      await db.close(); // Ensure to close the database after the operation
+    }
+
+    return latlongData;
+  }
 
 
   Future<List<Map<String, dynamic>>> getleads() async {
